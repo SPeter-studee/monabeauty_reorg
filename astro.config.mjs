@@ -15,7 +15,6 @@ export default defineConfig({
     locales: ["hu", "en"],
     routing: {
       prefixDefaultLocale: false,      // / = HU, /en/ = EN
-      redirectToDefaultLocale: false,
     },
     fallback: { en: "hu" },            // ha angol fordítás hiányzik, magyart mutatja
   },
