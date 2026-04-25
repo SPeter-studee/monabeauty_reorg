@@ -1,0 +1,469 @@
+---
+// src/components/common/CookieConsent.astro
+// 3 kategóriás GDPR-konform cookie consent
+// Banner alulról csúszik fel + Részletes beállítások modal
+---
+
+<div class="consent" data-consent-root hidden>
+
+  <!-- ── BANNER (egyszerű 3 gombos sáv) ──────────────────────────────── -->
+  <div class="consent-banner" data-consent-view="banner" hidden>
+    <div class="container consent-banner__inner">
+      <div class="consent-banner__text">
+        <p class="consent-banner__title">Cookie-kat használunk</p>
+        <p class="consent-banner__body">
+          A weboldal megfelelő működéséhez szükséges cookie-kat használunk, és
+          szeretnénk anonimizált statisztikát is gyűjteni a fejlesztéshez.
+          A részletek a <a href="/cookies">cookie tájékoztatóban</a>.
+        </p>
+      </div>
+      <div class="consent-banner__actions">
+        <button class="btn btn-tertiary btn-sm" data-consent-action="reject">
+          Csak a szükségeseket
+        </button>
+        <button class="btn btn-secondary btn-sm" data-consent-action="customize">
+          Beállítások
+        </button>
+        <button class="btn btn-primary btn-sm" data-consent-action="accept">
+          Mindent elfogadok
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL (részletes beállítások) ──────────────────────────────── -->
+  <div class="consent-modal" data-consent-view="modal" hidden>
+    <div class="consent-modal__backdrop" data-consent-action="close"></div>
+    <div class="consent-modal__panel" role="dialog" aria-labelledby="consent-title" aria-modal="true">
+      <header class="consent-modal__header">
+        <h2 id="consent-title" class="consent-modal__title">Cookie beállítások</h2>
+        <button class="btn-icon" aria-label="Bezárás" data-consent-action="close">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="consent-modal__body">
+        <p class="consent-modal__intro">
+          Az alábbi kategóriák szerint kezeljük a cookie-kat. A szükséges sütik
+          a weboldal alapfunkcióihoz tartoznak, ezeket nem lehet kikapcsolni.
+          A többit Te döntöd el.
+        </p>
+
+        <!-- Szükséges (mindig on) -->
+        <div class="consent-row">
+          <div class="consent-row__head">
+            <p class="consent-row__name">Szükséges</p>
+            <span class="consent-row__locked">Kötelező</span>
+          </div>
+          <p class="consent-row__desc">
+            Bejelentkezési munkamenet, kosár tartalma, biztonsági token-ek és
+            a Te cookie-választásod tárolása. A weboldal e nélkül nem működik.
+          </p>
+        </div>
+
+        <!-- Analítikai -->
+        <div class="consent-row">
+          <div class="consent-row__head">
+            <p class="consent-row__name">Analítikai</p>
+            <label class="consent-toggle">
+              <input type="checkbox" data-consent-toggle="analytics">
+              <span class="consent-toggle__track"></span>
+            </label>
+          </div>
+          <p class="consent-row__desc">
+            Google Analytics és Microsoft Clarity. Anonim adatok arról, hogyan
+            használják a weboldalt, hogy javíthassuk a felhasználói élményt.
+            Nem azonosítunk Téged személy szerint.
+          </p>
+        </div>
+
+        <!-- Marketing -->
+        <div class="consent-row">
+          <div class="consent-row__head">
+            <p class="consent-row__name">Marketing</p>
+            <label class="consent-toggle">
+              <input type="checkbox" data-consent-toggle="marketing">
+              <span class="consent-toggle__track"></span>
+            </label>
+          </div>
+          <p class="consent-row__desc">
+            Facebook Pixel és hasonló eszközök, hogy releváns hirdetéseket
+            tudjunk megjeleníteni a Te érdeklődési körödnek megfelelően
+            közösségi platformokon.
+          </p>
+        </div>
+      </div>
+
+      <footer class="consent-modal__footer">
+        <button class="btn btn-tertiary" data-consent-action="reject">
+          Csak a szükségeseket
+        </button>
+        <button class="btn btn-secondary" data-consent-action="save">
+          Választás mentése
+        </button>
+        <button class="btn btn-primary" data-consent-action="accept">
+          Mindent elfogadok
+        </button>
+      </footer>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.consent {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-modal);
+}
+
+.consent[hidden] { display: none !important; }
+
+/* ── BANNER ──────────────────────────────────────────────────────────── */
+.consent-banner {
+  position: fixed;
+  inset: auto 0 0 0;
+  background: var(--mona-elevated);
+  border-top: 0.5px solid var(--mona-border);
+  padding-block: var(--space-5);
+  pointer-events: auto;
+  animation: slide-up 300ms var(--ease);
+  box-shadow: 0 -4px 16px rgba(44, 41, 38, 0.06);
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.consent-banner__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .consent-banner__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+}
+
+.consent-banner__title {
+  font-family: var(--mona-serif);
+  font-size: 18px;
+  margin-bottom: var(--space-2);
+  color: var(--mona-text);
+}
+
+.consent-banner__body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  max-width: 580px;
+  margin: 0;
+}
+
+.consent-banner__body a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.consent-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .consent-banner__actions .btn {
+    flex: 1 1 calc(50% - var(--space-2));
+  }
+  .consent-banner__actions .btn:last-child {
+    flex: 1 1 100%;
+  }
+}
+
+/* ── MODAL ───────────────────────────────────────────────────────────── */
+.consent-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: auto;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .consent-modal {
+    align-items: center;
+    padding: var(--space-6);
+  }
+}
+
+.consent-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 41, 38, 0.5);
+  animation: fade-in 200ms var(--ease);
+}
+
+.consent-modal__panel {
+  position: relative;
+  background: var(--mona-elevated);
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slide-up 250ms var(--ease);
+}
+
+@media (min-width: 768px) {
+  .consent-modal__panel {
+    max-width: 560px;
+    max-height: 80vh;
+    animation: scale-in 200ms var(--ease);
+  }
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.consent-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-5) var(--space-3);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.consent-modal__title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.consent-modal__body {
+  padding: var(--space-5);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.consent-modal__intro {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-5);
+}
+
+/* ── Sor (kategória) ────────────────────────────────────────────────── */
+.consent-row {
+  padding: var(--space-4) 0;
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.consent-row:first-of-type { border-top: none; }
+
+.consent-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.consent-row__name {
+  font-family: var(--mona-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0;
+}
+
+.consent-row__locked {
+  font-size: 11px;
+  color: var(--mona-text-3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.consent-row__desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+/* ── Toggle switch ─────────────────────────────────────────────────── */
+.consent-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.consent-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.consent-toggle__track {
+  position: absolute;
+  inset: 0;
+  background: var(--mona-border);
+  transition: background var(--motion-fast) var(--ease);
+  border-radius: 24px;
+}
+
+.consent-toggle__track::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--mona-elevated);
+  top: 3px;
+  left: 3px;
+  border-radius: 50%;
+  transition: transform var(--motion-fast) var(--ease);
+}
+
+.consent-toggle input:checked + .consent-toggle__track {
+  background: var(--mona-nature);
+}
+
+.consent-toggle input:checked + .consent-toggle__track::before {
+  transform: translateX(20px);
+}
+
+.consent-toggle input:focus-visible + .consent-toggle__track {
+  outline: 2px solid var(--mona-nature);
+  outline-offset: 2px;
+}
+
+/* ── Modal footer ───────────────────────────────────────────────────── */
+.consent-modal__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-top: 0.5px solid var(--mona-border);
+  background: var(--mona-surface);
+}
+
+@media (min-width: 768px) {
+  .consent-modal__footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 767px) {
+  .consent-modal__footer .btn { width: 100%; }
+}
+</style>
+
+<script>
+  import { hasDecided, getConsent, setConsent, acceptAll, rejectAll } from "@/lib/consent";
+
+  const root = document.querySelector<HTMLDivElement>("[data-consent-root]");
+  const banner = document.querySelector<HTMLDivElement>("[data-consent-view='banner']");
+  const modal = document.querySelector<HTMLDivElement>("[data-consent-view='modal']");
+  const analyticsToggle = document.querySelector<HTMLInputElement>("[data-consent-toggle='analytics']");
+  const marketingToggle = document.querySelector<HTMLInputElement>("[data-consent-toggle='marketing']");
+
+  if (!root || !banner || !modal) {
+    // SSR-ben nincs DOM, ne csináljunk semmit
+  } else {
+
+    // ── Megjelenítés indításkor ──────────────────────────────────────
+    const showBanner = () => {
+      root.removeAttribute("hidden");
+      banner.removeAttribute("hidden");
+      modal.setAttribute("hidden", "");
+    };
+
+    const showModal = () => {
+      // Töltsük fel a toggle-okat a jelenlegi állapot alapján
+      const current = getConsent();
+      if (analyticsToggle) analyticsToggle.checked = current?.analytics ?? false;
+      if (marketingToggle) marketingToggle.checked = current?.marketing ?? false;
+
+      root.removeAttribute("hidden");
+      banner.setAttribute("hidden", "");
+      modal.removeAttribute("hidden");
+
+      // Focus management
+      modal.querySelector<HTMLElement>(".consent-modal__title")?.focus();
+    };
+
+    const hideAll = () => {
+      root.setAttribute("hidden", "");
+      banner.setAttribute("hidden", "");
+      modal.setAttribute("hidden", "");
+    };
+
+    // Első látogatáskor — 1.5 mp késleltetéssel ne villogjon a CLS
+    if (!hasDecided()) {
+      setTimeout(showBanner, 1500);
+    }
+
+    // ── Eseménykezelés (delegálás a root-ról) ────────────────────────
+    root.addEventListener("click", e => {
+      const target = e.target as HTMLElement;
+      const action = target.closest<HTMLElement>("[data-consent-action]")?.dataset.consentAction;
+
+      switch (action) {
+        case "accept":
+          acceptAll();
+          hideAll();
+          break;
+        case "reject":
+          rejectAll();
+          hideAll();
+          break;
+        case "customize":
+          showModal();
+          break;
+        case "save":
+          setConsent(
+            !!analyticsToggle?.checked,
+            !!marketingToggle?.checked
+          );
+          hideAll();
+          break;
+        case "close":
+          // Ha már döntött, csak zár; ha nem, banner marad
+          if (hasDecided()) hideAll();
+          else showBanner();
+          break;
+      }
+    });
+
+    // ── ESC bezárás ────────────────────────────────────────────────────
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !modal.hasAttribute("hidden")) {
+        if (hasDecided()) hideAll();
+        else showBanner();
+      }
+    });
+
+    // ── Footer link megnyitja a beállításokat ──────────────────────────
+    window.addEventListener("mona-consent-open", showModal);
+  }
+</script>

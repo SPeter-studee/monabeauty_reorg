@@ -1,0 +1,137 @@
+# Mona Studio V2 — Cursor szabályok
+
+Ez a fájl automatikusan betöltődik minden Cursor chat session-be. Tartalmazza a projekt alapelveit és a kódolási konvenciókat.
+
+## Projekt áttekintés
+
+A Mona Studio egy prémium kozmetikai brand webshop és szalon weboldala Vácon. Az új V2 verzió Astro keretrendszerre épül Cloudflare Pages-en. Részletes spec a `docs/` mappában.
+
+## Tech stack
+
+- **Framework**: Astro 4 (SSR mód, Cloudflare adapter)
+- **Hosting**: Cloudflare Pages
+- **Adatbázis**: Cloudflare D1 (binding: `DB`)
+- **Cache**: Cloudflare KV (binding: `CONTENT`)
+- **Object storage**: Cloudflare R2 (binding: `PRODUCT_IMAGES`)
+- **Auth**: Google OAuth (admin) + email/jelszó (vásárlók)
+- **Email**: Resend
+- **Newsletter**: Mailchimp
+- **Szállítás**: FoxPost (jelenleg), GLS (sprint 6-ban)
+- **Foglalás**: Setmore
+- **AI**: Anthropic (chatbot, termék import)
+- **Fordítás**: DeepL (HU default, EN támogatott)
+
+## Mappa-struktúra
+
+```
+src/
+├── components/
+│   ├── common/          Header, Footer, CookieConsent, Toast, Newsletter, Button, Modal
+│   ├── shop/            ProductCard, FilterPanel, Cart, SaleCountdown
+│   └── admin/           AdminGate, AdminSidebar, DataTable
+├── layouts/             BaseLayout, ShopLayout, AdminLayout
+├── pages/               Astro routing
+│   └── api/             API endpoint-ok
+├── styles/
+│   ├── tokens.css       Design tokens (színek, térköz, font)
+│   ├── reset.css
+│   ├── layout.css
+│   └── components/
+├── i18n/                hu.json, en.json, utils.ts
+└── lib/                 cart.ts, consent.ts, toast.ts, auth.ts, db.ts
+```
+
+## Kódolási konvenciók
+
+### TypeScript
+- Strict mode kötelező (`tsconfig.json`)
+- `import` aliasok: `@/*` → `src/*`
+- Cloudflare bindings: `Astro.locals.runtime.env`
+- API endpointok: `APIRoute` típus
+
+### Astro komponensek
+- Frontmatter (`---`) Astro logika
+- Body Astro template (HTML-szerű)
+- `<style>` és `<script>` scope-olt
+- `client:idle` / `client:visible` direktívák ritkán
+
+### CSS
+- **CSS változók** mindenhol (`var(--mona-text)`)
+- **Mobile-first**: alap CSS mobil méretre, `@media (min-width: 768px)` override-ok
+- Border radius a brand-ben: `--radius-none` (éles), kivétel pillek (`--radius-full`)
+- Font: Cormorant Garamond serif címeknek, Inter sans body-nak
+- WCAG AAA cél (kontraszt 7:1 lehetőleg)
+
+### Komponensnévkonvenció
+- PascalCase: `ProductCard.astro`
+- BEM CSS osztályok: `.product-card`, `.product-card__title`, `.product-card--featured`
+
+## Brand színpaletta
+
+```css
+/* Háttér */
+--mona-bg:        #ebe5db;   /* fő háttér */
+--mona-surface:   #f5f1e8;   /* kártyák */
+--mona-elevated:  #fdfbf7;   /* modálok, form */
+
+/* Szöveg (mind WCAG AAA) */
+--mona-text:      #2c2926;   /* címek, body */
+--mona-text-2:    #4a4640;   /* másodlagos */
+--mona-text-3:    #6b5a4a;   /* eyebrow, helper */
+
+/* Accent */
+--mona-nature:    #3d4a3d;   /* sötétzöld — vegán, természetes */
+--mona-warm:      #8a6f4a;   /* patina arany — Mónika ajánlása */
+--mona-sale:      #b85a3c;   /* akció */
+--mona-success:   #5a6b5a;   /* készlet OK */
+```
+
+## Brand alapelvek
+
+- **Csendes** — kevés szín, sok levegő, nem agresszív
+- **Személyes** — Mónika személye = a brand
+- **Természetes** — földszínek, nem neon, nem szintetikus
+- **Szakmai** — részletes INCI, hatóanyag információ
+
+## Mit NEM csinálunk
+
+- ❌ Felugró popup hírlevélre
+- ❌ Live chat widget (nincs mögötte 24/7 ember)
+- ❌ Túl sok "Hurry! Only 1 left!" sürgetés
+- ❌ User-generated stock fotók
+- ❌ Marketplace integráció (Amazon, eMag) — kannibalizálná a brand-et
+- ❌ Cookie banner popup (csak inline sáv lent)
+- ❌ Vélemény rendszer indulásnál (üres rosszabb mint nem lenni)
+- ❌ Variáns kezelés UI (séma támogatja, de UI rejtve)
+
+## Kódgenerálás módja
+
+Amikor új komponenst vagy oldalt kérek:
+
+1. **Nézd meg a `docs/` mappát** kontextusért
+2. **Használd a CSS változókat**, ne hardkódolj színeket
+3. **Mobile-first** mindig
+4. **WCAG AAA** kontraszt cél
+5. **Komponens újrahasznosítás** — ha hasonló már létezik, bővítsd
+6. **TypeScript szigorú típusok** (`any` kerülése)
+7. **Hungarian content** (HU default), **i18n-ready** (utils.ts használata)
+8. **SEO**: minden oldal a BaseLayout-ot használja, title + description kötelező
+
+## Sprint státusz
+
+- ✅ Sprint 1: Astro alap, design system, header, footer, BaseLayout, i18n
+- ✅ Sprint 2A: cookie consent, toast, newsletter, layout fixes, sale countdown
+- ⏳ Sprint 2B: statikus oldalak (főoldal, rólam, blog, galéria, vélemények, kapcsolat, bejelentkezés, jogi oldalak, 404)
+- ⏳ Sprint 3: webshop (hub, kategóriák, termékoldal, kosár, pénztár, wishlist)
+- ⏳ Sprint 4: ügyfél törzs (regisztráció, profil, rendelési előzmények)
+- ⏳ Sprint 5: admin (dashboard, termékek, ügyfelek, rendelések, akciók)
+- ⏳ Sprint 6: integrációk (FoxPost, GLS, Setmore, Anthropic, AI import)
+- ⏳ Sprint 7: cutover (DNS váltás, élesítés)
+
+## Referenciák
+
+- Design system: `docs/01-design-system.md`
+- Reorganizáció: `docs/02-reorganization-plan.md`
+- Known issues: `docs/03-known-issues.md`
+- V2 migráció: `docs/04-v2-migration-plan.md`
+- Termék séma: `docs/05-product-schema.md`

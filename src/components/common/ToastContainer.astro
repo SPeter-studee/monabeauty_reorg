@@ -1,0 +1,212 @@
+---
+// src/components/common/ToastContainer.astro
+// Toast üzenetek konténer — események alapján jelennek meg
+---
+
+<div class="toast-container" data-toast-container aria-live="polite" aria-atomic="true"></div>
+
+<style>
+.toast-container {
+  position: fixed;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  /* Mobile: alul középen */
+  inset: auto var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)) var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .toast-container {
+    /* Desktop: jobb felül header alatt */
+    inset: calc(var(--header-height, 72px) + var(--space-4)) var(--space-5) auto auto;
+    max-width: 380px;
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--mona-elevated);
+  border-left: 3px solid var(--mona-success);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: toast-in 250ms var(--ease) backwards;
+  box-shadow: 0 4px 16px rgba(44, 41, 38, 0.08);
+}
+
+.toast--leaving {
+  animation: toast-out 200ms var(--ease) forwards;
+}
+
+.toast--info    { border-left-color: var(--mona-info); }
+.toast--error   { border-left-color: var(--mona-error); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+
+@media (max-width: 767px) {
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toast-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(20px); }
+  }
+}
+
+.toast__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.toast__icon--success { color: var(--mona-success); }
+.toast__icon--info    { color: var(--mona-info); }
+.toast__icon--error   { color: var(--mona-error); }
+
+.toast__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__title {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 2px;
+}
+
+.toast__message {
+  font-size: 12px;
+  color: var(--mona-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--mona-text-3);
+  cursor: pointer;
+  margin-top: 1px;
+}
+
+.toast__close:hover { color: var(--mona-text); }
+
+.toast__actions {
+  display: flex;
+  gap: var(--space-2);
+  padding-left: 32px;
+}
+
+.toast__action {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 0.5px;
+}
+
+.toast__action:hover {
+  color: var(--mona-warm);
+}
+</style>
+
+<script>
+  import type { ToastDetail } from "@/lib/toast";
+
+  const container = document.querySelector<HTMLDivElement>("[data-toast-container]");
+  if (!container) {
+    // No-op in SSR
+  }
+
+  let counter = 0;
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]!));
+  }
+
+  function iconSvg(type: string): string {
+    if (type === "error") return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-linecap="round"/><line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/></svg>`;
+    if (type === "info") return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-linecap="round"/><line x1="12" y1="16" x2="12" y2="12" stroke-linecap="round"/><line x1="12" y1="8" x2="12.01" y2="8" stroke-linecap="round"/></svg>`;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  function renderToast(detail: ToastDetail) {
+    if (!container) return;
+    const id = `toast-${++counter}`;
+    const type = detail.type ?? "success";
+    const duration = detail.duration ?? 4000;
+
+    const el = document.createElement("div");
+    el.className = `toast toast--${type}`;
+    el.id = id;
+    el.setAttribute("role", "status");
+
+    const titleHtml = escapeHtml(detail.title);
+    const msgHtml = detail.message ? escapeHtml(detail.message) : "";
+    const actionHtml = detail.actionLabel && detail.actionHref
+      ? `<div class="toast__actions">
+           <a href="${escapeHtml(detail.actionHref)}" class="toast__action">${escapeHtml(detail.actionLabel)}</a>
+         </div>` : "";
+
+    el.innerHTML = `
+      <div class="toast__row">
+        <span class="toast__icon toast__icon--${type}" aria-hidden="true">${iconSvg(type)}</span>
+        <div class="toast__content">
+          <p class="toast__title">${titleHtml}</p>
+          ${msgHtml ? `<p class="toast__message">${msgHtml}</p>` : ""}
+        </div>
+        <button class="toast__close" aria-label="Bezárás" data-toast-close>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="15" y1="5" x2="5" y2="15" stroke-linecap="round"/>
+            <line x1="5" y1="5" x2="15" y2="15" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      ${actionHtml}
+    `;
+
+    container.appendChild(el);
+
+    // Bezárás
+    const dismiss = () => {
+      el.classList.add("toast--leaving");
+      setTimeout(() => el.remove(), 200);
+    };
+
+    el.querySelector<HTMLButtonElement>("[data-toast-close]")?.addEventListener("click", dismiss);
+    setTimeout(dismiss, duration);
+  }
+
+  window.addEventListener("mona-toast", (e: Event) => {
+    const ce = e as CustomEvent<ToastDetail>;
+    renderToast(ce.detail);
+  });
+</script>

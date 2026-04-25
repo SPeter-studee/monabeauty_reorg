@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "services": "Szolgáltatások",
+    "shop": "Webshop",
+    "blog": "Blog",
+    "gallery": "Galéria",
+    "reviews": "Vélemények",
+    "about": "Rólam",
+    "book": "Időpontfoglalás"
+  },
+  "footer": {
+    "about": "Szabó Mónika kozmetikai szakember Vácon. Több mint 20 év tapasztalattal, személyre szabott bőrápolással.",
+    "shop": "Webshop",
+    "allProducts": "Minden termék",
+    "skincare": "Arcápolás",
+    "sales": "Akciók",
+    "brands": "Márkák",
+    "salon": "Szalon",
+    "services": "Szolgáltatások",
+    "booking": "Időpontfoglalás",
+    "location": "Megközelítés",
+    "gallery": "Galéria",
+    "info": "Információk",
+    "about_link": "Rólam",
+    "blog": "Blog",
+    "shipping": "Szállítás",
+    "contact": "Kapcsolat",
+    "terms": "ÁSZF",
+    "privacy": "Adatvédelem",
+    "cookies": "Cookie-k"
+  },
+  "home": {
+    "hero_kicker": "Szabó Mónika · Kozmetikus",
+    "hero_title": "A szépség benned van",
+    "hero_blurb": "Több mint 20 év tapasztalattal, természetes hatóanyagok és modern technológia együtt — személyre szabott bőrápolás Vácon és webshopon át.",
+    "hero_cta_book": "Időpontfoglalás",
+    "hero_cta_shop": "Webshop megnyitása"
+  }
+}

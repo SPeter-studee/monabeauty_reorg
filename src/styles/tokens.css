@@ -1,0 +1,129 @@
+/* src/styles/tokens.css — UPDATED v1.1
+ * Mona Studio Design System
+ * Természetes prémium kozmetikai paletta — Kiehl's / La Mer irány
+ *
+ * Az 1.1 verzió újdonságai (Sprint 2A):
+ * - Header magasság token (scroll-padding, toast pozicionálás)
+ * - Touch target minimum
+ * - Scroll behavior tokens
+ */
+
+:root {
+  /* ── Színek: Háttér és felület ──────────────────────────────────────────── */
+  --mona-bg:        #ebe5db;
+  --mona-surface:   #f5f1e8;
+  --mona-elevated:  #fdfbf7;
+
+  /* ── Színek: Szöveg (mind WCAG AAA a háttéren) ──────────────────────────── */
+  --mona-text:      #2c2926;
+  --mona-text-2:    #4a4640;
+  --mona-text-3:    #6b5a4a;
+
+  /* ── Színek: Accent ────────────────────────────────────────────────────── */
+  --mona-nature:    #3d4a3d;
+  --mona-warm:      #8a6f4a;
+  --mona-sale:      #b85a3c;
+  --mona-success:   #5a6b5a;
+  --mona-error:     #a64236;
+  --mona-info:      #4a5e6f;
+
+  /* ── Színek: Borders ───────────────────────────────────────────────────── */
+  --mona-border:         #d4cfc4;
+  --mona-border-strong:  #2c2926;
+
+  /* ── Tipográfia ────────────────────────────────────────────────────────── */
+  --mona-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --mona-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI",
+               system-ui, sans-serif;
+  --mona-mono: ui-monospace, "SF Mono", Menlo, Monaco, monospace;
+
+  /* ── Font méretek (mobile-first, clamp-pal skálázódik) ─────────────────── */
+  --fs-h1:       clamp(2.25rem, 5vw + 1rem, 3rem);
+  --fs-h2:       clamp(1.75rem, 3.5vw + 1rem, 2.25rem);
+  --fs-h3:       clamp(1.375rem, 2.5vw + 0.75rem, 1.75rem);
+  --fs-h4:       1.25rem;
+  --fs-body:     1rem;
+  --fs-caption:  0.875rem;
+  --fs-tiny:     0.6875rem;
+  --fs-eyebrow:  0.6875rem;
+
+  /* ── Sorköz ────────────────────────────────────────────────────────────── */
+  --lh-tight:   1.1;
+  --lh-snug:    1.3;
+  --lh-normal:  1.65;
+  --lh-loose:   1.8;
+
+  /* ── Térköz skála ──────────────────────────────────────────────────────── */
+  --space-1:   0.25rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.5rem;
+  --space-6:   2rem;
+  --space-8:   3rem;
+  --space-10:  4rem;
+  --space-12:  6rem;
+  --space-16:  8rem;
+
+  /* ── Container szélességek ─────────────────────────────────────────────── */
+  --container-sm:    640px;
+  --container-md:    768px;
+  --container-lg:    1024px;
+  --container-xl:    1280px;
+  --container-text:  680px;
+  --container-prose: 720px;
+
+  /* ── Border radius ─────────────────────────────────────────────────────── */
+  --radius-none: 0;
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   8px;
+  --radius-full: 9999px;
+
+  /* ── Mozgás ────────────────────────────────────────────────────────────── */
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --motion-slow: 400ms;
+  --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Z-index skála ─────────────────────────────────────────────────────── */
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    300;
+  --z-toast:    400;
+
+  /* ── ⚠️ ÚJ: Header magasság (scroll-padding, sticky offset) ─────────────── */
+  --header-height: 64px;
+
+  /* ── ⚠️ ÚJ: Touch target minimum (Apple HIG, Google Material) ─────────── */
+  --touch-target: 44px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-height: 72px;
+  }
+}
+
+/* ── Reduced motion preference ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── ⚠️ ÚJ: Scroll padding (anchor link nem csúszik header alá) ─────────── */
+html {
+  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+  scrollbar-gutter: stable;
+}
+
+/* Anchor target margin (id-vel rendelkező szekciók) */
+section[id],
+[data-anchor],
+:target {
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
+}

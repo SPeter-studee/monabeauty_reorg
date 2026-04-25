@@ -1,0 +1,74 @@
+/* src/styles/components/badges.css */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mona-sans);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  white-space: nowrap;
+  border-radius: var(--radius-none);
+  font-weight: 400;
+}
+
+/* ── Filled (semantikus) ────────────────────────────────────────────────── */
+
+.badge-vegan {
+  background: var(--mona-nature);
+  color: var(--mona-surface);
+}
+
+.badge-mona {
+  background: var(--mona-warm);
+  color: var(--mona-surface);
+}
+
+.badge-sale {
+  background: var(--mona-sale);
+  color: var(--mona-surface);
+}
+
+.badge-new {
+  background: var(--mona-success);
+  color: var(--mona-surface);
+}
+
+.badge-stock {
+  color: var(--mona-success);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0;
+  background: none;
+}
+
+.badge-low-stock {
+  color: var(--mona-sale);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0;
+  background: none;
+}
+
+/* ── Outlined ──────────────────────────────────────────────────────────── */
+
+.badge-outline {
+  background: transparent;
+  color: var(--mona-text);
+  border: 0.5px solid var(--mona-text);
+}
+
+/* ── Méret variánsok ───────────────────────────────────────────────────── */
+
+.badge-sm {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+.badge-lg {
+  font-size: 12px;
+  padding: 4px 12px;
+}

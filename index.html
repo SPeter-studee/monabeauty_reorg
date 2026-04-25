@@ -5,21 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mona Studio — reorganizáció</title>
   <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    :root { --bg: #140c0a; --gold: #c9a86c; --cream: #f3ebe1; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--cream); margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
-    .box { max-width: 36rem; text-align: center; line-height: 1.6; }
-    h1 { color: var(--gold); font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
-    p { margin: 0 0 1rem; opacity: 0.9; font-size: 0.95rem; }
-    code { font-size: 0.85rem; opacity: 0.85; }
-    a { color: var(--gold); }
+    :root {
+      --mona-bg: #ebe5db;
+      --mona-surface: #f5f1e8;
+      --mona-text: #2c2926;
+      --mona-text-2: #4a4640;
+      --mona-nature: #3d4a3d;
+      --mona-border: #d4cfc4;
+      --mona-serif: "Cormorant Garamond", Georgia, serif;
+      --mona-sans: Inter, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--mona-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      background: var(--mona-bg);
+      color: var(--mona-text);
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+    }
+    .box {
+      max-width: 36rem;
+      text-align: center;
+      background: var(--mona-surface);
+      border: 0.5px solid var(--mona-border);
+      padding: 2rem 1.75rem;
+    }
+    h1 {
+      font-family: var(--mona-serif);
+      font-size: 1.75rem;
+      font-weight: 400;
+      margin: 0 0 0.5rem;
+      color: var(--mona-text);
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--mona-text-2);
+      margin: 0 0 0.75rem;
+    }
+    p { margin: 0 0 1rem; color: var(--mona-text-2); font-size: 0.95rem; }
+    code { font-size: 0.85rem; color: var(--mona-text); }
+    a {
+      color: var(--mona-nature);
+      text-underline-offset: 4px;
+    }
+    .pill {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      color: var(--mona-nature);
+      border: 0.5px solid var(--mona-nature);
+      padding: 6px 12px;
+    }
   </style>
 </head>
 <body>
   <div class="box">
+    <p class="eyebrow">Mona Studio · v2 design tokenek</p>
     <h1>monabeauty_reorg</h1>
-    <p>Új, tiszta projektváz. Statikus tartalom itt; API a <code>functions/api/</code> alatt.</p>
+    <p>Új, tiszta projektváz. Webshop és <strong>szolgáltatások</strong> ugyanazon, a régi sötét+aranyhoz képest <strong>optimalizált világos színvilággal</strong> (lásd <code>mona-docs/.../docs/01-design-system.md</code>).</p>
+    <p>Statikus tartalom itt; API a <code>functions/api/</code> alatt.</p>
     <p><a href="/api/health">GET /api/health</a> — ellenőrzés</p>
+    <span class="pill" aria-hidden="true">Kezelések · Setmore CTA később ugyanígy</span>
   </div>
 </body>
 </html>

@@ -1,0 +1,14 @@
+# robots.txt — Mona Studio
+# https://monastudio.hu/robots.txt
+
+User-agent: *
+Allow: /
+
+# Admin oldalak ne kerüljenek be
+Disallow: /admin/
+Disallow: /api/admin/
+Disallow: /api/auth/
+Disallow: /profil/
+
+# Sitemap
+Sitemap: https://monastudio.hu/sitemap.xml

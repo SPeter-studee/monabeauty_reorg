@@ -1,0 +1,222 @@
+---
+// src/components/common/Header.astro — UPDATED v1.1
+// Sprint 2A javítások:
+// - Scroll direction logika (lefelé scroll → header eltűnik)
+// - iOS-kompatibilis mobile menu scroll lock
+// - Hover state csak hover-képes eszközön
+
+import { getTranslations } from "@/i18n/utils";
+
+interface Props {
+  currentPath?: string;
+  locale?: "hu" | "en";
+}
+
+const { currentPath = Astro.url.pathname, locale = "hu" } = Astro.props;
+const t = getTranslations(locale);
+
+const navItems = [
+  { href: "/szolgaltatasok",   label: t.nav.services },
+  { href: "/webshop",          label: t.nav.shop },
+  { href: "/blog",             label: t.nav.blog },
+  { href: "/galeria",          label: t.nav.gallery },
+  { href: "/velemenyek",       label: t.nav.reviews },
+  { href: "/rolam",            label: t.nav.about },
+];
+
+const isActive = (href: string) =>
+  currentPath === href || currentPath.startsWith(href + "/");
+---
+
+<header class="site-header" data-site-header data-scroll-direction="up">
+  <div class="container site-header__inner">
+
+    <a href="/" class="site-header__logo" aria-label="Mona Studio főoldal">
+      <span class="site-header__logo-name">Mona Studio</span>
+      <span class="site-header__logo-tagline">A szépség benned van</span>
+    </a>
+
+    <nav class="site-header__nav" aria-label="Főnavigáció">
+      {navItems.map(item => (
+        <a
+          href={item.href}
+          class="site-header__nav-link"
+          aria-current={isActive(item.href) ? "page" : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="site-header__actions">
+
+      <a href="/idopontfoglalas" class="btn btn-secondary btn-sm hide-mobile">
+        {t.nav.book}
+      </a>
+
+      <div class="lang-switcher hide-mobile" aria-label="Nyelvválasztó">
+        <a href="/" class={locale === "hu" ? "active" : ""}>HU</a>
+        <span aria-hidden="true">·</span>
+        <a href="/en/" class={locale === "en" ? "active" : ""}>EN</a>
+      </div>
+
+      <a href="/kosar" class="site-header__action" aria-label="Kosár">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
+          <path d="M16 10a4 4 0 0 1-8 0" stroke-linecap="round"/>
+        </svg>
+        <span class="site-header__cart-count" data-cart-count hidden></span>
+      </a>
+
+      <a href="/bejelentkezes" class="site-header__action" aria-label="Bejelentkezés">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <button
+        class="site-header__action site-header__hamburger"
+        aria-label="Menü megnyitása"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        data-mobile-menu-toggle
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"/>
+          <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
+          <line x1="3" y1="18" x2="21" y2="18" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Mobile menu drawer -->
+  <div class="mobile-menu" id="mobile-menu" data-mobile-menu data-open="false" aria-hidden="true">
+    <div class="mobile-menu__header">
+      <span class="site-header__logo-name">Mona Studio</span>
+      <button class="site-header__action" aria-label="Menü bezárása" data-mobile-menu-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="mobile-menu__nav" aria-label="Mobil menü">
+      {navItems.map(item => (
+        <a href={item.href} aria-current={isActive(item.href) ? "page" : undefined}>
+          {item.label}
+        </a>
+      ))}
+      <a href="/idopontfoglalas">{t.nav.book}</a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  // ── Mobile menu scroll lock (iOS Safari kompatibilis) ────────────────────
+  const menu = document.querySelector<HTMLDivElement>("[data-mobile-menu]");
+  const toggleBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-toggle]");
+  const closeBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-close]");
+
+  let savedScrollY = 0;
+
+  const lockBodyScroll = () => {
+    savedScrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.width = "100%";
+    document.body.dataset.scrollLocked = "true";
+  };
+
+  const unlockBodyScroll = () => {
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    document.body.dataset.scrollLocked = "false";
+    window.scrollTo(0, savedScrollY);
+  };
+
+  const openMenu = () => {
+    menu?.setAttribute("data-open", "true");
+    menu?.setAttribute("aria-hidden", "false");
+    toggleBtn?.setAttribute("aria-expanded", "true");
+    lockBodyScroll();
+
+    // Focus első link-re az accessibility-hez
+    setTimeout(() => {
+      menu?.querySelector<HTMLAnchorElement>(".mobile-menu__nav a")?.focus();
+    }, 50);
+  };
+
+  const closeMenu = () => {
+    menu?.setAttribute("data-open", "false");
+    menu?.setAttribute("aria-hidden", "true");
+    toggleBtn?.setAttribute("aria-expanded", "false");
+    unlockBodyScroll();
+    toggleBtn?.focus();
+  };
+
+  toggleBtn?.addEventListener("click", openMenu);
+  closeBtn?.addEventListener("click", closeMenu);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && menu?.getAttribute("data-open") === "true") {
+      closeMenu();
+    }
+  });
+
+  // ── Header scroll direction logika ───────────────────────────────────────
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  let lastScroll = 0;
+  let ticking = false;
+
+  window.addEventListener("scroll", () => {
+    if (ticking) return;
+    requestAnimationFrame(() => {
+      const current = window.scrollY;
+      const direction = current > lastScroll && current > 100 ? "down" : "up";
+      header?.setAttribute("data-scroll-direction", direction);
+      lastScroll = Math.max(0, current);
+      ticking = false;
+    });
+    ticking = true;
+  }, { passive: true });
+
+  // ── Cart count update (lib/cart.ts esemény + storage) ────────────────────
+  const updateCartCount = () => {
+    try {
+      const cart = JSON.parse(localStorage.getItem("mona_cart") || "[]");
+      const count = cart.reduce((s: number, i: any) => s + (i.qty || 1), 0);
+      const el = document.querySelector<HTMLSpanElement>("[data-cart-count]");
+      if (!el) return;
+      if (count > 0) {
+        el.textContent = String(count);
+        el.removeAttribute("hidden");
+      } else {
+        el.setAttribute("hidden", "");
+      }
+    } catch {}
+  };
+  updateCartCount();
+  window.addEventListener("storage", updateCartCount);
+  window.addEventListener("mona-cart-update", updateCartCount);
+</script>
+
+<style>
+  /* ── Header scroll direction (Sprint 2A új) ────────────────────────── */
+  .site-header {
+    transition: transform 200ms var(--ease);
+    will-change: transform;
+  }
+
+  .site-header[data-scroll-direction="down"] {
+    transform: translateY(-100%);
+  }
+
+  .site-header[data-scroll-direction="up"] {
+    transform: translateY(0);
+  }
+</style>

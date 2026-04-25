@@ -1,17 +1,24 @@
 {
-  "name": "monabeauty-reorg",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Mona Studio — tiszta reorganizációs projekt (Pages + Functions)",
+  "name": "mona-studio",
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "build": "node -e \"console.log('static+functions; no bundle')\"",
-    "deploy": "npx wrangler pages deploy . --project-name monabeauty2 --commit-dirty=true",
-    "deploy:preview": "npx wrangler pages deploy . --project-name monabeauty2"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev ./dist",
+    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=monabeauty2",
+    "astro": "astro",
+    "images:webp": "node scripts/generate-webp.mjs"
   },
-  "engines": {
-    "node": ">=18"
+  "dependencies": {
+    "astro": "^4.16.0",
+    "@astrojs/cloudflare": "^11.2.0"
   },
   "devDependencies": {
-    "wrangler": "^4.85.0"
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "wrangler": "^3.78.0",
+    "typescript": "^5.6.0",
+    "sharp": "^0.33.5"
   }
 }

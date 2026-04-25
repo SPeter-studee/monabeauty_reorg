@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "services": "Services",
+    "shop": "Shop",
+    "blog": "Blog",
+    "gallery": "Gallery",
+    "reviews": "Reviews",
+    "about": "About",
+    "book": "Book"
+  },
+  "footer": {
+    "about": "Mónika Szabó, beauty professional in Vác, Hungary. Over 20 years of experience, personalised skincare.",
+    "shop": "Shop",
+    "allProducts": "All products",
+    "skincare": "Skincare",
+    "sales": "On sale",
+    "brands": "Brands",
+    "salon": "Salon",
+    "services": "Services",
+    "booking": "Book appointment",
+    "location": "Find us",
+    "gallery": "Gallery",
+    "info": "Information",
+    "about_link": "About",
+    "blog": "Blog",
+    "shipping": "Shipping",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies"
+  },
+  "home": {
+    "hero_kicker": "Mónika Szabó · Beauty professional",
+    "hero_title": "True beauty starts within",
+    "hero_blurb": "Over 20 years of experience, natural ingredients combined with modern technology — personalised skincare in Vác, Hungary, and online.",
+    "hero_cta_book": "Book appointment",
+    "hero_cta_shop": "Open shop"
+  }
+}

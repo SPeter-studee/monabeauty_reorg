@@ -1,0 +1,179 @@
+---
+// src/layouts/BaseLayout.astro — UPDATED v1.1
+// Sprint 2A: CookieConsent + ToastContainer + Cookie consent script gating
+
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import CookieConsent from "@/components/common/CookieConsent.astro";
+import ToastContainer from "@/components/common/ToastContainer.astro";
+
+import "@/styles/tokens.css";
+import "@/styles/reset.css";
+import "@/styles/layout.css";
+import "@/styles/components/buttons.css";
+import "@/styles/components/badges.css";
+import "@/styles/components/header.css";
+import "@/styles/components/footer.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  locale?: "hu" | "en";
+  canonical?: string;
+  hideNewsletter?: boolean;
+}
+
+const {
+  title,
+  description = "Szakmai ajánlással válogatott prémium kozmetikumok és személyre szabott bőrápolási kezelések — Szabó Mónika kozmetikus, Vác.",
+  image = "https://monastudio.hu/og-default.webp",
+  noindex = false,
+  locale = "hu",
+  canonical,
+} = Astro.props;
+
+const fullTitle = title.includes("Mona Studio") ? title : `${title} — Mona Studio`;
+const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="generator" content={Astro.generator}>
+
+  <title>{fullTitle}</title>
+  <meta name="description" content={description}>
+  {noindex && <meta name="robots" content="noindex, nofollow">}
+  <link rel="canonical" href={url}>
+
+  <!--
+    Open Graph + Twitter Card képek
+    -------------------------------
+    Alap útvonal: /og-default.webp (1200x630, public/og-default.jpg-ből generálva).
+    Az alap meta abszolút URL: https://monastudio.hu/og-default.webp (lásd image default prop fent).
+
+    Lánc:  raszter (.jpg/.png) a public/-ban
+        →  npm run images:webp   (sharp generálja a .webp variánsokat)
+        →  npm run build         (mindkettő a dist/ gyökerébe kerül)
+
+    Egyedi képet az `image` prop-pal lehet adni a BaseLayout-nak.
+    Példák:
+      <BaseLayout image={new URL("/blog/cikk-cover.webp", Astro.site).href} ... />
+      <BaseLayout image="https://monastudio.hu/blog/cikk-cover.webp" ... />
+  -->
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={fullTitle}>
+  <meta property="og:description" content={description}>
+  <meta property="og:image" content={image}>
+  <meta property="og:url" content={url}>
+  <meta property="og:locale" content={locale === "hu" ? "hu_HU" : "en_US"}>
+  <meta property="og:site_name" content="Mona Studio">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={fullTitle}>
+  <meta name="twitter:description" content={description}>
+  <meta name="twitter:image" content={image}>
+
+  <link rel="alternate" hreflang="hu" href={`https://monastudio.hu${Astro.url.pathname.replace(/^\/en/, "")}`}>
+  <link rel="alternate" hreflang="en" href={`https://monastudio.hu/en${Astro.url.pathname.replace(/^\/en/, "")}`}>
+  <link rel="alternate" hreflang="x-default" href={`https://monastudio.hu${Astro.url.pathname.replace(/^\/en/, "")}`}>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/webp" sizes="32x32" href="/favicon-32.webp">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&display=swap"
+        as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&display=swap"
+        rel="stylesheet">
+
+  <meta name="theme-color" content="#ebe5db">
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BeautySalon",
+    "name": "Mona Studio",
+    "image": image,
+    "telephone": "+36 20 913 0126",
+    "email": "info@monastudio.hu",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Bartók Béla utca 3.",
+      "addressLocality": "Vác",
+      "postalCode": "2600",
+      "addressCountry": "HU"
+    },
+    "url": "https://monastudio.hu",
+    "founder": { "@type": "Person", "name": "Szabó Mónika" },
+    "sameAs": [
+      "https://www.facebook.com/profile.php?id=61556935559229",
+      "https://www.instagram.com/monabeauty.vac/"
+    ]
+  })} />
+
+  <slot name="head" />
+</head>
+<body>
+  <a href="#main" class="sr-only">Ugrás a fő tartalomra</a>
+
+  <Header locale={locale} currentPath={Astro.url.pathname} />
+
+  <main id="main">
+    <slot />
+  </main>
+
+  <Footer locale={locale} />
+
+  <!-- Cookie consent banner + modal -->
+  <CookieConsent />
+
+  <!-- Toast notifications container -->
+  <ToastContainer />
+
+  <slot name="scripts" />
+
+  <!-- ── Analytics csak consent után ───────────────────────────────────── -->
+  <script>
+    import { isAllowed } from "@/lib/consent";
+
+    function loadAnalytics() {
+      if (!isAllowed("analytics")) return;
+      // Google Analytics 4 placeholder — cseréld le a saját GA ID-dre
+      // const gaScript = document.createElement("script");
+      // gaScript.async = true;
+      // gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX";
+      // document.head.appendChild(gaScript);
+      // window.dataLayer = window.dataLayer || [];
+      // function gtag(){ dataLayer.push(arguments); }
+      // gtag("js", new Date());
+      // gtag("config", "G-XXXXXXXXXX", { anonymize_ip: true });
+    }
+
+    function loadMarketing() {
+      if (!isAllowed("marketing")) return;
+      // Facebook Pixel placeholder — cseréld le a saját Pixel ID-dre
+      // !function(f,b,e,v,n,t,s) { ... };
+      // fbq("init", "YOUR_PIXEL_ID");
+      // fbq("track", "PageView");
+    }
+
+    loadAnalytics();
+    loadMarketing();
+
+    // Ha utólag elfogadta, töltsük be akkor is
+    window.addEventListener("mona-consent-change", () => {
+      loadAnalytics();
+      loadMarketing();
+    });
+  </script>
+</body>
+</html>

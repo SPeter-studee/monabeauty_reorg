@@ -1,0 +1,117 @@
+---
+// src/components/common/Footer.astro — UPDATED v1.1
+// Sprint 2A: Cookie beállítás link integrálva
+
+import { getTranslations } from "@/i18n/utils";
+
+interface Props {
+  locale?: "hu" | "en";
+}
+
+const { locale = "hu" } = Astro.props;
+const t = getTranslations(locale);
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+
+    <div class="site-footer__grid">
+
+      <div>
+        <p class="site-footer__brand-name">Mona Studio</p>
+        <p class="site-footer__brand-tagline">A szépség benned van</p>
+        <p class="site-footer__brand-blurb">{t.footer.about}</p>
+
+        <div class="site-footer__social">
+          <a href="https://www.facebook.com/profile.php?id=61556935559229"
+             target="_blank" rel="noopener" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/monabeauty.vac/"
+             target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke-linecap="round"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" stroke-linecap="round"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-linecap="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">{t.footer.shop}</p>
+        <div class="site-footer__col">
+          <a href="/webshop">{t.footer.allProducts}</a>
+          <a href="/webshop/arcapolas">{t.footer.skincare}</a>
+          <a href="/webshop/akciok">{t.footer.sales}</a>
+          <a href="/webshop/marka">{t.footer.brands}</a>
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">{t.footer.salon}</p>
+        <div class="site-footer__col">
+          <a href="/szolgaltatasok">{t.footer.services}</a>
+          <a href="/idopontfoglalas">{t.footer.booking}</a>
+          <a href="/szalon">{t.footer.location}</a>
+          <a href="/galeria">{t.footer.gallery}</a>
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">{t.footer.info}</p>
+        <div class="site-footer__col">
+          <a href="/rolam">{t.footer.about_link}</a>
+          <a href="/blog">{t.footer.blog}</a>
+          <a href="/szallitas">{t.footer.shipping}</a>
+          <a href="/kapcsolat">{t.footer.contact}</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="site-footer__bottom">
+      <p class="site-footer__copyright">
+        © {year} Mona Studio · 2600 Vác, Bartók Béla utca 3. · +36 20 913 0126
+      </p>
+      <div class="site-footer__legal">
+        <a href="/aszf">{t.footer.terms}</a>
+        <a href="/adatvedelem">{t.footer.privacy}</a>
+        <a href="/cookies">{t.footer.cookies}</a>
+        <button class="site-footer__cookie-btn" data-cookie-settings>
+          Cookie beállítások
+        </button>
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+<style>
+  .site-footer__cookie-btn {
+    background: none;
+    border: none;
+    color: var(--mona-bg);
+    opacity: 0.5;
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    min-height: auto;
+    transition: opacity var(--motion-fast) var(--ease);
+  }
+  .site-footer__cookie-btn:hover {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { openConsentManager } from "@/lib/consent";
+
+  document.querySelector<HTMLButtonElement>("[data-cookie-settings]")
+    ?.addEventListener("click", () => openConsentManager());
+</script>

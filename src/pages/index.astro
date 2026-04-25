@@ -1,0 +1,85 @@
+---
+// src/pages/index.astro
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getTranslations } from "@/i18n/utils";
+
+const t = getTranslations("hu");
+---
+
+<BaseLayout
+  title="Mona Studio — A szépség benned van"
+  description="Szabó Mónika kozmetikus webshopja és szalonja Vácon. Prémium kozmetikumok személyes ajánlással."
+>
+
+  <!-- Hero szekció -->
+  <section class="hero section">
+    <div class="container hero__inner">
+      <p class="eyebrow hero__kicker">{t.home.hero_kicker}</p>
+      <h1 class="hero__title">{t.home.hero_title}</h1>
+      <p class="hero__blurb">{t.home.hero_blurb}</p>
+      <div class="hero__actions">
+        <a href="/idopontfoglalas" class="btn btn-primary">{t.home.hero_cta_book}</a>
+        <a href="/webshop" class="btn btn-secondary">{t.home.hero_cta_shop}</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Példa: Mónika ajánlása -->
+  <section class="section">
+    <div class="container container-text">
+      <p class="eyebrow text-center mb-4">Mónika ajánlása</p>
+      <h2 class="text-center mb-6">A hónap kiemelt termékei</h2>
+      <p class="text-center text-secondary mb-8">
+        Több mint 20 év tapasztalat alatt megtanultam, mely márkák és termékek
+        adnak valódi eredményt. Az alábbi válogatás személyes ajánlásom alapján készült.
+      </p>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+.hero {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, var(--mona-bg) 0%, var(--mona-surface) 100%);
+}
+
+.hero__inner {
+  max-width: var(--container-text);
+  text-align: center;
+}
+
+.hero__kicker {
+  margin-bottom: var(--space-4);
+  color: var(--mona-text-3);
+}
+
+.hero__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(2.5rem, 8vw + 1rem, 4.5rem);
+  line-height: 1.05;
+  margin-bottom: var(--space-5);
+}
+
+.hero__blurb {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+  max-width: 560px;
+  margin: 0 auto var(--space-8);
+}
+
+.hero__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1024px) {
+  .hero { min-height: 80vh; }
+}
+</style>

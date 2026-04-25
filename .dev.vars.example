@@ -1,0 +1,35 @@
+# .dev.vars.example
+# Másold át .dev.vars néven, és töltsd ki a saját kulcsokkal.
+# Ez a fájl GIT-be NEM kerül (.gitignore-olva van).
+# Cloudflare Pages-ben ezeket a Settings → Environment Variables-ben kell beállítani éles ID-kkel.
+
+# ── Google OAuth ─────────────────────────────────────────────────────────
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# ── Email küldés (Resend) ───────────────────────────────────────────────
+RESEND_API_KEY=
+
+# ── Hírlevél (Mailchimp) ────────────────────────────────────────────────
+MAILCHIMP_API_KEY=
+MAILCHIMP_AUDIENCE_ID=
+MAILCHIMP_SERVER=
+
+# ── FoxPost ─────────────────────────────────────────────────────────────
+FOXPOST_USERNAME=
+FOXPOST_PASSWORD=
+FOXPOST_API_KEY=
+
+# ── GLS (későbbi sprintben) ─────────────────────────────────────────────
+GLS_USERNAME=
+GLS_PASSWORD=
+GLS_CLIENT_ID=
+
+# ── Setmore (foglalások) ────────────────────────────────────────────────
+SETMORE_REFRESH_TOKEN=
+
+# ── Anthropic (chatbot, AI termék import) ───────────────────────────────
+ANTHROPIC_API_KEY=
+
+# ── DeepL (fordítás) ────────────────────────────────────────────────────
+DEEPL_API_KEY=

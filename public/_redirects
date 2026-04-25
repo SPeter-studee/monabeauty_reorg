@@ -1,0 +1,10 @@
+# Cloudflare Pages redirect szabályok
+# Formátum: <forrás_url>  <cél_url>  <státuszkód>
+# https://developers.cloudflare.com/pages/configuration/redirects/
+
+# Régi URL-ekről új helyre (példák, módosítsd igény szerint)
+# /webshop.html       /webshop                301
+# /szolgaltatasok.html  /szolgaltatasok       301
+
+# Dev oldal — Google ne indexelje (megerősítés a HTTP fejlécen)
+# Ezt a /404 oldal headers fájlja kezeli, itt csak fallback

@@ -1,0 +1,140 @@
+---
+// src/components/shop/SaleCountdown.astro
+// Vegyes változat — a "variant" prop alapján csendes vagy hangos megjelenés
+
+interface Props {
+  /** ISO timestamp az akció végéről, pl. "2026-05-15T23:59:59" */
+  endsAt: string;
+  /** Csendes (kártyán) vagy hangos (termékoldalon) változat */
+  variant?: "compact" | "full";
+}
+
+const { endsAt, variant = "compact" } = Astro.props;
+---
+
+<div
+  class={`sale-countdown sale-countdown--${variant}`}
+  data-sale-countdown
+  data-ends-at={endsAt}
+  hidden
+>
+  <span class="sale-countdown__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10" stroke-linecap="round"/>
+      <polyline points="12 6 12 12 16 14" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+  <span class="sale-countdown__text" data-countdown-text></span>
+</div>
+
+<style>
+.sale-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mona-sans);
+  color: var(--mona-sale);
+}
+
+.sale-countdown[hidden] { display: none; }
+
+/* ── Csendes (kártyán) ───────────────────────────────────────────────── */
+.sale-countdown--compact {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.sale-countdown--compact .sale-countdown__icon {
+  display: none;
+}
+
+/* ── Hangosabb (termékoldalon) ───────────────────────────────────────── */
+.sale-countdown--full {
+  font-size: 13px;
+  padding: 10px 14px;
+  background: rgba(184, 90, 60, 0.08);
+  border-left: 2px solid var(--mona-sale);
+  border-radius: 0;
+}
+
+.sale-countdown--full[data-urgent="true"] {
+  animation: pulse-soft 2s var(--ease) infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { background: rgba(184, 90, 60, 0.08); }
+  50%      { background: rgba(184, 90, 60, 0.16); }
+}
+</style>
+
+<script>
+  type CountdownEl = HTMLElement & { dataset: { endsAt: string } };
+
+  const elements = Array.from(document.querySelectorAll<CountdownEl>("[data-sale-countdown]"));
+
+  function format(remaining: number): { text: string; urgent: boolean } | null {
+    if (remaining <= 0) return null;
+
+    const days = Math.floor(remaining / 86400000);
+    const hours = Math.floor((remaining % 86400000) / 3600000);
+    const minutes = Math.floor((remaining % 3600000) / 60000);
+
+    // Több mint 7 nap: ne mutassuk (nincs sürgősség)
+    if (days > 7) return null;
+
+    // 1-7 nap: "Még 3 nap, 14 óra"
+    if (days >= 1) {
+      const text = hours > 0
+        ? `Akciós ár — még ${days} nap, ${hours} óra`
+        : `Akciós ár — még ${days} nap`;
+      return { text, urgent: false };
+    }
+
+    // < 24 óra: "Már csak 14 óra"
+    if (hours >= 1) {
+      const text = `Már csak ${hours} óra ${minutes} perc`;
+      return { text, urgent: hours < 6 };
+    }
+
+    // < 1 óra: "Már csak 47 perc" (sürgős)
+    return {
+      text: `Már csak ${minutes} perc!`,
+      urgent: true,
+    };
+  }
+
+  function updateAll() {
+    const now = Date.now();
+    for (const el of elements) {
+      const endsAt = el.dataset.endsAt;
+      if (!endsAt) continue;
+      const remaining = new Date(endsAt).getTime() - now;
+      const formatted = format(remaining);
+      const textEl = el.querySelector<HTMLSpanElement>("[data-countdown-text]");
+
+      if (!formatted || !textEl) {
+        el.setAttribute("hidden", "");
+        continue;
+      }
+
+      el.removeAttribute("hidden");
+      textEl.textContent = formatted.text;
+      if (formatted.urgent) {
+        el.setAttribute("data-urgent", "true");
+      } else {
+        el.removeAttribute("data-urgent");
+      }
+    }
+  }
+
+  // Csak akkor frissítsünk, ha az oldal látható (battery / CPU spórolás)
+  if (elements.length > 0) {
+    updateAll();
+    // Compact (kártya): percenként; Full: percenként is, de visszaszámol
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        updateAll();
+      }
+    }, 60_000);
+  }
+</script>
