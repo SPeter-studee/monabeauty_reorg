@@ -4,8 +4,12 @@
   "version": "0.1.0",
   "description": "Mona Studio — tiszta reorganizációs projekt (Pages + Functions)",
   "scripts": {
-    "deploy": "npx wrangler pages deploy . --project-name monabeauty_reorg --commit-dirty=true",
-    "deploy:preview": "npx wrangler pages deploy . --project-name monabeauty_reorg"
+    "build": "node -e \"console.log('static+functions; no bundle')\"",
+    "deploy": "npx wrangler pages deploy . --project-name monabeauty2 --commit-dirty=true",
+    "deploy:preview": "npx wrangler pages deploy . --project-name monabeauty2"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
     "wrangler": "^4.85.0"
