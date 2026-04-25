@@ -1,0 +1,13 @@
+{
+  "name": "monabeauty-reorg",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mona Studio — tiszta reorganizációs projekt (Pages + Functions)",
+  "scripts": {
+    "deploy": "npx wrangler pages deploy . --project-name monabeauty_reorg --commit-dirty=true",
+    "deploy:preview": "npx wrangler pages deploy . --project-name monabeauty_reorg"
+  },
+  "devDependencies": {
+    "wrangler": "^4.85.0"
+  }
+}

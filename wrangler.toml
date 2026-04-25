@@ -1,0 +1,16 @@
+# Cloudflare Pages — lokális wrangler / deploy.
+# D1 és KV bindingeket a Cloudflare Dashboardon is be kell kötni a Pages projekthez,
+# majd ide másold a bindingeket a régi monabeuty wrangler.toml-ból, ha ugyanazt az erőforrást használod.
+name = "monabeauty_reorg"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "."
+
+# Példa — töröld vagy egészítsd ki deploy előtt:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "your-d1-name"
+# database_id = "paste-uuid-from-dashboard"
+#
+# [[kv_namespaces]]
+# binding = "CONTENT"
+# id = "paste-kv-id"
