@@ -708,15 +708,142 @@ git push
 
 ---
 
-## ⏳ Sprint 3.2 (2. rész) — Webshop oldalak
+## ✅ Sprint 3.2 (2. rész) — Webshop oldalak
+
+**Időszak**: 2026-04-26  
+**Cél**: Webshop frontend — hub, kategória, márka oldalak ProductCard komponenssel és szűrőkkel.
+
+### Mit építettünk
+
+**Új komponensek** (`src/components/shop/`):
+- **`ProductCard.astro`** — termék kártya:
+  - Brand C tervezés: tört bézs alap, finom borderek, hover effekt (translateY + scale a képen)
+  - Badge-ek: akció (`−15%` patina sale szín), új (`Új` zöld), Mónika ajánlja (warm arany)
+  - 4:5 aspektrátió kép (object-fit: contain — a koreai termékek hosszúkás flakónjai kontextusban)
+  - 3 soros line-clamp a `short_description`-ra
+  - Akciós ár: piros + áthúzott eredeti
+  - Készlet státusz: csak ha low/out of stock
+  - Méret jelölő (50 ml, 25 g)
+- **`FilterPanel.astro`** — szűrő oldalsáv:
+  - Kategória + Márka lista
+  - Ár szűrő (min/max input + "Alkalmaz" gomb)
+  - Rendezés select (auto-submit)
+  - Sticky pozíció desktop-on, mobile-on statikus
+  - **Hide opciók**: `hideCategoryFilter` (kategória oldalon), `hideBrandFilter` (márka oldalon)
+  - **URL state**: minden szűrő search params-ban — canonical-friendly és megosztható
+
+**Új oldalak**:
+- **`/webshop`** (hub) — 4 szekció:
+  - Akciós termékek (csak ha van legalább 1)
+  - Kiemelt termékek ("Mónika ajánlja — Kezdő válogatás")
+  - Kategória tile-ok (5 kategória: arclemosok, tonikok, szerumok, arckremek, csomagok)
+  - Márka tile-ok (most csak KRX)
+  - Szállítási info CTA blokk (személyes átvétel + FoxPost magyarázat)
+- **`/webshop/[kategoria]`** — kategória oldal:
+  - Bal: FilterPanel (kategóriát rejtve)
+  - Jobb: ProductCard grid + lapozás (24/oldal)
+  - Üres állapot kezelés
+- **`/webshop/markak/[marka]`** — márka oldal:
+  - Márka bemutatás szekció (a KRX leírás markdown bold-okkal)
+  - Bal: FilterPanel (márkát rejtve, kategóriát mutatva)
+  - Jobb: ProductCard grid + lapozás
+
+**Új API**:
+- **`GET /api/products`** — szűrésekkel + lapozással:
+  - Query params: `kategoria`, `marka`, `ar`, `sort`, `keres`, `akcios`, `page`, `per_page`
+  - Validáció: max 100 termék/oldal, min 1
+  - Válasz: `{ products, total, page, perPage, totalPages }`
+
+### Döntések
+
+- **URL-állapot a szűrőkhöz** — nem JS-driven kliens oldal, hanem klasszikus form submit + URL params:
+  - **Előny**: canonical, megosztható, browser back/forward működik, SEO-barát, JS nélkül is működik
+  - **Hátrány**: minden szűrésnél új lapbetöltés
+  - **Kompromisszum**: ár szűrőhöz "Alkalmaz" gomb (ne triggerelje minden gépeléskor); a sort dropdown auto-submit
+- **`object-fit: contain`** + padding a termék kártyákon — a koreai termékek hosszúkás flakónjai így kontextusban jelennek meg
+- **Mónika ajánlja badge nem mutatkozik ha akció vagy új jelölés is van** — vizuális zaj minimalizálás
+- **Kategória oldalon kategória szűrő rejtve** (és márka oldalon márka szűrő) — már szűrtünk arra, de a másikra szabadon szűrhet
+- **24 termék/oldal** — annyi mint amennyi egy néző session alatt áttekinthető. Ha valaha 50+ termék lesz, érdemes lehet 12-re csökkenteni.
+
+### Teszt URL-ek (deploy után)
+
+```
+/webshop                                    — hub
+/webshop/szerumok                           — Szérumok kategória (4 termék)
+/webshop/szerumok?marka=krx                 — Szérumok + KRX (még mindig 4)
+/webshop/szerumok?ar=5000-10000             — Szérumok + ár szűrés
+/webshop/szerumok?sort=price_asc            — Szérumok + ár növekvő
+/webshop/markak/krx                         — KRX márka (8 termék)
+/webshop/markak/krx?kategoria=arckremek     — KRX + arckrémek (2 termék)
+/api/products                               — összes 8 termék JSON
+/api/products?akcios=1                      — csak akciós termékek
+```
+
+### Cursor teendő
+
+```powershell
+# 1. Behúzás
+# 2. Ellenőrzés: D1-ben vannak-e termékek?
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT COUNT(*) FROM products"
+# Ha nincs 8 → npm run db:reseed
+
+# 3. Lokális teszt (KÖTELEZŐ a deploy előtt — ellenőrizni hogy nincs SSR error):
+npm run dev
+# Nyisd meg: http://localhost:4321/webshop
+# Kattints kategóriákra, márkára, próbáld a szűrőket
+
+# 4. Build:
+npm run build
+# Ha sikeres → deploy:
+npm run deploy
+
+# 5. Commit
+git add -A
+git commit -m "Sprint 3.2 (2. rész) — Webshop oldalak v0.6.4
+
+- ProductCard komponens (4:5 arány, 3 badge típus, akciós ár, készlet)
+- FilterPanel (kategória + márka + ár csúszka + rendezés, URL state)
+- /webshop hub (akciós + kiemelt + kategóriák + márkák + szállítási info)
+- /webshop/[kategoria] szűrőkkel + lapozással
+- /webshop/markak/[marka] márka bemutatással + szűrőkkel
+- /api/products GET endpoint (szűrés, lapozás, validáció)"
+git push
+```
+
+### Fájlok (új)
+- `src/components/shop/ProductCard.astro` (új)
+- `src/components/shop/FilterPanel.astro` (új)
+- `src/pages/api/products/index.ts` (új)
+- `src/pages/webshop/index.astro` (új)
+- `src/pages/webshop/[kategoria].astro` (új)
+- `src/pages/webshop/markak/[marka].astro` (új)
+- `package.json` — verzió 0.6.3 → 0.6.4
+
+### Sprint 3.3 előtt
+
+A frontend "böngészés" rész kész — most jön a **vásárlási folyamat**:
+- Termékoldal (`/webshop/termek/[slug]`) — galéria, részletes leírás, INCI, használat, kosárba gomb
+- Kosár drawer (oldalsó panel)
+- localStorage-ban kosár állapot (vendég módban)
+- Mennyiség módosítás, törlés
+- "Tovább a pénztárhoz" CTA
+
+---
+
+## ⏳ Sprint 3.3 — Termékoldal + kosár drawer
 
 **Tervezett építés**:
-- `/webshop` hub oldal (kiemelt termékek, kategóriák tile, márka kártya)
-- `/webshop/[kategoria]` oldal szűrőkkel (kategória, márka, ár csúszka)
-- `/webshop/markak/[marka]` oldal
-- `ProductCard` komponens (kártyán a `short_description`)
-- `CategoryFilter`, `BrandFilter`, `PriceRange`, `SortDropdown` komponensek
-- `/api/products` GET endpoint
+- `/webshop/termek/[slug]` — egyedi termékoldal:
+  - Kép galéria (ha több kép van)
+  - Teljes gyártói leírás markdown formázással
+  - INCI lista
+  - Használati útmutató
+  - Mónika ajánlása blokk (kiemelve)
+  - Kapcsolódó termékek (ugyanaz a kategória)
+  - Kosárba gomb (mennyiség választóval)
+- `CartDrawer` komponens — oldalsó panel, mobil-barát
+- localStorage-alapú kosár (cart.ts library)
+- `/kosar` full page nézet (a drawer mellett)
 
 ---
 
@@ -993,6 +1120,7 @@ A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik
 | Sprint 3.2 (1. rész) | 2026-04-26 | ✅ Kész | KRX termékek + Footer Maps |
 | Sprint 3.2 (1. fix) | 2026-04-26 | ✅ Kész | sitemap+seed fix + képek |
 | Hírlevél újrapozícionálás | 2026-04-26 | ✅ Kész | "Mónika havi naplója" |
+| Sprint 3.2 (2. rész) | 2026-04-26 | ✅ Kész | Webshop hub + kategória + márka |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

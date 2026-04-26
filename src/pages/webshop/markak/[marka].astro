@@ -1,0 +1,327 @@
+---
+// src/pages/webshop/markak/[marka].astro
+// Márka oldal — pl. /webshop/markak/krx
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import ProductCard from "@/components/shop/ProductCard.astro";
+import FilterPanel from "@/components/shop/FilterPanel.astro";
+import {
+  listProducts,
+  getBrand,
+  listCategories,
+  listBrands,
+  getPriceRange,
+} from "@/lib/products";
+import type { ProductFilter, ProductSort } from "@/lib/types/shop";
+
+const env = Astro.locals.runtime.env;
+const db = (env as any).DB;
+
+const { marka } = Astro.params;
+const params = Astro.url.searchParams;
+
+const brand = await getBrand(db, marka!);
+
+if (!brand) {
+  return Astro.redirect("/webshop", 302);
+}
+
+// Szűrők
+const filter: ProductFilter = {
+  brandSlug: marka!,
+  categorySlug: params.get("kategoria") ?? undefined,
+};
+
+const arParam = params.get("ar");
+if (arParam) {
+  const [minStr, maxStr] = arParam.split("-");
+  const min = parseInt(minStr, 10);
+  const max = parseInt(maxStr, 10);
+  if (!isNaN(min) && !isNaN(max) && min < max) {
+    filter.minPriceFt = min;
+    filter.maxPriceFt = max;
+  }
+}
+
+const sortParam = params.get("sort") as ProductSort | null;
+filter.sortBy = sortParam ?? "recommended";
+
+const pageParam = parseInt(params.get("page") ?? "1", 10);
+filter.page = Math.max(1, isNaN(pageParam) ? 1 : pageParam);
+filter.perPage = 24;
+
+// Adatok
+const [productsResult, allCategories, allBrands, priceRange] = await Promise.all([
+  listProducts(db, filter),
+  listCategories(db),
+  listBrands(db),
+  getPriceRange(db, { brandSlug: marka! }),
+]);
+
+const { products, total } = productsResult;
+const totalPages = Math.ceil(total / filter.perPage);
+
+const metaTitle = `${brand.name} termékek — Webshop | Mona Studio`;
+const metaDescription = brand.description?.split(".")[0]
+  ?? `${brand.name} termékek a Mona Studio webshopjában — szakmai ajánlással.`;
+
+function pageUrl(p: number): string {
+  const u = new URL(Astro.url);
+  if (p === 1) {
+    u.searchParams.delete("page");
+  } else {
+    u.searchParams.set("page", String(p));
+  }
+  return u.pathname + (u.searchParams.toString() ? "?" + u.searchParams.toString() : "");
+}
+---
+
+<BaseLayout
+  title={metaTitle}
+  description={metaDescription}
+  canonical={`https://monastudio.hu/webshop/markak/${marka}`}
+>
+  <PageHero
+    title={brand.name}
+    description={brand.country ? `${brand.country} — szakmai ajánlással` : undefined}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Webshop", href: "/webshop" },
+      { label: brand.name }
+    ]}
+  />
+
+  {/* Márka bemutatás (ha van részletes leírás) */}
+  {brand.description && (
+    <section class="brand-intro section-sm">
+      <div class="container brand-intro__inner">
+        <div class="brand-intro__text" set:html={brand.description.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")}>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="webshop-list section">
+    <div class="container">
+      <div class="webshop-list__layout">
+        {/* ─── Bal oldali szűrő ──────────────── */}
+        <FilterPanel
+          categories={allCategories}
+          brands={allBrands}
+          priceRange={priceRange}
+          activeFilters={{
+            categorySlug: filter.categorySlug,
+            brandSlug: filter.brandSlug,
+            minPriceFt: filter.minPriceFt,
+            maxPriceFt: filter.maxPriceFt,
+            sortBy: filter.sortBy,
+          }}
+          baseUrl={`/webshop/markak/${marka}`}
+          hideBrandFilter
+        />
+
+        {/* ─── Jobb oldali termék lista ────────── */}
+        <div class="webshop-list__main">
+          <div class="webshop-list__meta">
+            <p class="webshop-list__count">
+              {total === 0 ? (
+                <span>Nincs találat</span>
+              ) : total === 1 ? (
+                <span><strong>1</strong> termék</span>
+              ) : (
+                <span><strong>{total}</strong> termék</span>
+              )}
+            </p>
+          </div>
+
+          {products.length > 0 ? (
+            <>
+              <div class="product-grid">
+                {products.map(product => (
+                  <ProductCard product={product} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <nav class="pagination" aria-label="Lapozás">
+                  {filter.page! > 1 && (
+                    <a href={pageUrl(filter.page! - 1)} class="pagination__link" rel="prev">
+                      ← Előző
+                    </a>
+                  )}
+                  <span class="pagination__current">
+                    {filter.page} / {totalPages}
+                  </span>
+                  {filter.page! < totalPages && (
+                    <a href={pageUrl(filter.page! + 1)} class="pagination__link" rel="next">
+                      Következő →
+                    </a>
+                  )}
+                </nav>
+              )}
+            </>
+          ) : (
+            <div class="webshop-list__empty">
+              <p class="webshop-list__empty-title">Nincs találat a megadott szűrőkkel</p>
+              <p class="webshop-list__empty-text">
+                Próbálj kevesebb szűrőt — vagy nézd meg a <a href={`/webshop/markak/${marka}`}>{brand.name} összes termékét</a>.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.brand-intro {
+  background: var(--mona-surface);
+  border-block: 0.5px solid var(--mona-border);
+  padding-block: var(--space-6);
+}
+
+.brand-intro__inner {
+  max-width: var(--container-text);
+  margin-inline: auto;
+}
+
+.brand-intro__text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+}
+
+.brand-intro__text strong {
+  color: var(--mona-text);
+  font-weight: 600;
+}
+
+.webshop-list {
+  padding-block: var(--space-8);
+}
+
+.webshop-list__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .webshop-list__layout {
+    grid-template-columns: 260px 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.webshop-list__main {
+  min-width: 0;
+}
+
+.webshop-list__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.webshop-list__count {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.webshop-list__count strong {
+  color: var(--mona-text);
+  font-weight: 600;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.pagination__link {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-warm);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  transition: background var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pagination__link:hover {
+  background: var(--mona-elevated);
+  border-color: var(--mona-warm);
+}
+
+.pagination__current {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-3);
+}
+
+.webshop-list__empty {
+  text-align: center;
+  padding: var(--space-10) var(--space-5);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+}
+
+.webshop-list__empty-title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-3);
+}
+
+.webshop-list__empty-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.webshop-list__empty-text a {
+  color: var(--mona-warm);
+  border-bottom: 0.5px solid var(--mona-warm);
+  text-decoration: none;
+}
+</style>

@@ -1,0 +1,455 @@
+---
+// src/components/shop/FilterPanel.astro
+// Webshop szűrők — kategória, márka, ár csúszka, rendezés
+//
+// SSR módban URL search params-ban tárol minden szűrőt:
+//   ?kategoria=szerumok&marka=krx&ar=5000-15000&sort=price_asc
+//
+// Ez canonical-friendly és megosztható.
+
+import type { Category, Brand, ProductSort } from "@/lib/types/shop";
+
+interface Props {
+  categories: Category[];
+  brands: Brand[];
+  /** Min/max ár a slider határaihoz */
+  priceRange: { min: number; max: number };
+  /** Aktív szűrők — URL params alapján */
+  activeFilters: {
+    categorySlug?: string;
+    brandSlug?: string;
+    minPriceFt?: number;
+    maxPriceFt?: number;
+    sortBy?: ProductSort;
+  };
+  /** Az URL alappont (pl. "/webshop" vagy "/webshop/szerumok") */
+  baseUrl: string;
+  /** Ha szűrünk egy kategóriára, ne jelenjen meg a kategória szűrő */
+  hideCategoryFilter?: boolean;
+  /** Ha szűrünk egy márkára, ne jelenjen meg a márka szűrő */
+  hideBrandFilter?: boolean;
+}
+
+const {
+  categories,
+  brands,
+  priceRange,
+  activeFilters,
+  baseUrl,
+  hideCategoryFilter = false,
+  hideBrandFilter = false,
+} = Astro.props;
+
+// Helper — URL építés a meglévő params megőrzésével
+function buildUrl(overrides: Record<string, string | undefined>): string {
+  const params = new URLSearchParams();
+
+  // Meglévő params
+  if (activeFilters.categorySlug && !hideCategoryFilter) {
+    params.set("kategoria", activeFilters.categorySlug);
+  }
+  if (activeFilters.brandSlug && !hideBrandFilter) {
+    params.set("marka", activeFilters.brandSlug);
+  }
+  if (activeFilters.minPriceFt && activeFilters.maxPriceFt) {
+    params.set("ar", `${activeFilters.minPriceFt}-${activeFilters.maxPriceFt}`);
+  }
+  if (activeFilters.sortBy && activeFilters.sortBy !== "recommended") {
+    params.set("sort", activeFilters.sortBy);
+  }
+
+  // Felülíró params alkalmazása
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value === undefined || value === "") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+  }
+
+  const queryString = params.toString();
+  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+}
+
+const sortOptions: Array<{ value: ProductSort; label: string }> = [
+  { value: "recommended", label: "Mónika ajánlja" },
+  { value: "newest", label: "Legújabb először" },
+  { value: "price_asc", label: "Ár: növekvő" },
+  { value: "price_desc", label: "Ár: csökkenő" },
+  { value: "name_asc", label: "Név: A-Z" },
+];
+
+// Aktív szűrő-számláló (a "Szűrők törlése" gombhoz)
+const hasActiveFilters =
+  (!hideCategoryFilter && !!activeFilters.categorySlug) ||
+  (!hideBrandFilter && !!activeFilters.brandSlug) ||
+  (!!activeFilters.minPriceFt && activeFilters.minPriceFt > priceRange.min) ||
+  (!!activeFilters.maxPriceFt && activeFilters.maxPriceFt < priceRange.max);
+---
+
+<aside class="filter-panel" data-filter-panel>
+  <header class="filter-panel__header">
+    <h2 class="filter-panel__title">Szűrők</h2>
+    {hasActiveFilters && (
+      <a href={baseUrl} class="filter-panel__reset">Szűrők törlése</a>
+    )}
+  </header>
+
+  <form class="filter-panel__form" method="get" data-filter-form>
+    {/* ─── Kategória szűrő ────────────────────────────── */}
+    {!hideCategoryFilter && categories.length > 0 && (
+      <fieldset class="filter-group">
+        <legend class="filter-group__title">Kategória</legend>
+        <ul class="filter-group__options">
+          <li>
+            <a
+              href={buildUrl({ kategoria: undefined })}
+              class:list={["filter-option", { "filter-option--active": !activeFilters.categorySlug }]}
+            >
+              Mind
+            </a>
+          </li>
+          {categories.map(cat => (
+            <li>
+              <a
+                href={buildUrl({ kategoria: cat.slug })}
+                class:list={["filter-option", { "filter-option--active": activeFilters.categorySlug === cat.slug }]}
+              >
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+    )}
+
+    {/* ─── Márka szűrő ────────────────────────────────── */}
+    {!hideBrandFilter && brands.length > 0 && (
+      <fieldset class="filter-group">
+        <legend class="filter-group__title">Márka</legend>
+        <ul class="filter-group__options">
+          <li>
+            <a
+              href={buildUrl({ marka: undefined })}
+              class:list={["filter-option", { "filter-option--active": !activeFilters.brandSlug }]}
+            >
+              Mind
+            </a>
+          </li>
+          {brands.map(brand => (
+            <li>
+              <a
+                href={buildUrl({ marka: brand.slug })}
+                class:list={["filter-option", { "filter-option--active": activeFilters.brandSlug === brand.slug }]}
+              >
+                {brand.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+    )}
+
+    {/* ─── Ár szűrő ───────────────────────────────────── */}
+    <fieldset class="filter-group">
+      <legend class="filter-group__title">Ár</legend>
+      <div class="filter-price">
+        <div class="filter-price__inputs">
+          <label class="filter-price__field">
+            <span class="filter-price__label">Min</span>
+            <input
+              type="number"
+              name="ar_min"
+              min={priceRange.min}
+              max={priceRange.max}
+              step="500"
+              value={activeFilters.minPriceFt ?? priceRange.min}
+              data-filter-price-min
+            />
+            <span class="filter-price__suffix">Ft</span>
+          </label>
+          <span class="filter-price__sep" aria-hidden="true">—</span>
+          <label class="filter-price__field">
+            <span class="filter-price__label">Max</span>
+            <input
+              type="number"
+              name="ar_max"
+              min={priceRange.min}
+              max={priceRange.max}
+              step="500"
+              value={activeFilters.maxPriceFt ?? priceRange.max}
+              data-filter-price-max
+            />
+            <span class="filter-price__suffix">Ft</span>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-secondary filter-price__apply">
+          Alkalmaz
+        </button>
+      </div>
+    </fieldset>
+
+    {/* ─── Rendezés ───────────────────────────────────── */}
+    <fieldset class="filter-group">
+      <legend class="filter-group__title">Rendezés</legend>
+      <select
+        name="sort"
+        class="filter-sort"
+        data-filter-sort
+      >
+        {sortOptions.map(opt => (
+          <option
+            value={opt.value}
+            selected={activeFilters.sortBy === opt.value || (!activeFilters.sortBy && opt.value === "recommended")}
+          >{opt.label}</option>
+        ))}
+      </select>
+    </fieldset>
+  </form>
+</aside>
+
+<script>
+  // Auto-submit when sort changes (only sort needs auto-submit; price has explicit "Apply")
+  const form = document.querySelector<HTMLFormElement>("[data-filter-form]");
+  const sortSelect = document.querySelector<HTMLSelectElement>("[data-filter-sort]");
+
+  sortSelect?.addEventListener("change", () => {
+    // Build URL with new sort value
+    const url = new URL(window.location.href);
+    if (sortSelect.value && sortSelect.value !== "recommended") {
+      url.searchParams.set("sort", sortSelect.value);
+    } else {
+      url.searchParams.delete("sort");
+    }
+    window.location.href = url.toString();
+  });
+
+  // Price form submit handler — convert ar_min/ar_max to "ar=min-max"
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const minInput = form.querySelector<HTMLInputElement>("[data-filter-price-min]");
+    const maxInput = form.querySelector<HTMLInputElement>("[data-filter-price-max]");
+
+    const url = new URL(window.location.href);
+    const min = minInput?.value;
+    const max = maxInput?.value;
+
+    if (min && max) {
+      url.searchParams.set("ar", `${min}-${max}`);
+    } else {
+      url.searchParams.delete("ar");
+    }
+    window.location.href = url.toString();
+  });
+</script>
+
+<style>
+.filter-panel {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  padding: var(--space-5);
+  position: sticky;
+  top: calc(var(--header-height, 80px) + var(--space-4));
+  align-self: start;
+}
+
+.filter-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.filter-panel__title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.filter-panel__reset {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-warm);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--mona-warm);
+  padding-bottom: 1px;
+  transition: color var(--motion-fast) var(--ease);
+}
+
+.filter-panel__reset:hover {
+  color: var(--mona-sale);
+  border-bottom-color: var(--mona-sale);
+}
+
+.filter-panel__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ─── Filter group ───────────────────────────────────── */
+.filter-group {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.filter-group__title {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+
+.filter-group__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.filter-option {
+  display: block;
+  padding: 6px 10px;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  text-decoration: none;
+  border-radius: 1px;
+  transition: background var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease);
+}
+
+.filter-option:hover {
+  background: var(--mona-bg);
+  color: var(--mona-text);
+}
+
+.filter-option--active {
+  background: var(--mona-nature);
+  color: var(--mona-elevated);
+  font-weight: 500;
+}
+
+.filter-option--active:hover {
+  background: var(--mona-nature);
+  color: var(--mona-elevated);
+}
+
+/* ─── Ár szűrő ───────────────────────────────────────── */
+.filter-price {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.filter-price__inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.filter-price__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  position: relative;
+}
+
+.filter-price__label {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  color: var(--mona-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filter-price__field input {
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  padding: 8px 36px 8px 10px;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text);
+  width: 100%;
+  min-height: 36px;
+}
+
+.filter-price__field input:focus {
+  outline: none;
+  border-color: var(--mona-nature);
+}
+
+/* Spinner buttons elrejtése a böngészők alapértelmezésben */
+.filter-price__field input[type="number"]::-webkit-inner-spin-button,
+.filter-price__field input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.filter-price__field input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.filter-price__suffix {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  pointer-events: none;
+}
+
+.filter-price__sep {
+  color: var(--mona-text-3);
+  padding-bottom: 8px;
+}
+
+.filter-price__apply {
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 6px 14px;
+  min-height: 32px;
+}
+
+/* ─── Sort dropdown ──────────────────────────────────── */
+.filter-sort {
+  width: 100%;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  padding: 8px 10px;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text);
+  min-height: 36px;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.filter-sort:focus {
+  outline: none;
+  border-color: var(--mona-nature);
+}
+
+/* ─── Reszponzív (mobile collapsible) ─────────────────── */
+@media (max-width: 1023px) {
+  .filter-panel {
+    position: static;
+  }
+
+  /* TODO Sprint 3.3: mobile drawer / accordion megoldás */
+}
+</style>

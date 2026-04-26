@@ -1,0 +1,409 @@
+---
+// src/pages/webshop/index.astro
+// Webshop hub oldal — kiemelt termékek + kategória/márka tile-ok
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import ProductCard from "@/components/shop/ProductCard.astro";
+import {
+  listFeaturedProducts,
+  listOnSaleProducts,
+  listCategories,
+  listBrands,
+} from "@/lib/products";
+
+const env = Astro.locals.runtime.env;
+const db = (env as any).DB;
+
+// Adatok lekérdezése a hub oldalhoz — párhuzamosan
+const [featuredProducts, onSaleProducts, categories, brands] = await Promise.all([
+  listFeaturedProducts(db, 4),
+  listOnSaleProducts(db, 4),
+  listCategories(db),
+  listBrands(db),
+]);
+
+// Csak akkor mutatjuk az "Akciós" szekciót, ha van legalább 1 akciós termék
+const showSaleSection = onSaleProducts.length > 0;
+---
+
+<BaseLayout
+  title="Webshop — Mona Studio"
+  description="Szakmai ajánlással válogatott prémium kozmetikumok — koreai KRX termékek érzékeny és mikrobiom-támogatott bőrápoláshoz. 20.000 Ft fölött ingyenes szállítás."
+>
+  <PageHero
+    title="Webshop"
+    description="Szakmai ajánlással válogatott prémium kozmetikumok — Mónika személyesen választja ki amit forgalmaz, a kezeléseiben is használt termékekre építve."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Webshop" }
+    ]}
+  />
+
+  {/* ─── Akciós termékek (ha van) ──────────────────────────────────── */}
+  {showSaleSection && (
+    <section class="webshop-section section">
+      <div class="container">
+        <header class="webshop-section__header">
+          <p class="eyebrow webshop-section__eyebrow">Most akcióban</p>
+          <h2 class="webshop-section__title">Időszakos kedvezmény</h2>
+        </header>
+
+        <div class="product-grid">
+          {onSaleProducts.map(product => (
+            <ProductCard product={product} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ─── Kiemelt termékek ──────────────────────────────────────────── */}
+  {featuredProducts.length > 0 && (
+    <section class="webshop-section section">
+      <div class="container">
+        <header class="webshop-section__header">
+          <p class="eyebrow webshop-section__eyebrow">Mónika ajánlja</p>
+          <h2 class="webshop-section__title">Kezdő válogatás</h2>
+          <p class="webshop-section__lead">
+            Ezekkel a termékekkel ajánlom kezdeni — bőrtípusra szabott alapcsomag,
+            ami a kezelések után is otthoni rutinba épül be.
+          </p>
+        </header>
+
+        <div class="product-grid">
+          {featuredProducts.map(product => (
+            <ProductCard product={product} featured />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ─── Kategóriák ─────────────────────────────────────────────────── */}
+  <section class="webshop-section section webshop-section--bg" id="webshop-kategoriak">
+    <div class="container">
+      <header class="webshop-section__header">
+        <p class="eyebrow webshop-section__eyebrow">Termékkategóriák</p>
+        <h2 class="webshop-section__title">Böngéssz kategória szerint</h2>
+      </header>
+
+      <div class="category-grid">
+        {categories.map(cat => (
+          <a href={`/webshop/${cat.slug}`} class="category-tile">
+            <h3 class="category-tile__name">{cat.name}</h3>
+            {cat.description && (
+              <p class="category-tile__description">{cat.description}</p>
+            )}
+            <span class="category-tile__cta">
+              Megnézem →
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* ─── Márkák ─────────────────────────────────────────────────────── */}
+  {brands.length > 0 && (
+    <section class="webshop-section section" id="webshop-markak">
+      <div class="container">
+        <header class="webshop-section__header">
+          <p class="eyebrow webshop-section__eyebrow">Márkáink</p>
+          <h2 class="webshop-section__title">Szakmai márkák</h2>
+          <p class="webshop-section__lead">
+            Csak olyan márkákat forgalmazok, amiket a szalonomban is használok.
+            Minden márkát Mónika személyesen választott, és a vendégeivel kipróbált.
+          </p>
+        </header>
+
+        <div class="brand-grid">
+          {brands.map(brand => (
+            <a href={`/webshop/markak/${brand.slug}`} class="brand-tile">
+              <h3 class="brand-tile__name">{brand.name}</h3>
+              {brand.country && (
+                <p class="brand-tile__country">{brand.country}</p>
+              )}
+              {brand.description && (
+                <p class="brand-tile__description" set:html={brand.description.split("\n")[0]} />
+              )}
+              <span class="brand-tile__cta">
+                Termékek →
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ─── Szállítási info / CTA ──────────────────────────────────────── */}
+  <section class="shipping-info section">
+    <div class="container shipping-info__inner">
+      <div class="shipping-info__item">
+        <h3 class="shipping-info__title">Személyes átvétel Vácon</h3>
+        <p class="shipping-info__description">
+          Ingyen — a szalonomban (2600 Vác, Zrínyi Miklós u. 3.). Egy kávé mellett
+          átbeszélhetjük amit kell, és bármikor segíthetek a használatban.
+        </p>
+      </div>
+      <div class="shipping-info__item">
+        <h3 class="shipping-info__title">FoxPost csomagautomata</h3>
+        <p class="shipping-info__description">
+          1.990 Ft országosan. <strong>20.000 Ft fölött ingyenes</strong> —
+          ennél több gyakran egy teljes vonal (lemosó + tonik + szérum + krém).
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.webshop-section {
+  padding-block: var(--space-10);
+}
+
+.webshop-section--bg {
+  background: var(--mona-surface);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.webshop-section__header {
+  text-align: center;
+  max-width: var(--container-text);
+  margin-inline: auto;
+  margin-bottom: var(--space-8);
+}
+
+.webshop-section__eyebrow {
+  color: var(--mona-warm);
+  margin-bottom: var(--space-2);
+}
+
+.webshop-section__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-3);
+}
+
+.webshop-section__lead {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+/* ─── Product grid (kiemelt + akciós) ───────────────── */
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* ─── Category grid ─────────────────────────────────── */
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+}
+
+@media (min-width: 1280px) {
+  .category-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.category-tile {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  border-radius: 2px;
+  padding: var(--space-5);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color var(--motion-base) var(--ease),
+              transform var(--motion-base) var(--ease);
+}
+
+@media (hover: hover) {
+  .category-tile:hover {
+    border-color: var(--mona-warm);
+    transform: translateY(-2px);
+  }
+}
+
+.category-tile__name {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.category-tile__description {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mona-text-2);
+  margin: 0;
+  flex: 1;
+}
+
+.category-tile__cta {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-warm);
+  margin-top: var(--space-3);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Brand grid ────────────────────────────────────── */
+.brand-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  max-width: var(--container-lg);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .brand-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .brand-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.brand-tile {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  padding: var(--space-6);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--motion-base) var(--ease);
+}
+
+@media (hover: hover) {
+  .brand-tile:hover {
+    border-color: var(--mona-warm);
+  }
+}
+
+.brand-tile__name {
+  font-family: var(--mona-serif);
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.brand-tile__country {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mona-warm);
+  margin: 0;
+}
+
+.brand-tile__description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+  flex: 1;
+  /* Markdown bold/italic működik a description-ben */
+}
+
+.brand-tile__cta {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-warm);
+  margin-top: var(--space-2);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Shipping info ─────────────────────────────────── */
+.shipping-info {
+  background: var(--mona-bg);
+  border-block: 0.5px solid var(--mona-border);
+  padding-block: var(--space-8);
+}
+
+.shipping-info__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-lg);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .shipping-info__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.shipping-info__title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 var(--space-2);
+  color: var(--mona-text);
+}
+
+.shipping-info__description {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.shipping-info__description strong {
+  color: var(--mona-nature);
+  font-weight: 600;
+}
+</style>

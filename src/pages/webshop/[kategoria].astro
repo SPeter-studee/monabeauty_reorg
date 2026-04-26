@@ -1,0 +1,306 @@
+---
+// src/pages/webshop/[kategoria].astro
+// Kategória oldal — pl. /webshop/szerumok
+//
+// Szűrők URL params-ban:
+//   ?marka=krx&ar=5000-15000&sort=price_asc&page=2
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import ProductCard from "@/components/shop/ProductCard.astro";
+import FilterPanel from "@/components/shop/FilterPanel.astro";
+import {
+  listProducts,
+  getCategory,
+  listCategories,
+  listBrands,
+  getPriceRange,
+} from "@/lib/products";
+import type { ProductFilter, ProductSort } from "@/lib/types/shop";
+
+const env = Astro.locals.runtime.env;
+const db = (env as any).DB;
+
+const { kategoria } = Astro.params;
+const params = Astro.url.searchParams;
+
+// Kategória betöltése
+const category = await getCategory(db, kategoria!);
+
+if (!category) {
+  return Astro.redirect("/webshop", 302);
+}
+
+// Szűrők kiolvasása URL-ből
+const filter: ProductFilter = {
+  categorySlug: kategoria!,
+  brandSlug: params.get("marka") ?? undefined,
+};
+
+const arParam = params.get("ar");
+if (arParam) {
+  const [minStr, maxStr] = arParam.split("-");
+  const min = parseInt(minStr, 10);
+  const max = parseInt(maxStr, 10);
+  if (!isNaN(min) && !isNaN(max) && min < max) {
+    filter.minPriceFt = min;
+    filter.maxPriceFt = max;
+  }
+}
+
+const sortParam = params.get("sort") as ProductSort | null;
+filter.sortBy = sortParam ?? "recommended";
+
+const pageParam = parseInt(params.get("page") ?? "1", 10);
+filter.page = Math.max(1, isNaN(pageParam) ? 1 : pageParam);
+filter.perPage = 24;
+
+// Adatok lekérdezése párhuzamosan
+const [productsResult, allBrands, priceRange, allCategories] = await Promise.all([
+  listProducts(db, filter),
+  listBrands(db),
+  getPriceRange(db, { categorySlug: kategoria! }),
+  listCategories(db),
+]);
+
+const { products, total } = productsResult;
+const totalPages = Math.ceil(total / filter.perPage);
+
+// SEO
+const metaTitle = `${category.name} — Webshop | Mona Studio`;
+const metaDescription = category.description
+  ?? `Válogatott prémium ${category.name.toLowerCase()} a Mona Studio webshopjában — szakmai ajánlással.`;
+
+// Lapozás URL-ek
+function pageUrl(p: number): string {
+  const u = new URL(Astro.url);
+  if (p === 1) {
+    u.searchParams.delete("page");
+  } else {
+    u.searchParams.set("page", String(p));
+  }
+  return u.pathname + (u.searchParams.toString() ? "?" + u.searchParams.toString() : "");
+}
+---
+
+<BaseLayout
+  title={metaTitle}
+  description={metaDescription}
+  canonical={`https://monastudio.hu/webshop/${kategoria}`}
+>
+  <PageHero
+    title={category.name}
+    description={category.description}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Webshop", href: "/webshop" },
+      { label: category.name }
+    ]}
+  />
+
+  <section class="webshop-list section">
+    <div class="container">
+      <div class="webshop-list__layout">
+        {/* ─── Bal oldali szűrő ──────────────── */}
+        <FilterPanel
+          categories={allCategories}
+          brands={allBrands}
+          priceRange={priceRange}
+          activeFilters={{
+            categorySlug: filter.categorySlug,
+            brandSlug: filter.brandSlug,
+            minPriceFt: filter.minPriceFt,
+            maxPriceFt: filter.maxPriceFt,
+            sortBy: filter.sortBy,
+          }}
+          baseUrl={`/webshop/${kategoria}`}
+          hideCategoryFilter
+        />
+
+        {/* ─── Jobb oldali termék lista ────────── */}
+        <div class="webshop-list__main">
+          {/* Találatok száma */}
+          <div class="webshop-list__meta">
+            <p class="webshop-list__count">
+              {total === 0 ? (
+                <span>Nincs találat</span>
+              ) : total === 1 ? (
+                <span><strong>1</strong> termék</span>
+              ) : (
+                <span><strong>{total}</strong> termék</span>
+              )}
+            </p>
+          </div>
+
+          {products.length > 0 ? (
+            <>
+              <div class="product-grid">
+                {products.map(product => (
+                  <ProductCard product={product} />
+                ))}
+              </div>
+
+              {/* Lapozás */}
+              {totalPages > 1 && (
+                <nav class="pagination" aria-label="Lapozás">
+                  {filter.page! > 1 && (
+                    <a href={pageUrl(filter.page! - 1)} class="pagination__link" rel="prev">
+                      ← Előző
+                    </a>
+                  )}
+                  <span class="pagination__current">
+                    {filter.page} / {totalPages}
+                  </span>
+                  {filter.page! < totalPages && (
+                    <a href={pageUrl(filter.page! + 1)} class="pagination__link" rel="next">
+                      Következő →
+                    </a>
+                  )}
+                </nav>
+              )}
+            </>
+          ) : (
+            <div class="webshop-list__empty">
+              <p class="webshop-list__empty-title">Nincs találat a megadott szűrőkkel</p>
+              <p class="webshop-list__empty-text">
+                Próbálj kevesebb szűrőt — vagy nézd meg a teljes <a href="/webshop">webshop kínálatot</a>.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.webshop-list {
+  padding-block: var(--space-8);
+}
+
+.webshop-list__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .webshop-list__layout {
+    grid-template-columns: 260px 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.webshop-list__main {
+  min-width: 0; /* grid overflow védelem */
+}
+
+.webshop-list__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.webshop-list__count {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.webshop-list__count strong {
+  color: var(--mona-text);
+  font-weight: 600;
+}
+
+/* Termék grid (a hub-ban definiált, itt kicsit más sűrűség) */
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* Lapozás */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.pagination__link {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-warm);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  transition: background var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pagination__link:hover {
+  background: var(--mona-elevated);
+  border-color: var(--mona-warm);
+}
+
+.pagination__current {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-3);
+}
+
+/* Üres állapot */
+.webshop-list__empty {
+  text-align: center;
+  padding: var(--space-10) var(--space-5);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+}
+
+.webshop-list__empty-title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-3);
+}
+
+.webshop-list__empty-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.webshop-list__empty-text a {
+  color: var(--mona-warm);
+  border-bottom: 0.5px solid var(--mona-warm);
+  text-decoration: none;
+}
+</style>

@@ -1,3 +1,3 @@
 # patches/
 
-Jelenleg nincs aktív `patch-package` patch. Az `@astrojs/sitemap` **3.6.0** pin mellett a build sitemap lépése rendben fut.
+Nincs aktív patch. `@astrojs/sitemap` **3.6.0** — a build sitemap lépés rendben fut `postinstall` nélkül.

@@ -7,7 +7,49 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 3.2 (2. rész) — Webshop oldalak_
+- _Sprint 3.3 — Termékoldal + kosár drawer_
+
+---
+
+## [0.6.4] — 2026-04-26 — Sprint 3.2 (2. rész) — Webshop oldalak
+
+### Hozzáadva
+- **`src/components/shop/ProductCard.astro`** — termék kártya komponens:
+  - 4:5 aspektrátió kép, hover effekt
+  - Badge-ek: akció (`−15%`), új, Mónika ajánlja
+  - Akciós ár megjelenítés (piros + áthúzott eredeti)
+  - Készlet jelzés (low / out of stock)
+  - 3 soros line-clamp short_description
+- **`src/components/shop/FilterPanel.astro`** — szűrő oldalsáv:
+  - Kategória + márka + ár + rendezés szűrők
+  - URL state alapú (search params) — canonical-friendly
+  - Sticky desktop, mobile statikus
+- **`src/pages/webshop/index.astro`** — webshop hub:
+  - Akciós + kiemelt termék szekciók
+  - 5 kategória tile (arclemosok, tonikok, szerumok, arckremek, csomagok)
+  - Márka tile-ok (KRX)
+  - Szállítási info CTA blokk
+- **`src/pages/webshop/[kategoria].astro`** — kategória oldal szűrőkkel + lapozással
+- **`src/pages/webshop/markak/[marka].astro`** — márka oldal márka bemutatással
+- **`src/pages/api/products/index.ts`** — GET endpoint:
+  - Query: `kategoria`, `marka`, `ar`, `sort`, `keres`, `akcios`, `page`, `per_page`
+  - JSON válasz: `{ products, total, page, perPage, totalPages }`
+  - Validáció: max 100 termék/oldal
+
+### Változott
+- **Verzió bump**: `0.6.3` → `0.6.4` (patch — új funkcionalitás Sprint 3 keretén belül)
+
+### Teszt URL-ek deploy után
+- `/webshop` — hub oldal
+- `/webshop/szerumok` — Szérumok kategória (4 KRX termék)
+- `/webshop/markak/krx` — KRX márka (8 termék)
+- `/webshop/szerumok?ar=5000-10000&sort=price_asc` — szűrt + rendezett
+- `/api/products?akcios=1` — csak akciós termékek JSON
+
+### Megjegyzés
+- A **termékoldal** (`/webshop/termek/[slug]`) **még nincs** — Sprint 3.3-ban jön
+- A ProductCard `<a>` tag már a `/webshop/termek/{slug}` URL-re mutat — Sprint 3.3 előtt ez 404 lesz, **a kártyák kattinthatóak de hibás oldalra mennek**
+- Ha gyorsan élesíthető teszt-termékoldalt akarunk Sprint 3.3 előtt, a ProductCard `productUrl`-t lehet `#`-ra állítani átmenetileg
 
 ---
 
