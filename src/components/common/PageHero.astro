@@ -1,0 +1,136 @@
+---
+// src/components/common/PageHero.astro
+// Oldal cím + opcionális leírás + opcionális breadcrumb
+// Használat: legtöbb belső oldalon (rólam, blog, szolgáltatások stb.)
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  breadcrumbs?: Crumb[];
+  align?: "center" | "left";
+  variant?: "default" | "compact";
+}
+
+const {
+  eyebrow,
+  title,
+  description,
+  breadcrumbs = [],
+  align = "center",
+  variant = "default",
+} = Astro.props;
+---
+
+<section class={`page-hero page-hero--${variant} page-hero--${align}`}>
+  <div class="container">
+    {breadcrumbs.length > 0 && (
+      <nav class="page-hero__breadcrumb" aria-label="Navigáció helye">
+        <ol>
+          {breadcrumbs.map((crumb, i) => (
+            <li>
+              {crumb.href && i < breadcrumbs.length - 1
+                ? <a href={crumb.href}>{crumb.label}</a>
+                : <span aria-current="page">{crumb.label}</span>}
+              {i < breadcrumbs.length - 1 && <span aria-hidden="true"> / </span>}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+    {eyebrow && <p class="eyebrow page-hero__eyebrow">{eyebrow}</p>}
+    <h1 class="page-hero__title">{title}</h1>
+    {description && <p class="page-hero__description">{description}</p>}
+  </div>
+</section>
+
+<style>
+.page-hero {
+  padding-block: var(--space-10) var(--space-8);
+  background: linear-gradient(180deg, var(--mona-bg) 0%, var(--mona-surface) 100%);
+}
+
+@media (min-width: 768px) {
+  .page-hero {
+    padding-block: var(--space-12) var(--space-10);
+  }
+}
+
+.page-hero--compact {
+  padding-block: var(--space-8) var(--space-6);
+}
+
+.page-hero--center {
+  text-align: center;
+}
+
+.page-hero--center .page-hero__breadcrumb,
+.page-hero--center .page-hero__description {
+  margin-inline: auto;
+}
+
+.page-hero__breadcrumb {
+  margin-bottom: var(--space-4);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  letter-spacing: 0.04em;
+}
+
+.page-hero__breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  justify-content: inherit;
+}
+
+.page-hero--center .page-hero__breadcrumb ol {
+  justify-content: center;
+}
+
+.page-hero__breadcrumb li {
+  display: inline;
+}
+
+.page-hero__breadcrumb a {
+  color: var(--mona-text-2);
+  text-decoration: none;
+}
+
+.page-hero__breadcrumb a:hover {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.page-hero__eyebrow {
+  margin-bottom: var(--space-3);
+  color: var(--mona-text-3);
+}
+
+.page-hero__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(2rem, 5vw + 1rem, 3rem);
+  line-height: 1.1;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.page-hero__description {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  max-width: 680px;
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .page-hero__description {
+    font-size: 1.0625rem;
+  }
+}
+</style>

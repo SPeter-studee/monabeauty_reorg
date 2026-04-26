@@ -1,0 +1,115 @@
+---
+// src/components/blog/BlogCard.astro
+
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const { title, description, category, publishedAt, readingMinutes } = post.data;
+
+const formattedDate = publishedAt.toLocaleDateString("hu-HU", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<article class={`blog-card ${featured ? "blog-card--featured" : ""}`}>
+  <a href={`/blog/${post.slug}`} class="blog-card__link">
+    <span class="badge badge-mona blog-card__category">{category}</span>
+
+    <h2 class="blog-card__title">{title}</h2>
+    <p class="blog-card__excerpt">{description}</p>
+
+    <footer class="blog-card__meta">
+      <span>Szabó Mónika</span>
+      <span aria-hidden="true">·</span>
+      <time datetime={publishedAt.toISOString()}>{formattedDate}</time>
+      <span aria-hidden="true">·</span>
+      <span>{readingMinutes} perc olvasás</span>
+    </footer>
+
+    <span class="blog-card__cta" aria-hidden="true">Tovább olvasom →</span>
+  </a>
+</article>
+
+<style>
+.blog-card {
+  background: var(--mona-surface);
+  border: 0.5px solid var(--mona-border);
+  border-radius: var(--radius-none);
+  transition: border-color var(--motion-fast) var(--ease),
+              transform var(--motion-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .blog-card:hover {
+    border-color: var(--mona-text);
+    transform: translateY(-2px);
+  }
+}
+
+.blog-card__link {
+  display: block;
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (min-width: 768px) {
+  .blog-card__link {
+    padding: var(--space-6);
+  }
+}
+
+.blog-card--featured {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-warm);
+}
+
+.blog-card__category {
+  margin-bottom: var(--space-3);
+}
+
+.blog-card__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.25rem, 2vw + 0.75rem, 1.625rem);
+  line-height: 1.2;
+  margin-bottom: var(--space-3);
+  color: var(--mona-text);
+}
+
+.blog-card--featured .blog-card__title {
+  font-size: clamp(1.5rem, 3vw + 0.75rem, 2rem);
+}
+
+.blog-card__excerpt {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-4);
+}
+
+.blog-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  margin-bottom: var(--space-3);
+  align-items: center;
+}
+
+.blog-card__cta {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 0.5px;
+}
+</style>

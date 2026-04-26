@@ -7,7 +7,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "wrangler pages dev ./dist",
-    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=monabeauty2",
+    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=monabeauty",
     "astro": "astro",
     "images:webp": "node scripts/generate-webp.mjs"
   },

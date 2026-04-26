@@ -1,0 +1,76 @@
+---
+// src/pages/blog/index.astro
+// Blog listaoldal — minden cikk
+// Statikusan prerender-elt build időben (gyors CDN szolgálás)
+
+export const prerender = true;
+
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import BlogCard from "@/components/blog/BlogCard.astro";
+
+// Cikkek lekérése — drafts kihagyva, dátum szerint csökkenő
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()
+);
+
+const featuredPost = sortedPosts.find(p => p.data.featured) ?? sortedPosts[0];
+const otherPosts = sortedPosts.filter(p => p.slug !== featuredPost?.slug);
+---
+
+<BaseLayout
+  title="Blog — Bőrápolási tippek és szakmai gondolatok"
+  description="Bőrápolási tippek, kezelési újdonságok és szakmai gondolatok — Szabó Mónika kozmetikustól. Olvasd el rendszeresen frissülő blogunkat."
+>
+  <PageHero
+    title="Blog"
+    description="Bőrápolási tippek, kezelési újdonságok és szakmai gondolatok — Szabó Mónika kozmetikustól."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Blog" }
+    ]}
+  />
+
+  <section class="section">
+    <div class="container">
+
+      {featuredPost && (
+        <div class="blog-list__featured">
+          <p class="eyebrow blog-list__featured-label">Kiemelt bejegyzés</p>
+          <BlogCard post={featuredPost} featured />
+        </div>
+      )}
+
+      {otherPosts.length > 0 && (
+        <div class="blog-list__grid grid grid-2">
+          {otherPosts.map(post => <BlogCard post={post} />)}
+        </div>
+      )}
+
+      {sortedPosts.length === 0 && (
+        <p class="text-center text-secondary">Még nincs publikált cikk.</p>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.blog-list__featured {
+  max-width: var(--container-prose);
+  margin-inline: auto;
+  margin-bottom: var(--space-10);
+}
+
+.blog-list__featured-label {
+  text-align: center;
+  margin-bottom: var(--space-4);
+  color: var(--mona-warm);
+}
+
+.blog-list__grid {
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+</style>

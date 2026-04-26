@@ -1,0 +1,229 @@
+---
+// src/pages/szolgaltatasok/[slug].astro
+// Egyedi szolgáltatás oldal — markdown content + Schema.org Service
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+export async function getStaticPaths() {
+  const services = await getCollection("services");
+  return services.map(service => ({
+    params: { slug: service.slug },
+    props: { service },
+  }));
+}
+
+interface Props {
+  service: CollectionEntry<"services">;
+}
+
+const { service } = Astro.props;
+const { Content } = await service.render();
+const {
+  title, description, shortDescription,
+  duration, priceFrom, priceNote, bookingUrl
+} = service.data;
+
+const formattedPrice = priceFrom
+  ? new Intl.NumberFormat("hu-HU").format(priceFrom)
+  : null;
+---
+
+<BaseLayout
+  title={`${title} — Mona Studio`}
+  description={description}
+>
+  {/* Schema.org Service markup */}
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": title,
+      "description": description,
+      "provider": {
+        "@type": "BeautySalon",
+        "name": "Mona Studio",
+        "url": "https://monastudio.hu",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Zrínyi Miklós u. 3.",
+          "addressLocality": "Vác",
+          "postalCode": "2600",
+          "addressCountry": "HU"
+        }
+      },
+      "areaServed": { "@type": "City", "name": "Vác" },
+      ...(priceFrom && {
+        "offers": {
+          "@type": "Offer",
+          "price": priceFrom,
+          "priceCurrency": "HUF",
+          "availability": "https://schema.org/InStock"
+        }
+      })
+    })} />
+  </Fragment>
+
+  <PageHero
+    eyebrow="Szolgáltatás"
+    title={title}
+    description={shortDescription}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Szolgáltatások", href: "/szolgaltatasok" },
+      { label: title }
+    ]}
+  />
+
+  <article class="service section">
+    <div class="container container-prose">
+
+      {/* Meta info (idő + ár) */}
+      {(duration || formattedPrice) && (
+        <div class="service__meta">
+          {duration && (
+            <div class="service__meta-item">
+              <p class="eyebrow">Időtartam</p>
+              <p>{duration}</p>
+            </div>
+          )}
+          {formattedPrice && (
+            <div class="service__meta-item">
+              <p class="eyebrow">Ártól</p>
+              <p>{formattedPrice} Ft</p>
+              {priceNote && <p class="service__price-note">{priceNote}</p>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Markdown tartalom */}
+      <div class="service__content">
+        <Content />
+      </div>
+
+      {/* CTA */}
+      <div class="service__cta">
+        <a href={bookingUrl ?? "/idopontfoglalas"} class="btn btn-primary btn-lg">
+          Időpontfoglalás
+        </a>
+        <a href="/kapcsolat" class="btn btn-secondary">
+          Kérdezz a kezelésről
+        </a>
+      </div>
+
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+.service__meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--mona-surface);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 640px) {
+  .service__meta {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.service__meta-item .eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.service__meta-item p {
+  font-size: 1rem;
+  color: var(--mona-text);
+  font-weight: 500;
+}
+
+.service__price-note {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: var(--mona-text-3) !important;
+  margin-top: 4px;
+}
+
+.service__content {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+}
+
+.service__content :global(h2) {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
+}
+
+.service__content :global(h3) {
+  font-family: var(--mona-serif);
+  font-size: 1.375rem;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-3);
+}
+
+.service__content :global(p) {
+  margin-bottom: var(--space-4);
+}
+
+.service__content :global(ul),
+.service__content :global(ol) {
+  margin-bottom: var(--space-4);
+  padding-left: 1.5rem;
+}
+
+.service__content :global(ul) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.service__content :global(ul li) {
+  position: relative;
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-2);
+  line-height: 1.65;
+}
+
+.service__content :global(ul li::before) {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 12px;
+  height: 0.5px;
+  background: var(--mona-warm);
+}
+
+.service__content :global(strong) {
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.service__content :global(blockquote) {
+  border-left: 2px solid var(--mona-warm);
+  padding: var(--space-3) var(--space-5);
+  margin-block: var(--space-5);
+  background: var(--mona-elevated);
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+}
+
+.service__cta {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: var(--space-8);
+  margin-top: var(--space-8);
+  border-top: 0.5px solid var(--mona-border);
+}
+</style>

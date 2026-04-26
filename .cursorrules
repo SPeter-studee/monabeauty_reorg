@@ -9,10 +9,11 @@ A Mona Studio egy prémium kozmetikai brand webshop és szalon weboldala Vácon.
 ## Tech stack
 
 - **Framework**: Astro 4 (SSR mód, Cloudflare adapter)
-- **Hosting**: Cloudflare Pages
-- **Adatbázis**: Cloudflare D1 (binding: `DB`)
-- **Cache**: Cloudflare KV (binding: `CONTENT`)
-- **Object storage**: Cloudflare R2 (binding: `PRODUCT_IMAGES`)
+- **Hosting**: Cloudflare Pages — projekt: `monabeauty2`
+- **GitHub**: `SPeter-studee/monabeauty_reorg`
+- **Adatbázis**: Cloudflare D1 (binding: `DB`, név: `monastudio-v2-db`)
+- **Cache**: Cloudflare KV (binding: `CONTENT`, név: `monastudio-v2-content`)
+- **Object storage**: Cloudflare R2 (binding: `PRODUCT_IMAGES`, bucket: `mona-products-v2`)
 - **Auth**: Google OAuth (admin) + email/jelszó (vásárlók)
 - **Email**: Resend
 - **Newsletter**: Mailchimp
@@ -24,36 +25,67 @@ A Mona Studio egy prémium kozmetikai brand webshop és szalon weboldala Vácon.
 ## Mappa-struktúra
 
 ```
+public/             statikus fájlok (favicon, robots.txt, og-default.webp)
+scripts/            build scriptek (generate-webp.mjs)
 src/
 ├── components/
-│   ├── common/          Header, Footer, CookieConsent, Toast, Newsletter, Button, Modal
-│   ├── shop/            ProductCard, FilterPanel, Cart, SaleCountdown
-│   └── admin/           AdminGate, AdminSidebar, DataTable
-├── layouts/             BaseLayout, ShopLayout, AdminLayout
-├── pages/               Astro routing
-│   └── api/             API endpoint-ok
+│   ├── common/     Header, Footer, CookieConsent, Toast, Newsletter, PageHero, ContactForm
+│   ├── shop/       SaleCountdown (Sprint 3-tól bővül)
+│   ├── blog/       BlogCard
+│   └── admin/      (Sprint 5-től)
+├── content/        Astro Content Collections
+│   ├── config.ts   schema (blog + services)
+│   ├── blog/       markdown cikkek
+│   └── services/   markdown szolgáltatás oldalak
+├── layouts/        BaseLayout, ShopLayout (Sprint 3), AdminLayout (Sprint 5)
+├── pages/
+│   ├── api/        serverless TS endpointok
+│   └── ...         oldal-rutok
 ├── styles/
-│   ├── tokens.css       Design tokens (színek, térköz, font)
-│   ├── reset.css
-│   ├── layout.css
-│   └── components/
-├── i18n/                hu.json, en.json, utils.ts
-└── lib/                 cart.ts, consent.ts, toast.ts, auth.ts, db.ts
+│   ├── tokens.css  CSS változók
+│   └── ...
+├── i18n/           hu.json, en.json, utils.ts
+└── lib/            consent.ts, toast.ts, cart.ts (auth.ts, db.ts később)
+docs/               projekt dokumentáció (lásd alább)
 ```
+
+## Dokumentáció (fontos)
+
+A `docs/` mappa **a projekt élő dokumentációja** — Cursor használja kontextusként:
+
+- `docs/00-architektura.md` — tech stack, komponens diagram, adatfolyam
+- `docs/01-design-system.md` — paletta, tipográfia, komponensek
+- `docs/02-reorganization-plan.md` — brand pozícionálás, SEO
+- `docs/03-known-issues.md` — régi rendszer hibái + megoldás
+- `docs/04-v2-migration-plan.md` — átfogó projekt terv, sprintek
+- `docs/05-product-schema.md` — termék adatlap teljes séma
+- `docs/06-api-reference.md` — minden API endpoint dokumentáltan
+- `docs/07-deployment.md` — Cloudflare setup útmutató
+- `docs/08-sprint-log.md` — sprint napló (mit építettünk)
+- `docs/09-changelog.md` — verziónapló (semver)
+
+**Karbantartási szabály**: minden push-nál frissíteni kell:
+1. `08-sprint-log.md` — mit csináltál ebben a sprintben
+2. `09-changelog.md` — a [Unreleased] szekcióba a változás
+3. Új API endpoint → `06-api-reference.md`
+4. Új env var / binding → `07-deployment.md`
+5. Architektúra-szintű változás → `00-architektura.md`
 
 ## Kódolási konvenciók
 
 ### TypeScript
 - Strict mode kötelező (`tsconfig.json`)
 - `import` aliasok: `@/*` → `src/*`
-- Cloudflare bindings: `Astro.locals.runtime.env`
+- Cloudflare bindings: `Astro.locals.runtime.env.DB`, `.CONTENT`, `.PRODUCT_IMAGES`
 - API endpointok: `APIRoute` típus
+- Soha `any` használat (kivéve env access ahol kényszer)
 
 ### Astro komponensek
 - Frontmatter (`---`) Astro logika
 - Body Astro template (HTML-szerű)
 - `<style>` és `<script>` scope-olt
 - `client:idle` / `client:visible` direktívák ritkán
+- Statikus oldalakon `export const prerender = true;`
 
 ### CSS
 - **CSS változók** mindenhol (`var(--mona-text)`)
@@ -108,7 +140,7 @@ src/
 
 Amikor új komponenst vagy oldalt kérek:
 
-1. **Nézd meg a `docs/` mappát** kontextusért
+1. **Olvasd el a `docs/` mappát** kontextusért
 2. **Használd a CSS változókat**, ne hardkódolj színeket
 3. **Mobile-first** mindig
 4. **WCAG AAA** kontraszt cél
@@ -116,22 +148,27 @@ Amikor új komponenst vagy oldalt kérek:
 6. **TypeScript szigorú típusok** (`any` kerülése)
 7. **Hungarian content** (HU default), **i18n-ready** (utils.ts használata)
 8. **SEO**: minden oldal a BaseLayout-ot használja, title + description kötelező
+9. **Statikus oldalakon `export const prerender = true;`**
 
 ## Sprint státusz
 
-- ✅ Sprint 1: Astro alap, design system, header, footer, BaseLayout, i18n
-- ✅ Sprint 2A: cookie consent, toast, newsletter, layout fixes, sale countdown
-- ⏳ Sprint 2B: statikus oldalak (főoldal, rólam, blog, galéria, vélemények, kapcsolat, bejelentkezés, jogi oldalak, 404)
-- ⏳ Sprint 3: webshop (hub, kategóriák, termékoldal, kosár, pénztár, wishlist)
-- ⏳ Sprint 4: ügyfél törzs (regisztráció, profil, rendelési előzmények)
-- ⏳ Sprint 5: admin (dashboard, termékek, ügyfelek, rendelések, akciók)
+Lásd `docs/08-sprint-log.md` a teljes részletekért:
+
+- ✅ Sprint 1 (0.1.0): Astro alap, design system, layout, i18n
+- ✅ Sprint 2A (0.2.0): cookie consent, toast, newsletter, layout fixes
+- ✅ Sprint 2B 1. kör (0.3.0): blog, rólam, kapcsolat, 404
+- 🟡 Sprint 2B 2. kör: szolgáltatás oldalak (3/8)
+- ⏳ Sprint 2B 3. kör: galéria, vélemények, jogi oldalak, főoldal bővítés
+- ⏳ Sprint 3: webshop
+- ⏳ Sprint 4: ügyfél törzs (auth)
+- ⏳ Sprint 5: admin
 - ⏳ Sprint 6: integrációk (FoxPost, GLS, Setmore, Anthropic, AI import)
-- ⏳ Sprint 7: cutover (DNS váltás, élesítés)
+- ⏳ Sprint 7: cutover (élesítés)
 
-## Referenciák
+## Aktuális Cloudflare deployment
 
-- Design system: `docs/01-design-system.md`
-- Reorganizáció: `docs/02-reorganization-plan.md`
-- Known issues: `docs/03-known-issues.md`
-- V2 migráció: `docs/04-v2-migration-plan.md`
-- Termék séma: `docs/05-product-schema.md`
+- **Cloudflare Pages**: `monabeauty2`
+- **URL**: `https://monabeauty2.pages.dev`
+- **D1**: `monastudio-v2-db` (`7b7e5aa5-b54f-4c17-94ab-ed0dedbf33d6`)
+- **KV**: `monastudio-v2-content` (`b2da4e4639ec4141a4f0c91ab3c5e8b7`)
+- **R2**: `mona-products-v2`

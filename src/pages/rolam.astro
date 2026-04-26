@@ -1,0 +1,156 @@
+---
+// src/pages/rolam.astro
+// Rólam (Mónika) — E-E-A-T oldal Schema.org Person markup-pal
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="Rólam — Szabó Mónika kozmetikus"
+  description="Kozmetikus vagyok, több mint 20 év tapasztalattal. Vácon dolgozom, és minden vendégemnek személyre szabott bőrápolást nyújtok."
+>
+  {/* Schema.org Person markup — E-E-A-T */}
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Szabó Mónika",
+      "jobTitle": "Kozmetikus",
+      "description": "Kozmetikus, több mint 20 év tapasztalattal. Mona Studio, Vác.",
+      "url": "https://monastudio.hu/rolam",
+      "image": "https://monastudio.hu/og-default.webp",
+      "worksFor": {
+        "@type": "BeautySalon",
+        "name": "Mona Studio",
+        "url": "https://monastudio.hu"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Vác",
+        "postalCode": "2600",
+        "addressCountry": "HU"
+      },
+      "sameAs": [
+        "https://www.facebook.com/profile.php?id=61556935559229",
+        "https://www.instagram.com/monabeauty.vac/"
+      ]
+    })} />
+  </Fragment>
+
+  <PageHero
+    eyebrow="Rólam"
+    title="Szabó Mónika"
+    description="Kozmetikus, 20+ év tapasztalattal — Mona Studio, Vác."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Rólam" }
+    ]}
+  />
+
+  <article class="about section">
+    <div class="container container-prose">
+
+      <p class="about__intro">
+        Amikor valaki kozmetikust választ, nem csak egy kezelést választ — bizalmat is ad.
+        Ezt soha nem felejtem el.
+      </p>
+
+      <section class="about__block">
+        <h2>Hogyan kerültem ide?</h2>
+        <p>
+          Húsz évvel ezelőtt nem egy fényes szalonban kezdtem. Akkor még azt sem tudtam pontosan,
+          hogy a bőrápolás valójában mennyire mély szakma — azt hittem, krémekről és gépekről szól.
+          Ma már tudom, hogy sokkal inkább szól az emberekről: azokról, akik bejönnek hozzám,
+          leülnek a kezelőszékbe, és megbíznak bennem. Ez az, ami miatt húsz év után is ugyanolyan
+          lelkesedéssel csinálom.
+        </p>
+        <p>
+          48 évesen én is pontosan tudom, milyen az, amikor a tükör nem azt mutatja, amit éreznénk
+          magunkról. Ezért is lettem kozmetikus — nem csak azért, mert szeretem a szakmát, hanem
+          mert hiszem, hogy a bőrünk állapota kihat arra, ahogy magunkra nézünk. És ez nem
+          esztétikai kérdés. Ez önbizalom kérdése.
+        </p>
+      </section>
+
+      <section class="about__block">
+        <h2>Miben hiszek?</h2>
+        <p>
+          Abban, hogy nincs két egyforma bőr — ezért nálam nincsenek sablonkezelések.
+          Ezt nem marketingszövegként mondom: nálam tényleg minden látogatás egy új diagnózissal
+          kezdődik. Megnézem, hogy aznap mi történik a bőröddel, mi változott az előző alkalom óta,
+          és ehhez igazítom a kezelést. Ugyanazzal a vendéggel is más dolgot csinálok januárban
+          és júliusban — mert a bőr nem statikus, és a kezelésnek sem szabad annak lennie.
+        </p>
+        <p>
+          Hiszek az őszinteségben is. Ha valami nem fog segíteni, megmondom. Ha egy krém,
+          amit otthon használsz, inkább árt, mint használ — azt is megmondom. Nem azért,
+          hogy kritizáljam a döntéseidet, hanem mert a célom nem egy egyszeri szép eredmény,
+          hanem az, hogy hosszú távon is jól érezd magad a bőrödben.
+        </p>
+      </section>
+
+      <section class="about__block">
+        <h2>Ha eljössz hozzám</h2>
+        <p>
+          Egy kötetlen beszélgetéssel kezdünk. Kíváncsi vagyok rád — az életmódodra, a gondjaidra,
+          arra, hogy te mivel lennél elégedett, ha a tükörbe nézel. Ezután alaposan megnézem
+          a bőrödet, és ott helyben állítom össze azt a kezelést, amire aznap a legnagyobb
+          szükséged van.
+        </p>
+        <p>
+          Ha szeretnél tudatosabban foglalkozni a bőröddel — vagy csak végre megérteni,
+          mi is történik valójában az arcodon —, szeretettel várlak.
+        </p>
+      </section>
+
+      <div class="about__cta">
+        <a href="/idopontfoglalas" class="btn btn-primary">Időpontfoglalás</a>
+        <a href="/kapcsolat" class="btn btn-secondary">Írj nekem</a>
+      </div>
+
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+.about__intro {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: clamp(1.25rem, 2vw + 0.75rem, 1.5rem);
+  line-height: 1.5;
+  color: var(--mona-text);
+  text-align: center;
+  margin-bottom: var(--space-10);
+  padding: var(--space-5);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.about__block {
+  margin-bottom: var(--space-8);
+}
+
+.about__block h2 {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem);
+  margin-bottom: var(--space-4);
+  color: var(--mona-text);
+}
+
+.about__block p {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+  margin-bottom: var(--space-4);
+}
+
+.about__cta {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-10);
+  padding-top: var(--space-8);
+  border-top: 0.5px solid var(--mona-border);
+}
+</style>

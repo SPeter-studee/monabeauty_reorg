@@ -1,0 +1,113 @@
+---
+// src/pages/404.astro
+// Egyedi 404 oldal Mona Studio brand-ben
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Nem találom — 404"
+  description="Az oldal amit keresel sajnos nem található. Térj vissza a főoldalra, vagy nézd meg a webshopot."
+  noindex={true}
+>
+  <section class="error-page section">
+    <div class="container container-text text-center">
+      <p class="eyebrow error-page__code">404</p>
+      <h1 class="error-page__title">Eltévedtél</h1>
+      <p class="error-page__description">
+        Az oldal amit keresel sajnos nem található. Lehet hogy átköltözött, vagy
+        valamiért el van rejtve. Mutatok pár jó irányt:
+      </p>
+
+      <div class="error-page__actions">
+        <a href="/" class="btn btn-primary">Vissza a főoldalra</a>
+        <a href="/webshop" class="btn btn-secondary">Webshop</a>
+      </div>
+
+      <div class="error-page__links">
+        <p class="eyebrow mb-2">Vagy nézd meg ezeket:</p>
+        <ul class="error-page__list">
+          <li><a href="/szolgaltatasok">Szolgáltatások</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/rolam">Rólam</a></li>
+          <li><a href="/kapcsolat">Kapcsolat</a></li>
+        </ul>
+      </div>
+
+      <p class="error-page__contact">
+        Ha úgy érzed valami nem stimmel, írj nekem:
+        <a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.error-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.error-page__code {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--mona-warm);
+  margin-bottom: var(--space-3);
+}
+
+.error-page__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(2.5rem, 6vw + 1rem, 4rem);
+  line-height: 1;
+  margin-bottom: var(--space-5);
+}
+
+.error-page__description {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-8);
+}
+
+.error-page__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-10);
+}
+
+.error-page__links {
+  margin-bottom: var(--space-8);
+}
+
+.error-page__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: center;
+}
+
+.error-page__list a {
+  font-size: 14px;
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 0.5px;
+}
+
+.error-page__list a:hover {
+  color: var(--mona-warm);
+}
+
+.error-page__contact {
+  font-size: 13px;
+  color: var(--mona-text-3);
+}
+
+.error-page__contact a {
+  color: var(--mona-text);
+  text-decoration: underline;
+}
+</style>

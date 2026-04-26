@@ -1,0 +1,306 @@
+---
+// src/pages/blog/[slug].astro
+// Egyedi blog cikk oldal — markdown content + Schema.org Article
+// Statikusan prerender-elt build időben (gyors CDN szolgálás)
+
+export const prerender = true;
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const { title, description, category, publishedAt, readingMinutes, author, tags } = post.data;
+
+const formattedDate = publishedAt.toLocaleDateString("hu-HU", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+// Előző / következő cikk
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const sorted = allPosts.sort(
+  (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()
+);
+const idx = sorted.findIndex(p => p.slug === post.slug);
+const prevPost = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+const nextPost = idx > 0 ? sorted[idx - 1] : null;
+---
+
+<BaseLayout
+  title={`${title} — Mona Studio Blog`}
+  description={description}
+>
+  {/* Schema.org Article markup a SEO-hoz */}
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": title,
+      "description": description,
+      "datePublished": publishedAt.toISOString(),
+      "author": {
+        "@type": "Person",
+        "name": author,
+        "url": "https://monastudio.hu/rolam"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Mona Studio",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://monastudio.hu/og-default.webp"
+        }
+      },
+      "articleSection": category,
+      "keywords": tags.join(", ")
+    })} />
+  </Fragment>
+
+  <PageHero
+    eyebrow={category}
+    title={title}
+    description={description}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Blog", href: "/blog" },
+      { label: title }
+    ]}
+    variant="compact"
+    align="left"
+  />
+
+  <article class="blog-post section">
+    <div class="container container-prose">
+
+      {/* Meta sor */}
+      <div class="blog-post__meta">
+        <span>{author}</span>
+        <span aria-hidden="true">·</span>
+        <time datetime={publishedAt.toISOString()}>{formattedDate}</time>
+        <span aria-hidden="true">·</span>
+        <span>{readingMinutes} perc olvasás</span>
+      </div>
+
+      {/* Markdown tartalom */}
+      <div class="blog-post__content">
+        <Content />
+      </div>
+
+      {/* Author kártya */}
+      <aside class="blog-post__author">
+        <div class="blog-post__author-avatar" aria-hidden="true">SM</div>
+        <div>
+          <p class="blog-post__author-name">Szabó Mónika</p>
+          <p class="blog-post__author-bio">Kozmetikus, 20+ év tapasztalattal. Mona Studio, Vác.</p>
+        </div>
+      </aside>
+
+      {/* Előző / Következő */}
+      {(prevPost || nextPost) && (
+        <nav class="blog-post__nav" aria-label="Cikkek közötti navigáció">
+          {prevPost && (
+            <a href={`/blog/${prevPost.slug}`} class="blog-post__nav-link blog-post__nav-link--prev">
+              <span class="blog-post__nav-direction">← Előző</span>
+              <span class="blog-post__nav-title">{prevPost.data.title}</span>
+            </a>
+          )}
+          {nextPost && (
+            <a href={`/blog/${nextPost.slug}`} class="blog-post__nav-link blog-post__nav-link--next">
+              <span class="blog-post__nav-direction">Következő →</span>
+              <span class="blog-post__nav-title">{nextPost.data.title}</span>
+            </a>
+          )}
+        </nav>
+      )}
+
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+.blog-post__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.blog-post__content {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+}
+
+.blog-post__content :global(h2) {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
+  color: var(--mona-text);
+}
+
+.blog-post__content :global(h3) {
+  font-family: var(--mona-serif);
+  font-size: 1.375rem;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-3);
+  color: var(--mona-text);
+}
+
+.blog-post__content :global(p) {
+  margin-bottom: var(--space-4);
+}
+
+.blog-post__content :global(ol),
+.blog-post__content :global(ul) {
+  margin-bottom: var(--space-4);
+  padding-left: 1.5rem;
+}
+
+.blog-post__content :global(ol) {
+  list-style: decimal;
+}
+
+.blog-post__content :global(ul) {
+  list-style: disc;
+}
+
+.blog-post__content :global(li) {
+  margin-bottom: var(--space-2);
+}
+
+.blog-post__content :global(blockquote) {
+  border-left: 2px solid var(--mona-warm);
+  padding: var(--space-3) var(--space-5);
+  margin-block: var(--space-5);
+  background: var(--mona-elevated);
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  color: var(--mona-text);
+}
+
+.blog-post__content :global(strong) {
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.blog-post__content :global(a) {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 0.5px;
+}
+
+.blog-post__content :global(a):hover {
+  color: var(--mona-warm);
+}
+
+/* Author kártya */
+.blog-post__author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  margin-block: var(--space-10);
+  background: var(--mona-surface);
+  border-left: 2px solid var(--mona-warm);
+}
+
+.blog-post__author-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: var(--mona-text);
+  color: var(--mona-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mona-serif);
+  font-size: 16px;
+  letter-spacing: 0.05em;
+}
+
+.blog-post__author-name {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.blog-post__author-bio {
+  font-size: 13px;
+  color: var(--mona-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Előző / Következő */
+.blog-post__nav {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  border-top: 0.5px solid var(--mona-border);
+  padding-top: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+@media (min-width: 640px) {
+  .blog-post__nav {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.blog-post__nav-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  background: var(--mona-surface);
+  border: 0.5px solid var(--mona-border);
+  text-decoration: none;
+  color: var(--mona-text);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.blog-post__nav-link--next {
+  text-align: right;
+}
+
+@media (hover: hover) {
+  .blog-post__nav-link:hover {
+    border-color: var(--mona-text);
+  }
+}
+
+.blog-post__nav-direction {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mona-text-3);
+  text-transform: uppercase;
+}
+
+.blog-post__nav-title {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--mona-text);
+}
+</style>

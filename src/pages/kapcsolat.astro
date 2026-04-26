@@ -1,0 +1,171 @@
+---
+// src/pages/kapcsolat.astro
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import ContactForm from "@/components/common/ContactForm.astro";
+---
+
+<BaseLayout
+  title="Kapcsolat — Mona Studio"
+  description="Vegyél fel velem a kapcsolatot. Mona Studio, 2600 Vác, Zrínyi Miklós u. 3. — telefon: +36 20 913 0126, email: mona@monastudio.hu"
+>
+  <PageHero
+    title="Kapcsolat"
+    description="Írj nekem nyugodtan, vagy gyere el a szalonba. Hamarosan válaszolok."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Kapcsolat" }
+    ]}
+  />
+
+  <section class="contact section">
+    <div class="container">
+      <div class="contact__grid">
+
+        <div class="contact__info">
+          <div class="contact__block">
+            <p class="eyebrow">Cím</p>
+            <p>
+              <a href="https://www.google.com/maps/search/Mona+Studio+V%C3%A1c/@47.7821181,19.1300852,17z"
+                 target="_blank" rel="noopener">
+                2600 Vác,<br>
+                Zrínyi Miklós u. 3.
+              </a>
+            </p>
+          </div>
+
+          <div class="contact__block">
+            <p class="eyebrow">Telefon</p>
+            <p><a href="tel:+36209130126">+36 20 913 0126</a></p>
+          </div>
+
+          <div class="contact__block">
+            <p class="eyebrow">Email</p>
+            <p><a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a></p>
+          </div>
+
+          <div class="contact__block">
+            <p class="eyebrow">Nyitvatartás</p>
+            <ul class="contact__hours">
+              <li><span>Hétfő</span><span>13:00 – 19:00</span></li>
+              <li><span>Kedd</span><span>08:00 – 14:00</span></li>
+              <li><span>Szerda</span><span>13:00 – 19:00</span></li>
+              <li><span>Csütörtök</span><span>13:00 – 19:00</span></li>
+              <li><span>Péntek</span><span>08:00 – 14:00</span></li>
+              <li><span>Szombat</span><span>zárva</span></li>
+              <li><span>Vasárnap</span><span>zárva</span></li>
+            </ul>
+          </div>
+
+          <div class="contact__block">
+            <p class="eyebrow">Közösségi média</p>
+            <div class="contact__social">
+              <a href="https://www.facebook.com/profile.php?id=61556935559229"
+                 target="_blank" rel="noopener">Facebook</a>
+              <a href="https://www.instagram.com/monabeauty.vac/"
+                 target="_blank" rel="noopener">Instagram</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact__form-wrap">
+          <h2 class="contact__form-title">Írj üzenetet</h2>
+          <p class="contact__form-blurb">
+            Egy munkanapon belül válaszolok. Ha sürgős, hívj a fenti telefonszámon!
+          </p>
+          <ContactForm />
+        </div>
+
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.contact__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+  max-width: var(--container-lg);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .contact__grid {
+    grid-template-columns: minmax(280px, 1fr) 2fr;
+    gap: var(--space-12);
+  }
+}
+
+.contact__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.contact__block {
+  border-bottom: 0.5px solid var(--mona-border);
+  padding-bottom: var(--space-4);
+}
+
+.contact__block:last-child {
+  border-bottom: none;
+}
+
+.contact__block .eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.contact__block p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--mona-text);
+}
+
+.contact__block a {
+  color: var(--mona-text);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--mona-border);
+  padding-bottom: 1px;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.contact__block a:hover {
+  border-bottom-color: var(--mona-text);
+  color: var(--mona-text);
+}
+
+.contact__hours {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.contact__hours li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--mona-text);
+}
+
+.contact__hours li span:last-child {
+  color: var(--mona-text-2);
+}
+
+.contact__social {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.contact__form-title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  margin-bottom: var(--space-2);
+}
+
+.contact__form-blurb {
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-6);
+}
+</style>

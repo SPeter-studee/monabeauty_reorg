@@ -104,16 +104,34 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
     "name": "Mona Studio",
     "image": image,
     "telephone": "+36 20 913 0126",
-    "email": "info@monastudio.hu",
+    "email": "mona@monastudio.hu",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Bartók Béla utca 3.",
+      "streetAddress": "Zrínyi Miklós u. 3.",
       "addressLocality": "Vác",
       "postalCode": "2600",
       "addressCountry": "HU"
     },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 47.7821181,
+      "longitude": 19.1300852
+    },
     "url": "https://monastudio.hu",
+    "priceRange": "$$",
     "founder": { "@type": "Person", "name": "Szabó Mónika" },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Monday",    "opens": "13:00", "closes": "19:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Tuesday",   "opens": "08:00", "closes": "14:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Wednesday", "opens": "13:00", "closes": "19:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Thursday",  "opens": "13:00", "closes": "19:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Friday",    "opens": "08:00", "closes": "14:00" }
+    ],
+    "areaServed": [
+      { "@type": "City", "name": "Vác" },
+      { "@type": "City", "name": "Budapest" },
+      { "@type": "Country", "name": "Hungary" }
+    ],
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61556935559229",
       "https://www.instagram.com/monabeauty.vac/"
