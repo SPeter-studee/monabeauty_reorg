@@ -11,7 +11,7 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.7.8] — 2026-04-27 — Pénztár + kosár UI fix-ek
+## [0.7.8] — 2026-04-27 — Pénztár + kosár + header mobile UI fix-ek
 
 ### Javítva
 - **Pénztár — GDPR checkbox layout**:
@@ -27,6 +27,21 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
   - Egyes esetekben a kép kifolyt a 100×125px keretből és túl nagyra nyúlt
   - Fix: explicit `width: 100px; height: 125px; max-width/max-height` mind a link wrapper-en, 
     mind a belső `<img>`-en (a CartDrawer és checkout summary mintájára — v0.7.5)
+- **Header — `Időpontfoglalás` gomb mobile-on látszott** (specificitás bug):
+  - A `.hide-tablet { display: none }` és a `.btn { display: inline-flex }` ütközött 
+    (mindkettő 0,1,0 specificitás), és mivel a `buttons.css` később töltődik mint 
+    a `layout.css`, a `.btn` nyert → a gomb a 1024px-es breakpoint alatt is látszott, 
+    csonkulva a header sáv padding-jában
+  - Fix: `.hide-mobile`, `.hide-tablet`, `.hide-desktop` utility-k `!important` flag-gel
+  - Plusz: `display: initial` → `display: revert` (jobban viselkedik flex/grid 
+    container-eknél, pl. `.lang-switcher`)
+- **Header — Mobile menu drawer iránya**:
+  - A drawer eddig **jobbról** csúszott be (`translateX(100%)`)
+  - Fix: most **balról** csúszik be (`translateX(-100%)`)
+- **Header — Logo mobile méret**:
+  - `font-size: 18px` → `20px` (mobile), `20px` → `22px` (tablet), `22px` → `24px` (desktop)
+  - `justify-content: center` a logo flex container-en — vertikálisan központosítva 
+    a header sávban (ahol a tagline rejtett)
 
 ### Megjegyzés
 - A v0.7.3–0.7.7 közötti változások nem kerültek bele ebbe a changelog-ba — 

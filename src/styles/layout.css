@@ -82,22 +82,23 @@
 .gap-6 { gap: var(--space-6); }
 
 /* ── Responsive helpers (mobile-first) ──────────────────────────────────── */
-/* hide-mobile: csak < 768px-en rejtve */
-.hide-mobile { display: none; }
+/* hide-mobile: csak < 768px-en rejtve.
+   `!important` a komponens display szabályok (pl. .btn { display: inline-flex }) ellen */
+.hide-mobile { display: none !important; }
 @media (min-width: 768px) {
-  .hide-mobile { display: initial; }
+  .hide-mobile { display: revert !important; }
 }
 
 /* hide-tablet: < 1024px-en rejtve (mobile + tablet) */
-.hide-tablet { display: none; }
+.hide-tablet { display: none !important; }
 @media (min-width: 1024px) {
-  .hide-tablet { display: initial; }
+  .hide-tablet { display: revert !important; }
 }
 
 /* hide-desktop: >= 1024px-en rejtve (csak mobile-tablet-en látszik) */
-.hide-desktop { display: initial; }
+.hide-desktop { display: revert; }
 @media (min-width: 1024px) {
-  .hide-desktop { display: none; }
+  .hide-desktop { display: none !important; }
 }
 
 /* ── Spacing utilities (margin/padding) ─────────────────────────────────── */
