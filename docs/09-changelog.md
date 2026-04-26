@@ -11,6 +11,21 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.8] — 2026-04-26 — Pénztár GDPR checkbox stílus fix
+
+### Javítva
+- **`.form-checkbox` CSS** (`src/pages/penztar/index.astro`) — a checkout GDPR checkbox jelmagyarázat csúnya nagybetűs/szétfolyt szövegként jelent meg, mert a `reset.css` globális `label` szabálya (`text-transform: uppercase` + `letter-spacing: 0.1em`) átöröklődött a `<span>`-be:
+  - **Hozzáadva**: `text-transform: none`, `letter-spacing: 0`, `font-weight: 400`, `margin-bottom: 0` — explicit override
+  - **Hozzáadva**: `width: 18px; height: 18px` a checkbox input-on (egységes a v0.7.5 radio méretével)
+  - **Hozzáadva**: `accent-color: var(--mona-warm)` — brand színű pipa (eddig fehér default volt)
+  - **Hozzáadva**: `text-underline-offset: 2px` + `:hover` link — finomabb tipográfia
+  - A `.auth__checkbox` és `.contact-form__checkbox` mintát követi (ott már jó volt)
+
+### Megjegyzés
+- A `0.7.3` – `0.7.7` közötti verziók nem kerültek dokumentálva ebbe a changelog-ba. Ezek elsősorban a `0.7.5`-ben lezárt UI fix kör (Sprint 3 véglegesítés) finomításai voltak.
+
+---
+
 ## [0.7.2] — 2026-04-26 — Sprint 3.4 — Pénztár + email + Mailchimp tag
 
 ### Hozzáadva

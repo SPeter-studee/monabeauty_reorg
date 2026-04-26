@@ -509,15 +509,36 @@ import PageHero from "@/components/common/PageHero.astro";
   font-size: 14px;
   line-height: 1.55;
   color: var(--mona-text-2);
+  /* Felülírja a globális label szabályokat (reset.css) */
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  margin-bottom: 0;
 }
 
-.form-checkbox input {
-  margin-top: 4px;
+.form-checkbox > span {
+  flex: 1;
+}
+
+.form-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: auto;
+  flex-shrink: 0;
+  margin: 0;
+  margin-top: 2px;
+  accent-color: var(--mona-warm);
+  cursor: pointer;
 }
 
 .form-checkbox a {
   color: var(--mona-warm);
   text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.form-checkbox a:hover {
+  text-decoration: none;
 }
 
 /* ─── Szállítási opciók ─────────────────────── */
