@@ -187,8 +187,11 @@
 
         if (!res.ok) throw new Error(result.error || "Sikertelen feliratkozás");
 
-        // ── Siker ──
-        feedback.textContent = "Köszönjük! A megerősítő emailt elküldtük.";
+        // ── Siker (üzenet a szerverről: új feliratkozás / már listán / compliance) ──
+        feedback.textContent =
+          typeof result.message === "string" && result.message.trim()
+            ? result.message
+            : "Köszönjük! A megerősítő emailt elküldtük.";
         feedback.dataset.feedbackType = "success";
         feedback.removeAttribute("hidden");
         form.reset();

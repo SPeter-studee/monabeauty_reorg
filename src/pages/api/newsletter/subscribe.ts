@@ -42,7 +42,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const server = (env as any).MAILCHIMP_SERVER;
 
   if (!apiKey || !audienceId || !server) {
-    console.error("Mailchimp env vars hiányoznak");
+    console.error("[newsletter] Mailchimp env vars hiányoznak", {
+      hasApiKey: !!apiKey,
+      hasAudienceId: !!audienceId,
+      hasServer: !!server,
+    });
     return Response.json(
       { error: "A havi napló szolgáltatás jelenleg nem érhető el." },
       { status: 503 }
@@ -56,7 +60,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${btoa(`anystring:${apiKey}`)}`,
+        Authorization: `Basic ${btoa(`anystring:${apiKey}`)}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -66,27 +70,72 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }),
     });
 
-    const data = await res.json();
+    const data: any = await res.json();
 
-    // Már feliratkozott
-    if (data.title === "Member Exists" || data.status === 400) {
+    // ── Sikeres feliratkozás (200/201) ────────────────────────────────────
+    if (res.ok) {
+      console.log("[newsletter] subscribed:", { email, status: data.status });
+      return Response.json({
+        success: true,
+        message: "A megerősítő emailt elküldtük. Köszönjük!",
+      });
+    }
+
+    // ── Hibák specifikus kezelése ─────────────────────────────────────────
+    // Konkrétan a "Member Exists" eset (csak ezt kezeljük sikeresként)
+    if (data.title === "Member Exists") {
+      console.log("[newsletter] member exists:", email);
       return Response.json({
         success: true,
         message: "Már megkapod a havi naplót — köszönjük!",
       });
     }
 
-    if (!res.ok) {
-      console.error("Mailchimp error:", data);
-      throw new Error("Mailchimp hiba");
+    // Compliance state — a tag korábban leiratkozott vagy elutasította
+    if (
+      data.title === "Forgotten Email Not Subscribed" ||
+      (data.detail && data.detail.includes("compliance"))
+    ) {
+      console.warn("[newsletter] compliance issue:", { email, detail: data.detail });
+      return Response.json({
+        success: true,
+        message: "Köszönjük! Hamarosan jelentkezünk.",
+      });
     }
 
-    return Response.json({
-      success: true,
-      message: "A megerősítő emailt elküldtük. Köszönjük!",
+    // ── Egyéb hibák — részletes naplózás (CF Functions log) ───────────────
+    console.error("[newsletter] Mailchimp HTTP error:", {
+      status: res.status,
+      title: data.title,
+      detail: data.detail,
+      type: data.type,
+      instance: data.instance,
+      errors: data.errors,
     });
+
+    // 401 — API kulcs hibás
+    if (res.status === 401) {
+      return Response.json(
+        { error: "Hitelesítési hiba. Kérlek, írj nekünk emailben." },
+        { status: 500 }
+      );
+    }
+
+    // 404 — Audience ID hibás
+    if (res.status === 404) {
+      return Response.json(
+        { error: "Konfigurációs hiba. Kérlek, írj nekünk emailben." },
+        { status: 500 }
+      );
+    }
+
+    // Egyéb (400, 422, 500...)
+    return Response.json(
+      { error: "Hiba történt. Próbáld újra később!" },
+      { status: 500 }
+    );
   } catch (err) {
-    console.error("Newsletter error:", err);
+    console.error("[newsletter] unexpected error:", err);
     return Response.json(
       { error: "Hiba történt. Próbáld újra később!" },
       { status: 500 }
