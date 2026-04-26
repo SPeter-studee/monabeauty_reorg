@@ -82,13 +82,21 @@
 .gap-6 { gap: var(--space-6); }
 
 /* ── Responsive helpers (mobile-first) ──────────────────────────────────── */
+/* hide-mobile: csak < 768px-en rejtve */
 .hide-mobile { display: none; }
 @media (min-width: 768px) {
   .hide-mobile { display: initial; }
-  .hide-tablet { display: none; }
 }
+
+/* hide-tablet: < 1024px-en rejtve (mobile + tablet) */
+.hide-tablet { display: none; }
 @media (min-width: 1024px) {
   .hide-tablet { display: initial; }
+}
+
+/* hide-desktop: >= 1024px-en rejtve (csak mobile-tablet-en látszik) */
+.hide-desktop { display: initial; }
+@media (min-width: 1024px) {
   .hide-desktop { display: none; }
 }
 
