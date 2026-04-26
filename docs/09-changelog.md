@@ -8,6 +8,41 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ### Hozzáadás tervezett
 - _Sprint 4 — Ügyfél törzs (auth)_
+- _Sprint 5 — termékkártya finomítás (Mónika ajánlja badge prominentebb, "Bőrtípus választás" 
+  konzultatív flow, AI chatbot proaktív ajánlás, GA4 add_to_cart tracking)_
+
+---
+
+## [0.7.13] — 2026-04-27 — CartDrawer kép eltávolítás (drawer egyszerűsítés)
+
+### Változott
+- **CartDrawer — termékkép teljesen eltávolítva**:
+  - A drawer szűk szélessége (~360-400px) miatt a 80×100px kép görgethető 
+    overflow-ot okozott egyes mobilokon (a v0.7.5 explicit `max-width/height` 
+    fix és a v0.7.9 `is:global` ellenére sem fért meg tisztán)
+  - **Új layout**: csak márka + név + qty + ár + Eltávolítás (vertikálisan stack-elve)
+  - A drawer **gyors áttekintés** funkciót szolgálja, nem termékpolc — a részletes 
+    nézet a `/kosar` full page-en + termékoldalon érhető el
+- **`.cart-item` CSS**: `display: grid` (80px 1fr) → `display: flex; flex-direction: column`
+- **Eltávolított CSS osztályok** (a forrásból törölve):
+  - `.cart-item__image-link`
+  - `.cart-item__image`
+  - `.cart-item__image-placeholder`
+
+### Változatlan
+- **`/kosar` full page** — termékkép **MARAD** 100×125px-es korláttal (van hely)
+- **`/penztar` checkout summary** — termékkép **MARAD** 60×75px-es korláttal (van hely)
+- **CartDrawer linkek** — a termék név továbbra is `<a>` link a termékoldalra
+
+### Trade-off
+A vendég a drawer-ben **nem látja a képet** ami emlékeztetné melyik termékről 
+van szó. **Mitigáció**: a termék név egyértelmű (pl. "Cica Szérum"), és kattintásra 
+átjut a teljes termékoldalra. Ha 5+ termékes kosár tipikus lenne, érdemes lenne 
+visszahozni a képet — de a Mona Studio webshop kis kosaras (1-3 termék vásárlásonként).
+
+### Fájlok (1)
+- `package.json` — verzió `0.7.12` → `0.7.13`
+- `src/components/shop/CartDrawer.astro` — kép-blokk markup + CSS törlés
 
 ---
 

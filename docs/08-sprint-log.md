@@ -1129,6 +1129,23 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
 - **Egész kártya kattintható** JS-ből (a `<a>` link kivéve) — Ctrl-klikk új fül-be
 - Pulse animáció a klikk feedback-hez + CartDrawer auto-megnyitás
 
+### v0.7.13 — CartDrawer kép eltávolítás
+- A drawer szűk szélessége (~360-400px) nem fér meg 80×100px képpel
+  görgethető overflow-ot okozott
+- **Új layout**: csak márka + név + qty + ár + Eltávolítás (vertikálisan stack-elve)
+- A drawer **gyors áttekintés** funkciót szolgál, részletes nézet a `/kosar` és 
+  termékoldalon
+- `/kosar` full page és `/penztar` checkout summary képek **változatlanok** (van hely)
+
+### Sprint 5-be áttéve (a Mónika brand-konzultatív vonal)
+- A v0.7.12 quick-add minta után felmerült mitigáció lehetőségek:
+  - **Termékoldalon kötelező Bőrtípus választás** mielőtt a "Kosárba" aktívvá válik
+  - **AI chatbot proaktív konzultációs ajánlás** a checkout előtt
+  - **Email a rendelés után**: "Pár tipp a használatához..." a bőrtípus alapján
+  - **GA4 `add_to_cart` event tracking** a quick-add kattintáskor (Sprint 6 része 
+    a teljes e-commerce tracking-gel)
+  - **Mónika ajánlja badge prominentebb megjelenítés** a kártyán
+
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
    észrevétlen bug-ot okozott hónapokon át

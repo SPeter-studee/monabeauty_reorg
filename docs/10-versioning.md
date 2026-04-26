@@ -20,7 +20,7 @@ Például: `0.5.1`
 
 ---
 
-## Aktuális verzió: `0.7.12`
+## Aktuális verzió: `0.7.13`
 
 A verzió a `package.json`-ban van rögzítve:
 
@@ -150,6 +150,7 @@ git push --tags
 | UI csiszolási hullám — Header B variáns + Google Business | `0.7.10` | patch (5 elem egyenletes spacing + Maps link) |
 | UI csiszolási hullám — Kosár qty kontroll center fix | `0.7.11` | patch (button min-height + flex center) |
 | UI csiszolási hullám — Quick-add gombok a kártyákon | `0.7.12` | patch (konverzió-segítő, ikon + szöveges gomb) |
+| UI csiszolási hullám — CartDrawer kép eltávolítás | `0.7.13` | patch (drawer egyszerűsítés) |
 | Sprint 4 (auth) | `0.8.0` | minor (tervezett) |
 | Sprint 5 (admin) | `0.9.0` | minor (tervezett) |
 | Sprint 6 (integrációk) | `0.10.0` | minor (tervezett) |
