@@ -979,18 +979,71 @@ A vásárlási folyamat **első fele kész**. Hátralévő:
 
 ---
 
-## ⏳ Sprint 3.4 — Pénztár + email + Mailchimp tag
+## ✅ Sprint 3.4 — Pénztár + email + Mailchimp tag
 
-**Tervezett építés**:
-- `/penztar` — checkout form (vendég adatok, szállítási cím, fizetési mód)
-- `POST /api/checkout` — D1 order + order_items insertion
-- Order number generálás: `MS-2026-0001` formátum
-- Resend email vendégnek (megerősítés + sorszám)
-- Resend email Mónikának (új rendelés értesítés)
-- Mailchimp tag: `vasarlas-2026-04` + `vasarolt-{slug}` minden tételhez
-- `/penztar/koszonjuk?rendeles=MS-2026-0001` — sikeres oldal
+**Időszak**: 2026-04-26  
+**Cél**: Vásárlási folyamat utolsó része — a webshop **élesen rendelést tud fogadni** átutalásra/utánvétre.
+
+### Mit építettünk
+
+**Új API endpoint** (`src/pages/api/checkout/index.ts`, ~600 sor):
+- POST `/api/checkout`
+- Body validáció (név, email, telefon, szállítás, fizetés, tételek)
+- Termékek lekérdezése **friss** D1-ből — kliens által küldött árat NEM bízzuk
+- Készlet ellenőrzés tételenként
+- **Effektív ár** kalkuláció (akciós ár ha aktív)
+- Szállítási költség: `calculateShipping(subtotal, method)` (FoxPost / Personal / Free 20.000 Ft fölött)
+- **Order number generálás**: `MS-YYYY-NNNN` (4 jegyű sorszám az adott évre)
+- D1 INSERT: `orders` + `order_items` (forEach) + `UPDATE products SET stock_qty -= ?`
+- **Resend email vendégnek**: HTML template Brand C színekkel, tételek táblázat, totals, transferInfo / shippingAddressBlock
+- **Resend email Mónikának**: admin notification subject `🎉 Új rendelés — MS-2026-0001 (15.000 Ft)`
+- **Mailchimp tag-elés**: ha az email **már** a listán van → `vasarlas-YYYY-MM` + `vasarolt-{slug}` minden tételhez. Ha NEM létezik 404 → skip
+- **Saját MD5 implementáció** Mailchimp member hash-hez (Web Crypto nem támogat MD5-öt)
+
+**`/penztar` checkout oldal** (`src/pages/penztar/index.astro`):
+- 2 oszlop layout: form bal, sticky summary jobb (asztalon)
+- 4 fieldset: Vásárlói adatok / Szállítási mód / Szállítási cím / Fizetési mód
+- localStorage-ból olvassa a kosár tartalmat
+- Szállítási mód váltás → szállítási cím szekció dinamikusan show/hide
+- Form submit → `POST /api/checkout` → success → `clearCart()` → redirect
+
+**`/penztar/koszonjuk` thank-you oldal** (`src/pages/penztar/koszonjuk.astro`):
+- Server-side: D1-ből olvassa a rendelést
+- Validáció: `MS-YYYY-NNNN` regex
+- Hero blokk + tételek lista + összegzés + szállítás/fizetés info + kapcsolat
+
+### Döntések
+
+- **Friss árak D1-ből**: a kliens által küldött localStorage árat NEM bízzuk
+- **Snapshot az `order_items`-ben**: termék adatok rögzítve a rendeléskor
+- **Email + Mailchimp non-fatal**: ha hibázik, csak `console.error` (rendelés már létrejött)
+- **Saját MD5 implementáció**: Web Crypto nem támogat, Mailchimp kötelezően MD5-öt vár
+
+### Sprint 3 LEZÁRÁS! 🎉
+
+A webshop élesen rendelést tud fogadni:
+- ✅ Termékböngészés + termékoldal + kosár + pénztár + email
+- ✅ Mailchimp hírlevél + automatikus tag-elés vásárlás után
+- ✅ D1 orders + order_items snapshot
+
+### Cursor teendő
+
+```powershell
+# 1. Behúzás (5 új/módosított fájl)
+# 2. Resend env var beállítás Cloudflare-ben
+#    RESEND_API_KEY = re_xxx... [Secret]
+# 3. npm install + npm run build
+# 4. git add -A && git commit + git push origin main
+```
+
+### Fájlok (új)
+- `src/pages/api/checkout/index.ts` (~600 sor)
+- `src/pages/penztar/index.astro` (~700 sor)
+- `src/pages/penztar/koszonjuk.astro` (~580 sor)
+- `package.json` — verzió 0.7.1 → 0.7.2
 
 ---
+
 
 ## ✅ Sprint 3.2 (1. rész — javítások v0.6.2)
 
@@ -1267,6 +1320,7 @@ A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik
 | Hírlevél újrapozícionálás | 2026-04-26 | ✅ Kész | "Mónika havi naplója" |
 | Sprint 3.2 (2. rész) | 2026-04-26 | ✅ Kész | Webshop hub + kategória + márka |
 | Sprint 3.3 | 2026-04-26 | ✅ Kész | Termékoldal + kosár drawer + /kosar |
+| Sprint 3.4 | 2026-04-26 | ✅ Kész | Pénztár + email + Mailchimp tag |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

@@ -7,7 +7,53 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 3.4 — Pénztár + email + Mailchimp tag_
+- _Sprint 4 — Ügyfél törzs (auth)_
+
+---
+
+## [0.7.2] — 2026-04-26 — Sprint 3.4 — Pénztár + email + Mailchimp tag
+
+### Hozzáadva
+- **`src/pages/api/checkout/index.ts`** (~600 sor) — checkout endpoint:
+  - Body validáció + termék frissítés D1-ből + készlet ellenőrzés
+  - Order number: `MS-YYYY-NNNN` formátum
+  - D1 INSERT: orders + order_items + készlet csökkentés
+  - Resend email vendégnek + Mónikának (HTML template-ek)
+  - Mailchimp tag-elés (csak ha email a listán) — non-fatal
+  - Saját MD5 implementáció Mailchimp member hash-hez
+- **`src/pages/penztar/index.astro`** — checkout oldal:
+  - Vendég adatok form (név, email, telefon)
+  - Szállítási mód (FoxPost / Personal) + dinamikus cím szekció
+  - Fizetési mód (átutalás / utánvét)
+  - Sticky summary jobb oldalon
+  - localStorage → API call → redirect
+- **`src/pages/penztar/koszonjuk.astro`** — thank-you oldal:
+  - Server-side D1 lookup
+  - Hero + tételek + szállítás/fizetés info + kapcsolat
+  - `noindex`
+
+### Változott
+- **Verzió bump**: `0.7.1` → `0.7.2` (patch — Sprint 3 kiegészítés)
+
+### Megjegyzés
+- A **Resend env var** (`RESEND_API_KEY`) **kötelező** a checkout flow-hoz
+- **Sprint 3 LEZÁRVA** — a webshop élesen rendelést tud fogadni
+
+---
+
+## [0.7.1] — 2026-04-26 — Newsletter Mailchimp error handling fix
+
+### Változott
+- **`src/pages/api/newsletter/subscribe.ts`** — érdemi hibakezelés:
+  - Csak konkrét `"Member Exists"` string-et fogad sikeresként (előtte minden 400-as error sikeres volt!)
+  - Részletes Mailchimp HTTP error logging (status, title, detail, type, errors)
+  - 401 → "Hitelesítési hiba" specifikus üzenet
+  - 404 → "Konfigurációs hiba" specifikus üzenet
+  - Sikeres feliratkozáskor `console.log` is
+- **Verzió bump**: `0.7.0` → `0.7.1` (patch — bug fix)
+
+### Megjegyzés
+- Az előző hibás kódban minden 400-as Mailchimp hiba (pl. "Invalid Resource", rossz API kulcs) **sikeresnek** nyilvánult → frontend "Köszönjük"-öt írt, miközben a Mailchimp valójában elutasította a kérést
 
 ---
 

@@ -281,6 +281,7 @@
   visibility: hidden;
   pointer-events: none;
   transition: visibility 0s linear var(--motion-base);
+  overflow: hidden;
 }
 
 .cart-drawer[aria-hidden="false"] {
@@ -357,6 +358,27 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--space-5);
+
+  /* Vékony, diszkrét scrollbar (Chrome/Edge/Safari) */
+  scrollbar-width: thin;
+  scrollbar-color: var(--mona-border) transparent;
+}
+
+.cart-drawer__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-drawer__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cart-drawer__body::-webkit-scrollbar-thumb {
+  background: var(--mona-border);
+  border-radius: 3px;
+}
+
+.cart-drawer__body::-webkit-scrollbar-thumb:hover {
+  background: var(--mona-text-3);
 }
 
 /* ─── Üres állapot ─────────────────────────── */
@@ -420,18 +442,23 @@
 .cart-item__image-link {
   display: block;
   width: 80px;
+  height: 100px;       /* explicit magasság aspect-ratio helyett — fallback */
   aspect-ratio: 4 / 5;
   background: var(--mona-elevated);
   border: 0.5px solid var(--mona-border);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .cart-item__image,
 .cart-item__image-placeholder {
   width: 100%;
   height: 100%;
+  max-width: 80px;
+  max-height: 100px;
   object-fit: contain;
   padding: var(--space-2);
+  display: block;
 }
 
 .cart-item__details {
