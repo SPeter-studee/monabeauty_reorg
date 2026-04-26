@@ -426,16 +426,25 @@ import PageHero from "@/components/common/PageHero.astro";
   background: var(--mona-elevated);
   height: 36px;
   align-self: center;
+  width: fit-content;
+  flex-shrink: 0;
 }
 
 .cart-page-item__qty-btn {
   width: 32px;
   height: 100%;
+  min-height: 0;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--mona-text-2);
   cursor: pointer;
   font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .cart-page-item__qty-btn:disabled {
@@ -445,14 +454,17 @@ import PageHero from "@/components/common/PageHero.astro";
 
 .cart-page-item__qty-value {
   width: 32px;
+  min-width: 32px;
   text-align: center;
   font-family: var(--mona-sans);
   font-size: 14px;
+  line-height: 1;
   border-inline: 0.5px solid var(--mona-border);
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .cart-page-item__total {

@@ -11,6 +11,47 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.11] — 2026-04-27 — Kosár qty kontrollok center alignment + min-height fix
+
+### Javítva
+- **CartDrawer + `/kosar` qty kontrollok**:
+  - A `−` `1` `+` jelek **balra ragadtak** a kontroll dobozban a v0.7.9 fix után, 
+    miközben a kontroll dobozok megjelentek
+  - **Két ok**:
+    1. **`button { min-height: var(--touch-target) }` (44px)** a globális 
+       `reset.css`-ben felülírta a parent `height: 32px / 36px` érdekét — a button 
+       magasabbra növekedett és felfeszítette a parent-et
+    2. A `.cart-item__qty-btn`-en **NEM volt** `display: flex; align-items: center; 
+       justify-content: center` — a button szöveg (`−` és `+`) az alapértelmezett 
+       inline pozíción maradt
+- **Fix**:
+  - `.cart-item__qty-btn` (CartDrawer) és `.cart-page-item__qty-btn` (`/kosar`):
+    - `min-height: 0` — felülírja a 44px touch target minimumot
+    - `display: flex; align-items: center; justify-content: center` — a `−`/`+` 
+      jelek tényleg középre kerülnek
+    - `padding: 0; line-height: 1` — biztosítja hogy a vertikális center pontos
+    - `flex-shrink: 0` — sose zsugorodjanak el
+  - `.cart-item__qty-value` és `.cart-page-item__qty-value`:
+    - `min-width` + `flex-shrink: 0` + `line-height: 1` (egységesség)
+  - `.cart-item__qty` (parent):
+    - `width: fit-content; flex-shrink: 0` — a kontroll csak annyit foglal el 
+      amennyi tartalma van, és nem zsugorodik el a flex container-ben
+
+### Megjegyzés
+- A **termékoldal `qty-control`** (`/webshop/termek/[slug]`) NEM érintett, mert ott 
+  a kontroll **48px magas** ami nagyobb a 44px touch target minimumnál — nincs 
+  ütközés. (A v0.7.4-es fix itt megfelelő volt.)
+- A `min-height: 0` egy modern jó gyakorlat — felülírja a globális `button` szabály 
+  44px-es touch target minimumát olyan UI-elemeken ahol a button **kontroll** 
+  része egy nagyobb komponensnek (pl. qty stepper), nem önálló call-to-action
+
+### Fájlok (3)
+- `package.json` — verzió `0.7.10` → `0.7.11`
+- `src/components/shop/CartDrawer.astro` — qty CSS
+- `src/pages/kosar.astro` — qty CSS
+
+---
+
 ## [0.7.10] — 2026-04-27 — Header bar B variáns + Google Maps integráció
 
 ### Változott

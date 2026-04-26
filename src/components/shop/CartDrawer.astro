@@ -504,16 +504,25 @@
   border: 0.5px solid var(--mona-border);
   background: var(--mona-elevated);
   height: 32px;
+  width: fit-content;
+  flex-shrink: 0;
 }
 
 .cart-item__qty-btn {
   width: 28px;
   height: 100%;
+  min-height: 0;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--mona-text-2);
   cursor: pointer;
   font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .cart-item__qty-btn:disabled {
@@ -523,14 +532,17 @@
 
 .cart-item__qty-value {
   width: 30px;
+  min-width: 30px;
   text-align: center;
   font-family: var(--mona-sans);
   font-size: 13px;
+  line-height: 1;
   border-inline: 0.5px solid var(--mona-border);
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .cart-item__price {

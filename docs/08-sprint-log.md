@@ -1101,15 +1101,23 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
 - Most már minden ami a v0.7.5-ben íródott a CartDrawer / checkout summary 
   szempontjából **valódi hatást fejt ki**
 
-### v0.7.10 — Header bar B variáns + Google Business linkek
+### v0.7.10 — Header bar B variáns + Google Maps integráció
 - Header bar mobile-on: mind az 5 elem (logo + HU/EN + 🛍️ + 👤 + ☰) **egyenletesen 
   szétosztva** `display: contents` trükkel
-- "Mona Studio · Vác" hero kicker → link Google Business search URL-re
-- Hamburger menü cím-link → Google Business
-- Footer cím-link URL frissítve (placeholder térkép URL → Business search URL)
-- TODO: Mónika Google Business Profile feldobása (értékelések, fényképek, óra) — 
-  amikor kész, a `?api=1&query=...` URL-ek lecserélhetők hivatalos `?cid=...` vagy
-  `?q=place_id:ChIJ...` formátumra
+- Google Maps **kanonikus rövid URL** (`maps.app.goo.gl/NrsyJ4eyMPsZCkUn6`) — 
+  Hero kicker, hamburger menü, Footer, Schema.org `hasMap`, kapcsolat oldal
+- `BaseLayout.astro` Schema.org BeautySalon teljes (`hasMap` + finomított `geo`)
+- `/kapcsolat` oldal — új "Hogyan találsz meg" privacy-friendly stilizált SVG térkép
+
+### v0.7.11 — Kosár qty kontrollok center alignment fix
+- A v0.7.9 után a `−` `1` `+` jelek megjelentek, **de balra ragadtak** a kontroll dobozban
+- **Két ok**:
+  1. A globális `button { min-height: var(--touch-target) }` (44px) felülírta a 
+     parent `height: 32px` érdekét — felfeszítette
+  2. A button `display: flex; align-items/justify-content: center` hiányzott
+- **Fix**: `min-height: 0` + explicit flex center mind a CartDrawer-ben mind 
+  a `/kosar` oldalon a qty button-okra
+- Termékoldal qty (48px magas) NEM érintett — nincs ütközés a touch target-tel
 
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
