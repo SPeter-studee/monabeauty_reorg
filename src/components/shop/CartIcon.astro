@@ -1,0 +1,85 @@
+---
+// src/components/shop/CartIcon.astro
+// Kosár ikon + counter — Header jobb oldalára
+// Klikkre megnyitja a CartDrawer-t (custom event-tel)
+---
+
+<button
+  type="button"
+  class="cart-icon"
+  data-cart-icon
+  aria-label="Kosár megnyitása"
+>
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+    <path d="M3 3h2l3.6 11.59a2 2 0 002 1.41h7.72a2 2 0 002-1.41L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="9" cy="20" r="1.5"/>
+    <circle cx="18" cy="20" r="1.5"/>
+  </svg>
+
+  <span class="cart-icon__badge" data-cart-count hidden>0</span>
+</button>
+
+<script>
+  import { getCartCount, openCartDrawer } from "@/lib/cart";
+
+  const button = document.querySelector<HTMLButtonElement>("[data-cart-icon]");
+  const badge = document.querySelector<HTMLElement>("[data-cart-count]");
+
+  function updateCount() {
+    if (!badge) return;
+    const count = getCartCount();
+    if (count === 0) {
+      badge.hidden = true;
+    } else {
+      badge.hidden = false;
+      badge.textContent = String(count);
+    }
+  }
+
+  button?.addEventListener("click", openCartDrawer);
+  window.addEventListener("mona-cart-update", updateCount);
+
+  // Initial render
+  updateCount();
+</script>
+
+<style>
+.cart-icon {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mona-text);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease);
+  min-height: auto;
+}
+
+.cart-icon:hover {
+  color: var(--mona-warm);
+}
+
+.cart-icon__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--mona-warm);
+  color: var(--mona-elevated);
+  font-family: var(--mona-sans);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  padding: 0 4px;
+  letter-spacing: 0.02em;
+}
+</style>

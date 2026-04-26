@@ -60,7 +60,7 @@ const isActive = (href: string) =>
         <a href="/en/" class={locale === "en" ? "active" : ""}>EN</a>
       </div>
 
-      <a href="/kosar" class="site-header__action" aria-label="Kosár">
+      <a href="/kosar" class="site-header__action" aria-label="Kosár megnyitása" data-cart-trigger>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
           <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
@@ -161,6 +161,39 @@ const isActive = (href: string) =>
 </header>
 
 <script>
+  // ── Cart icon — drawer nyitás + counter sync (Sprint 3.3) ─────────────────
+  import { getCartCount, openCartDrawer } from "@/lib/cart";
+
+  const cartTrigger = document.querySelector<HTMLAnchorElement>("[data-cart-trigger]");
+  const cartCount = document.querySelector<HTMLElement>("[data-cart-count]");
+
+  function updateCartCount() {
+    if (!cartCount) return;
+    const count = getCartCount();
+    if (count === 0) {
+      cartCount.hidden = true;
+    } else {
+      cartCount.hidden = false;
+      cartCount.textContent = String(count);
+    }
+  }
+
+  // Click handler: ne navigáljon a /kosar-ra, hanem nyissa meg a drawer-t
+  cartTrigger?.addEventListener("click", (e) => {
+    // Ctrl/Cmd-klikk vagy középső gomb — engedjük a navigációt (új fül)
+    if ((e as MouseEvent).ctrlKey || (e as MouseEvent).metaKey || (e as MouseEvent).button === 1) {
+      return;
+    }
+    e.preventDefault();
+    openCartDrawer();
+  });
+
+  window.addEventListener("mona-cart-update", updateCartCount);
+  window.addEventListener("storage", updateCartCount);
+
+  // Initial render
+  updateCartCount();
+
   // ── Mobile menu scroll lock (iOS Safari kompatibilis) ────────────────────
   const menu = document.querySelector<HTMLDivElement>("[data-mobile-menu]");
   const toggleBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-toggle]");
@@ -229,25 +262,6 @@ const isActive = (href: string) =>
     });
     ticking = true;
   }, { passive: true });
-
-  // ── Cart count update (lib/cart.ts esemény + storage) ────────────────────
-  const updateCartCount = () => {
-    try {
-      const cart = JSON.parse(localStorage.getItem("mona_cart") || "[]");
-      const count = cart.reduce((s: number, i: any) => s + (i.qty || 1), 0);
-      const el = document.querySelector<HTMLSpanElement>("[data-cart-count]");
-      if (!el) return;
-      if (count > 0) {
-        el.textContent = String(count);
-        el.removeAttribute("hidden");
-      } else {
-        el.setAttribute("hidden", "");
-      }
-    } catch {}
-  };
-  updateCartCount();
-  window.addEventListener("storage", updateCartCount);
-  window.addEventListener("mona-cart-update", updateCartCount);
 </script>
 
 <style>

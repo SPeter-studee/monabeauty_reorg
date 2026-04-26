@@ -20,7 +20,7 @@ Például: `0.5.1`
 
 ---
 
-## Aktuális verzió: `0.6.4`
+## Aktuális verzió: `0.7.0`
 
 A verzió a `package.json`-ban van rögzítve:
 
@@ -137,6 +137,7 @@ git push --tags
 | Sprint 3.2 (1. fix) | `0.6.2` | patch (sitemap+seed fix + képek) |
 | Hírlevél újrapozícionálás | `0.6.3` | patch (UX szöveg + Sprint 4 előkészítés) |
 | Sprint 3.2 (2. rész) | `0.6.4` | patch (webshop hub + kategória + márka) |
+| Sprint 3.3 | `0.7.0` | **MINOR** — vásárlási flow első fele |
 | Sprint 3 (webshop) | `0.6.0` | minor (tervezett) |
 | Sprint 4 (auth) | `0.7.0` | minor (tervezett) |
 | Sprint 5 (admin) | `0.8.0` | minor (tervezett) |

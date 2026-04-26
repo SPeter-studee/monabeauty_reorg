@@ -4,7 +4,7 @@
 // Env vars szükségesek (Cloudflare Pages → Settings → Environment Variables):
 //   MAILCHIMP_API_KEY      — Mailchimp API kulcs (formátum: xxx-usX)
 //   MAILCHIMP_AUDIENCE_ID  — célközönség ID
-//   MAILCHIMP_SERVER       — adatközpont prefix (pl. "us21")
+//   MAILCHIMP_SERVER       — adatközpont prefix (pl. "us8")
 //
 // Tagek:
 //   - "website-signup"     — minden feliratkozó automatikusan kap (forrás-jelölő)
@@ -92,10 +92,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Compliance state — a tag korábban leiratkozott vagy elutasította
-    if (
-      data.title === "Forgotten Email Not Subscribed" ||
-      (data.detail && data.detail.includes("compliance"))
-    ) {
+    if (data.title === "Forgotten Email Not Subscribed" ||
+        (data.detail && data.detail.includes("compliance"))) {
       console.warn("[newsletter] compliance issue:", { email, detail: data.detail });
       return Response.json({
         success: true,
@@ -103,7 +101,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    // ── Egyéb hibák — részletes naplózás (CF Functions log) ───────────────
+    // ── Egyéb hibák — RÉSZLETES NAPLÓZÁS! ─────────────────────────────────
+    // Ez segít a debug-ban: a Cloudflare Functions logban látni fogjuk
+    // pontosan mit küldött vissza a Mailchimp.
     console.error("[newsletter] Mailchimp HTTP error:", {
       status: res.status,
       title: data.title,
@@ -134,6 +134,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       { error: "Hiba történt. Próbáld újra később!" },
       { status: 500 }
     );
+
   } catch (err) {
     console.error("[newsletter] unexpected error:", err);
     return Response.json(

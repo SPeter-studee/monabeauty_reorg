@@ -7,7 +7,60 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 3.3 — Termékoldal + kosár drawer_
+- _Sprint 3.4 — Pénztár + email + Mailchimp tag_
+
+---
+
+## [0.7.0] — 2026-04-26 — Sprint 3.3 — Termékoldal + kosár drawer + /kosar
+
+**MINOR bump** — vásárlási folyamat első fele, új user flow.
+
+### Hozzáadva
+- **`src/pages/webshop/termek/[slug].astro`** — egyedi termékoldal:
+  - Kép galéria (fő + thumbnailek)
+  - Akció / Új / Mónika ajánlja badge
+  - Tartalom: márka link, név, lead, ár, méret, készlet státusz
+  - **Mónika ajánlása blokk** kiemelve (warm bal border)
+  - Mennyiség választó (− / + qty)
+  - Kosárba gomb → drawer megnyit
+  - 3 fülek: Leírás / Összetevők / Használat
+  - Kapcsolódó termékek szekció (max 4)
+  - Schema.org Product JSON-LD
+- **`src/pages/api/products/[slug].ts`** — egy termék GET endpoint
+- **`src/pages/kosar.astro`** — full page kosár nézet:
+  - Üres állapot CTA-val
+  - 2 oszlop layout (termékek + sticky summary)
+  - `noindex` (ne kerüljön Google indexbe)
+- **`src/components/shop/CartDrawer.astro`** — oldalsó panel:
+  - Right-side slide-in animation
+  - Backdrop + body scroll lock + Esc bezárás
+  - Tételek: kép + név + qty + ár + eltávolítás
+  - Szállítási mód radio (FoxPost / Személyes)
+  - Free shipping progress bar (20.000 Ft küszöbig)
+  - "Tovább a pénztárhoz" + "Kosár megtekintése"
+- **`src/components/shop/CartIcon.astro`** — alternatív kosár ikon (most nem használt)
+
+### Változott
+- **`src/lib/cart.ts`** — teljes átírás:
+  - `CartItem` interface a `shop.ts` típusokra (`productId`, `slug`, `priceAtAddFt`, `maxQty`, `brandName`)
+  - localStorage kulcs: `mona_cart` → `mona_cart_v2` (séma váltás)
+  - `getShippingMethod()` / `setShippingMethod()`
+  - `getCartSummary()` — szállítási költséggel együtt
+  - `addToCart` — készlet ellenőrzés (cap a stockQty-re), `capped` jelzés toast-ban
+  - Custom események: `mona-cart-update`, `mona-cart-open`
+- **`src/components/common/Header.astro`** — kosár ikon átalakítás:
+  - `data-cart-trigger` attribute
+  - Click → drawer megnyitás (preventDefault)
+  - Ctrl/Cmd-klikk + középső gomb klikk → engedi a `/kosar` navigációt új fülbe
+  - Counter `mona-cart-update` event-re
+- **`src/layouts/BaseLayout.astro`** — `CartDrawer` import + render
+- **Verzió bump**: `0.6.4` → `0.7.0` (MINOR — új user flow: vásárlási folyamat)
+
+### Megjegyzés
+- A **régi `mona_cart` localStorage** értékek **invalid-ok lesznek** — friss kezdés
+- A **/penztar oldal még nem létezik** — Sprint 3.4-ben jön. A "Tovább a pénztárhoz" gomb kattintáskor 404
+- A **kosár ikon Ctrl-klikk** opció megőrzi a `/kosar` URL-t (új fülben nyitja) — accessibility + SEO miatt
+- A **Probiotic utazó készlet** termék (8.) a placeholder ikont mutatja a galériában — Sprint 5 (admin)-ban Mónika tölthet fel képet
 
 ---
 

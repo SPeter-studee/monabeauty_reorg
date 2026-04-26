@@ -830,20 +830,165 @@ A frontend "böngészés" rész kész — most jön a **vásárlási folyamat**:
 
 ---
 
-## ⏳ Sprint 3.3 — Termékoldal + kosár drawer
+## ✅ Sprint 3.3 — Termékoldal + kosár drawer + /kosar
+
+**Időszak**: 2026-04-26  
+**Cél**: Vásárlási folyamat első fele — termékoldal részletekkel, localStorage-alapú kosár, oldalsó drawer, full page kosár nézet.
+
+### Mit építettünk
+
+**Termékoldal** (`src/pages/webshop/termek/[slug].astro`):
+- **Kép galéria**: fő kép + thumbnail-ok ha több kép van
+- **Akció / Új / Mónika ajánlja badge** (csak egy egyszerre)
+- **Tartalom oldal**:
+  - Márka link (vissza a márka oldalra)
+  - Termék név (clamp 28-40 px)
+  - Rövid leírás (lead)
+  - Ár (akciós: piros + áthúzott eredeti + −% badge)
+  - Méret (50 ml / 25 g / stb.)
+  - Készlet státusz színes pill (raktáron / kevés / nincs)
+  - **Mónika ajánlása blokk** — patina arany bal border, italic szöveg, **bold** kiemelésekkel
+  - Kosárba blokk: mennyiség választó (− qty +) + kosárba gomb
+  - Szállítási mini info (személyes átvétel + FoxPost + 20.000 Ft fölött ingyen)
+- **Tabs (3 fül)**:
+  - Leírás (gyártói teljes leírás markdown formázással)
+  - Összetevők (INCI lista monospace fontban + figyelmeztetés)
+  - Használat (használati útmutató)
+- **Kapcsolódó termékek** szekció (ugyanaz a kategória, max 4, kivéve self)
+- **Schema.org Product JSON-LD** SEO-hoz
+
+**Új API**:
+- **`GET /api/products/[slug]`** — egy termék lekérés (a kosárba gomb friss adatokkal dolgozik)
+
+**Kosár logika átdolgozás** (`src/lib/cart.ts`):
+- `CartItem` interface átírva `shop.ts` típusokra (`productId`, `slug`, `priceAtAddFt`, `maxQty`, `brandName`)
+- **localStorage kulcs változott**: `mona_cart` → `mona_cart_v2` (séma váltás miatt friss kezdés)
+- `getShippingMethod()` / `setShippingMethod()` — a kosár "emlékszik" mit választott
+- `getCartSummary()` — összegzés szállítási költséggel együtt
+- `addToCart` — készlet ellenőrzéssel (stockQty cap), `capped` jelzéssel toast-ban
+- Custom események: `mona-cart-update`, `mona-cart-open`
+
+**`CartDrawer` komponens** (`src/components/shop/CartDrawer.astro`):
+- Right-side slide-in (transform: translateX(100%) → 0)
+- Backdrop (rgba(44,41,38,0.4)) + body scroll lock
+- Esc + click-outside bezárás
+- 3 állapot: üres / tartalmas / loading
+- Tételek: kép + márka + név + qty controls + ár + eltávolítás
+- Szállítási mód radio (FoxPost / Személyes átvétel)
+- Összegzés: subtotal + shipping + total
+- **Free shipping progress bar** — ha >0 de <20.000 Ft, mutatja mennyit kell még; 20.000 Ft fölött "✓ Ingyenes szállításra jogosult!"
+- "Tovább a pénztárhoz" CTA + "Kosár megtekintése" link
+
+**Header bővítés**:
+- A meglévő kosár ikon a `data-cart-trigger` data attribute-tel
+- Click → drawer megnyitás (preventDefault)
+- Ctrl/Cmd-klikk + középső gomb klikk → engedi a `/kosar` navigációt új fülbe
+- Counter a `mona-cart-update` event-re reagál
+
+**`/kosar` full page**:
+- Üres állapot: kosár ikon + "A kosarad üres" + CTA `/webshop`-ra
+- Tartalmas állapot: 2 oszlop (termékek balra, summary jobbra sticky)
+- Item layout: kép + info + qty controls + total/eltávolítás (mobil: stacked)
+- Sticky összegző panel jobb oldalt asztalon
+- "Tovább a pénztárhoz" + "Vásárlás folytatása" linkek
+- Free shipping progress bar
+- **`noindex`** — a kosár oldal ne kerüljön a Google indexébe
+
+**`BaseLayout` bővítés**:
+- `CartDrawer` import + render Footer után — minden oldalon elérhető
+
+### Döntések
+
+- **Két nézet (drawer + page)**: a drawer **gyors interakciót** ad (kosárba kattintás után azonnal mutatja), a `/kosar` oldal a **részletes nézetet**. Ctrl/Cmd-klikk → új fül a `/kosar`-ra (ez **a Header link miatt** működik default-ként, csak az alap-klikk megakadályozva)
+- **localStorage kulcs `mona_cart_v2`**: a régi `mona_cart` kulcsban tárolt adatok séma-inkompatibilisek (a régi cart.ts-ben más struktúra volt). A v2 verzióval **a régi kosár tartalmak nem érvényesek** — ez nem probléma, mert még nem volt élő vásárlás
+- **Free shipping progress bar**: pszichológiai motivátor — a 20.000 Ft küszöbnél vizuálisan látja "még X Ft" — emeli az átlag rendelési értéket
+- **Sticky summary** asztali nézetben — a vásárló **mindig látja** mire kattint a "Tovább a pénztárhoz" gomb
+- **Schema.org Product JSON-LD**: termékek a Google Shopping-ban is megjelenhetnek (Sprint 6 Google Merchant feed előkészítés)
+
+### Cursor teendő
+
+```powershell
+# 1. Behúzás (10 új/módosított fájl)
+# 2. NPM install — nincs új dep, de újra építjük a node_modules-t
+npm install
+
+# 3. Lokális teszt — kritikus
+npm run dev
+# Ellenőrzés:
+#   ✓ /webshop/termek/krx-cica-szerum — termékoldal megjelenik
+#   ✓ Galéria thumbnail-ok cserélik a fő képet (ha több is van)
+#   ✓ Tabok (Leírás / Összetevők / Használat) működnek
+#   ✓ Mennyiség − / + gombok
+#   ✓ Kosárba gomb → drawer kinyílik
+#   ✓ Header kosár ikon klikk → drawer kinyílik (ne menjen a /kosar-ra)
+#   ✓ Header kosár ikon Ctrl+klikk → új fülben /kosar nyílik
+#   ✓ Drawer-ben qty − / + + eltávolítás
+#   ✓ Szállítási mód radio (FoxPost / Személyes)
+#   ✓ Free shipping progress: ha 5000 Ft → "Még 15.000 Ft..."
+#   ✓ /kosar oldal megjelenik tartalmasan
+#   ✓ Esc + backdrop klikk bezárja a drawer-t
+#   ✓ Mobile (DevTools): drawer full screen panel
+
+# 4. Build:
+npm run build
+# Sitemap-be a /webshop/termek/{slug} ne kerüljön be — várt!
+
+# 5. Deploy:
+npm run deploy
+
+# 6. Élesben próba: rakj be 1-2 terméket, ellenőrizd hogy a localStorage perzisztens
+
+# 7. Commit
+git add -A
+git commit -m "Sprint 3.3 — Termékoldal + kosár drawer + /kosar v0.7.0
+
+- Termékoldal: galéria + tartalom + tabs + kapcsolódó termékek + Schema.org
+- /api/products/[slug] GET endpoint
+- cart.ts átdolgozás (shop.ts típusok, mona_cart_v2)
+- CartDrawer: oldalsó panel, free shipping progress, szállítási mód
+- Header: kosár ikon klikk → drawer (Ctrl+klikk → /kosar)
+- /kosar full page nézet (2 oszlop, sticky summary)
+- BaseLayout: CartDrawer integrálva minden oldalra
+- Verzió: 0.6.4 → 0.7.0 MINOR (új user flow: vásárlási folyamat)"
+git push
+```
+
+### Fájlok (új + módosítás)
+
+**Új**:
+- `src/pages/webshop/termek/[slug].astro`
+- `src/pages/api/products/[slug].ts`
+- `src/pages/kosar.astro`
+- `src/components/shop/CartDrawer.astro`
+- `src/components/shop/CartIcon.astro` (jelenleg nem használjuk — a Header-be a meglévő gombot bővítettük)
+
+**Módosítás**:
+- `src/lib/cart.ts` — átdolgozva shop.ts típusokra
+- `src/components/common/Header.astro` — kosár ikon → drawer trigger, counter sync
+- `src/layouts/BaseLayout.astro` — CartDrawer import + render
+- `package.json` — verzió 0.6.4 → 0.7.0
+
+### Sprint 3.4 előtt
+
+A vásárlási folyamat **első fele kész**. Hátralévő:
+- `/penztar` checkout oldal (vendég adatok, szállítás, fizetés)
+- `POST /api/checkout` — rendelés létrehozás D1-ben
+- Resend email a vendégnek + Mónikának
+- Mailchimp tag automatikus (`vasarlas-YYYY-MM` + `vasarolt-{slug}`)
+- `/penztar/koszonjuk` — sikeres rendelés visszaigazolás
+
+---
+
+## ⏳ Sprint 3.4 — Pénztár + email + Mailchimp tag
 
 **Tervezett építés**:
-- `/webshop/termek/[slug]` — egyedi termékoldal:
-  - Kép galéria (ha több kép van)
-  - Teljes gyártói leírás markdown formázással
-  - INCI lista
-  - Használati útmutató
-  - Mónika ajánlása blokk (kiemelve)
-  - Kapcsolódó termékek (ugyanaz a kategória)
-  - Kosárba gomb (mennyiség választóval)
-- `CartDrawer` komponens — oldalsó panel, mobil-barát
-- localStorage-alapú kosár (cart.ts library)
-- `/kosar` full page nézet (a drawer mellett)
+- `/penztar` — checkout form (vendég adatok, szállítási cím, fizetési mód)
+- `POST /api/checkout` — D1 order + order_items insertion
+- Order number generálás: `MS-2026-0001` formátum
+- Resend email vendégnek (megerősítés + sorszám)
+- Resend email Mónikának (új rendelés értesítés)
+- Mailchimp tag: `vasarlas-2026-04` + `vasarolt-{slug}` minden tételhez
+- `/penztar/koszonjuk?rendeles=MS-2026-0001` — sikeres oldal
 
 ---
 
@@ -1121,6 +1266,7 @@ A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik
 | Sprint 3.2 (1. fix) | 2026-04-26 | ✅ Kész | sitemap+seed fix + képek |
 | Hírlevél újrapozícionálás | 2026-04-26 | ✅ Kész | "Mónika havi naplója" |
 | Sprint 3.2 (2. rész) | 2026-04-26 | ✅ Kész | Webshop hub + kategória + márka |
+| Sprint 3.3 | 2026-04-26 | ✅ Kész | Termékoldal + kosár drawer + /kosar |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

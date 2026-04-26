@@ -1,0 +1,535 @@
+---
+// src/pages/penztar/koszonjuk.astro
+// Thank-you oldal sikeres rendelés után
+//
+// Query: ?rendeles=MS-2026-0001
+// A rendelés részleteit a D1-ből töltjük (server-side, hogy ne lehessen
+// más rendelését megnézni JS-ből).
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+const env = Astro.locals.runtime.env;
+const db = (env as any).DB;
+
+const rendelesParam = Astro.url.searchParams.get("rendeles");
+
+// Validáció: MS-YYYY-NNNN formátum
+const orderNumberPattern = /^MS-\d{4}-\d{4}$/;
+const isValidOrderNumber = rendelesParam && orderNumberPattern.test(rendelesParam);
+
+let order: any = null;
+let items: any[] = [];
+
+if (isValidOrderNumber) {
+  // Rendelés lekérdezése
+  const orderResult = await db
+    .prepare("SELECT * FROM orders WHERE order_number = ?")
+    .bind(rendelesParam)
+    .first();
+
+  if (orderResult) {
+    order = orderResult;
+
+    // Tételek
+    const itemsResult = await db
+      .prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id ASC")
+      .bind(order.id)
+      .all();
+
+    items = itemsResult.results || [];
+  }
+}
+
+// HU formátum
+const formatPrice = (ft: number) => `${ft.toLocaleString("hu-HU")} Ft`;
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleDateString("hu-HU", {
+    year: "numeric", month: "long", day: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+};
+
+const shippingLabel = order?.shipping_method === "foxpost"
+  ? "FoxPost csomagautomata"
+  : "Személyes átvétel — Vác";
+
+const paymentLabel = order?.payment_method === "transfer"
+  ? "Átutalás"
+  : "Utánvét";
+---
+
+<BaseLayout
+  title={order ? `Köszönjük — ${order.order_number}` : "Rendelés visszaigazolása"}
+  description="Sikeres rendelés visszaigazolása."
+  noindex
+>
+  <PageHero
+    title={order ? "Köszönjük a rendelésedet!" : "Rendelés nem található"}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Pénztár" }
+    ]}
+  />
+
+  <section class="thanks section">
+    <div class="container">
+
+      {!order ? (
+        <div class="thanks-error">
+          <h2 class="thanks-error__title">A megadott rendelési szám nem található</h2>
+          <p class="thanks-error__text">
+            Ha most adtál le rendelést, várj néhány másodpercet, és próbáld újra.
+            Ha továbbra sem találod, írj nekünk a <a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a>
+            címre, vagy hívj a <strong>+36 20 913 0126</strong> számon.
+          </p>
+          <a href="/webshop" class="btn btn-primary">Vissza a webshopba</a>
+        </div>
+      ) : (
+        <div class="thanks-layout">
+
+          {/* ─── Rendelési szám hero ─────────────────────────── */}
+          <div class="thanks-hero">
+            <div class="thanks-hero__icon">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </div>
+            <h2 class="thanks-hero__title">A rendelésed megérkezett!</h2>
+            <p class="thanks-hero__lead">
+              Kedves <strong>{order.guest_name}</strong>, köszönöm hogy nálam vásároltál.
+              Hamarosan elindítom a feldolgozást, és emailben jelentkezem.
+            </p>
+            <div class="thanks-hero__order">
+              <span class="thanks-hero__order-label">Rendelési szám:</span>
+              <span class="thanks-hero__order-number">{order.order_number}</span>
+            </div>
+          </div>
+
+          {/* ─── Részletek ──────────────────────────────────── */}
+          <div class="thanks-details">
+
+            {/* Tételek */}
+            <div class="thanks-section">
+              <h3 class="thanks-section__title">Termékek</h3>
+              <ul class="thanks-items">
+                {items.map(item => (
+                  <li class="thanks-item">
+                    <div class="thanks-item__image-wrap">
+                      {item.product_image_url ? (
+                        <img src={item.product_image_url} alt={item.product_name} class="thanks-item__image" />
+                      ) : (
+                        <div class="thanks-item__image-placeholder"></div>
+                      )}
+                    </div>
+                    <div class="thanks-item__details">
+                      <p class="thanks-item__name">{item.product_name}</p>
+                      <p class="thanks-item__qty">{item.qty} db × {formatPrice(item.price_at_order_ft)}</p>
+                    </div>
+                    <span class="thanks-item__total">{formatPrice(item.subtotal_ft)}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div class="thanks-totals">
+                <div class="thanks-totals__row">
+                  <span>Részösszeg</span>
+                  <span>{formatPrice(order.subtotal_ft)}</span>
+                </div>
+                <div class="thanks-totals__row">
+                  <span>Szállítás ({shippingLabel})</span>
+                  <span>{order.shipping_fee_ft === 0 ? "Ingyen" : formatPrice(order.shipping_fee_ft)}</span>
+                </div>
+                <div class="thanks-totals__row thanks-totals__row--total">
+                  <span>Összesen</span>
+                  <span>{formatPrice(order.total_ft)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Szállítási / átvétel info */}
+            <div class="thanks-section">
+              <h3 class="thanks-section__title">
+                {order.shipping_method === "foxpost" ? "Szállítás" : "Átvétel"}
+              </h3>
+
+              {order.shipping_method === "foxpost" ? (
+                <div class="thanks-info">
+                  <p>
+                    <strong>FoxPost csomagautomata</strong><br>
+                    {order.shipping_address}<br>
+                    {order.shipping_zip} {order.shipping_city}
+                  </p>
+                  <p class="thanks-info__note">
+                    Hamarosan kapsz egy linket emailben, ahol kiválaszthatod
+                    a hozzád legközelebbi FoxPost automatát.
+                  </p>
+                </div>
+              ) : (
+                <div class="thanks-info">
+                  <p>
+                    <strong>Személyes átvétel</strong><br>
+                    Mona Studio<br>
+                    2600 Vác, Zrínyi Miklós u. 3.
+                  </p>
+                  <p class="thanks-info__note">
+                    Mónika telefonon jelentkezik a <strong>{order.guest_phone}</strong> számon,
+                    mikor jöhetsz a termékekért. Egy kávé mellett megbeszéljük amit kell.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Fizetési info */}
+            <div class="thanks-section">
+              <h3 class="thanks-section__title">Fizetés — {paymentLabel}</h3>
+
+              {order.payment_method === "transfer" ? (
+                <div class="thanks-info thanks-info--accent">
+                  <p>
+                    Az utalási adatokat <strong>külön emailben</strong> küldjük el.
+                    A csomagot az utalás megérkezése után indítjuk útnak.
+                  </p>
+                  <p>
+                    <strong>Összeg:</strong> {formatPrice(order.total_ft)}<br>
+                    <strong>Közlemény:</strong> {order.order_number}
+                  </p>
+                </div>
+              ) : (
+                <div class="thanks-info">
+                  <p>
+                    A futárnak fizetsz amikor megérkezik a csomag.
+                    <strong>Készpénzben vagy bankkártyával</strong> is fizethetsz.
+                  </p>
+                  <p>
+                    <strong>Fizetendő összeg:</strong> {formatPrice(order.total_ft)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Email visszaigazolás info */}
+            <div class="thanks-section thanks-section--accent">
+              <p class="thanks-email-note">
+                <strong>📧 Visszaigazoló email küldve!</strong><br>
+                Részletes visszaigazolás a <strong>{order.guest_email}</strong> címre.
+                Ha nem találod, nézd meg a spam mappát is.
+              </p>
+            </div>
+
+            {/* Kapcsolat */}
+            <div class="thanks-section thanks-section--bg">
+              <h3 class="thanks-section__title">Kérdésed van?</h3>
+              <p>
+                Bármilyen kérdés, kérés vagy aggály esetén keress bizalommal:<br>
+                📞 <a href="tel:+36209130126"><strong>+36 20 913 0126</strong></a><br>
+                ✉️ <a href="mailto:mona@monastudio.hu"><strong>mona@monastudio.hu</strong></a>
+              </p>
+              <p class="thanks-section__signature">
+                — Mónika
+              </p>
+            </div>
+
+            {/* CTA-k */}
+            <div class="thanks-actions">
+              <a href="/webshop" class="btn btn-secondary">Vásárlás folytatása</a>
+              <a href="/" class="btn-link">Vissza a főoldalra →</a>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.thanks {
+  padding-block: var(--space-8);
+}
+
+/* Hibás állapot */
+.thanks-error {
+  text-align: center;
+  max-width: var(--container-text);
+  margin-inline: auto;
+  padding: var(--space-10) var(--space-5);
+}
+
+.thanks-error__title {
+  font-family: var(--mona-serif);
+  font-size: 26px;
+  margin: 0 0 var(--space-4);
+  color: var(--mona-text);
+}
+
+.thanks-error__text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+  margin: 0 0 var(--space-6);
+}
+
+.thanks-error__text a {
+  color: var(--mona-warm);
+  text-decoration: underline;
+}
+
+/* Sikeres állapot */
+.thanks-layout {
+  max-width: var(--container-text);
+  margin-inline: auto;
+}
+
+.thanks-hero {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  margin-bottom: var(--space-6);
+}
+
+.thanks-hero__icon {
+  display: inline-flex;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--mona-bg);
+  align-items: center;
+  justify-content: center;
+  color: var(--mona-success);
+  margin-bottom: var(--space-4);
+}
+
+.thanks-hero__title {
+  font-family: var(--mona-serif);
+  font-size: 32px;
+  font-weight: 500;
+  margin: 0 0 var(--space-3);
+  color: var(--mona-text);
+}
+
+.thanks-hero__lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+  margin: 0 0 var(--space-5);
+}
+
+.thanks-hero__order {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--mona-bg);
+  padding: var(--space-3) var(--space-5);
+  border-radius: 1px;
+}
+
+.thanks-hero__order-label {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+}
+
+.thanks-hero__order-number {
+  font-family: var(--mona-mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--mona-text);
+  letter-spacing: 0.04em;
+}
+
+/* Részletek szekció */
+.thanks-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.thanks-section {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  padding: var(--space-5);
+}
+
+.thanks-section--accent {
+  background: var(--mona-surface);
+  border-left: 3px solid var(--mona-warm);
+}
+
+.thanks-section--bg {
+  background: var(--mona-bg);
+}
+
+.thanks-section__title {
+  font-family: var(--mona-serif);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 var(--space-3);
+  color: var(--mona-text);
+}
+
+.thanks-section__signature {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  color: var(--mona-warm);
+  margin-top: var(--space-3);
+}
+
+/* Tételek lista */
+.thanks-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.thanks-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.thanks-item:last-child {
+  border-bottom: none;
+}
+
+.thanks-item__image-wrap {
+  width: 60px;
+  aspect-ratio: 4 / 5;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  overflow: hidden;
+}
+
+.thanks-item__image,
+.thanks-item__image-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.thanks-item__name {
+  font-family: var(--mona-serif);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.thanks-item__qty {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  margin: 0;
+}
+
+.thanks-item__total {
+  font-family: var(--mona-serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+/* Totals */
+.thanks-totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.thanks-totals__row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+}
+
+.thanks-totals__row--total {
+  font-family: var(--mona-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--mona-text);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+/* Info blokkok */
+.thanks-info {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+}
+
+.thanks-info p {
+  margin: 0 0 var(--space-3);
+}
+
+.thanks-info p:last-child {
+  margin-bottom: 0;
+}
+
+.thanks-info strong {
+  color: var(--mona-text);
+}
+
+.thanks-info__note {
+  font-size: 13px;
+  color: var(--mona-text-3);
+  font-style: italic;
+}
+
+.thanks-info--accent {
+  background: var(--mona-bg);
+  padding: var(--space-3);
+  border-left: 3px solid var(--mona-warm);
+  margin: var(--space-2) 0;
+}
+
+.thanks-email-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+}
+
+/* CTA */
+.thanks-actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: var(--space-5);
+}
+
+.btn-link {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-warm);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--mona-warm);
+  padding-bottom: 1px;
+}
+
+.btn-link:hover {
+  color: var(--mona-text);
+  border-bottom-color: var(--mona-text);
+}
+</style>

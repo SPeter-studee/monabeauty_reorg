@@ -157,8 +157,6 @@
   const text = document.querySelector<HTMLSpanElement>("[data-newsletter-text]");
   const feedback = document.querySelector<HTMLDivElement>("[data-newsletter-feedback]");
 
-  const btnLabelDefault = "Igen, küldd a naplót";
-
   if (form && text && feedback) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -181,26 +179,23 @@
         const res = await fetch("/api/newsletter/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "website-footer" }),
+          body: JSON.stringify({ email }),
         });
         const result = await res.json();
 
         if (!res.ok) throw new Error(result.error || "Sikertelen feliratkozás");
 
-        // ── Siker (üzenet a szerverről: új feliratkozás / már listán / compliance) ──
-        feedback.textContent =
-          typeof result.message === "string" && result.message.trim()
-            ? result.message
-            : "Köszönjük! A megerősítő emailt elküldtük.";
+        // ── Siker ──
+        feedback.textContent = "Köszönjük! A megerősítő emailt elküldtük.";
         feedback.dataset.feedbackType = "success";
         feedback.removeAttribute("hidden");
         form.reset();
-        text.textContent = btnLabelDefault;
+        text.textContent = "Feliratkozás";
       } catch (err: any) {
         feedback.textContent = err.message || "Hiba történt. Próbáld újra később!";
         feedback.dataset.feedbackType = "error";
         feedback.removeAttribute("hidden");
-        text.textContent = btnLabelDefault;
+        text.textContent = "Feliratkozás";
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }

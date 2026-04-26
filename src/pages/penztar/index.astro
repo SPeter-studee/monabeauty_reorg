@@ -1,0 +1,729 @@
+---
+// src/pages/penztar.astro
+// Checkout oldal — vendég adatok + szállítás + fizetés + submit
+//
+// localStorage-ből olvassuk a kosár tartalmat, és a /api/checkout endpoint-ra
+// POST-oljuk. Sikeres rendelés után átirányít a /penztar/koszonjuk?rendeles=...
+// oldalra, és üríti a kosarat.
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="Pénztár — Mona Studio"
+  description="Rendelési adatok megadása és véglegesítés."
+  noindex
+>
+  <PageHero
+    title="Pénztár"
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Webshop", href: "/webshop" },
+      { label: "Kosár", href: "/kosar" },
+      { label: "Pénztár" }
+    ]}
+  />
+
+  <section class="checkout section">
+    <div class="container">
+
+      {/* Üres kosár — átirányítás */}
+      <div class="checkout-empty" data-checkout-empty hidden>
+        <p>A kosarad üres — vissza a webshopba.</p>
+        <a href="/webshop" class="btn btn-primary">Irány a webshop →</a>
+      </div>
+
+      <div class="checkout__layout" data-checkout-content>
+        {/* ─── BAL OLDAL — Form ─────────────────────────────────────── */}
+        <form class="checkout__form" data-checkout-form>
+
+          {/* Vendég adatok */}
+          <fieldset class="checkout-section">
+            <legend class="checkout-section__title">Vásárlói adatok</legend>
+
+            <div class="form-row">
+              <label class="form-field">
+                <span class="form-field__label">Teljes név <span class="required">*</span></span>
+                <input type="text" name="guestName" required autocomplete="name" />
+              </label>
+            </div>
+
+            <div class="form-row form-row--two">
+              <label class="form-field">
+                <span class="form-field__label">Email <span class="required">*</span></span>
+                <input type="email" name="guestEmail" required autocomplete="email" />
+              </label>
+              <label class="form-field">
+                <span class="form-field__label">Telefon <span class="required">*</span></span>
+                <input type="tel" name="guestPhone" required autocomplete="tel" placeholder="+36 ..." />
+              </label>
+            </div>
+
+            <p class="form-hint">
+              <strong>Miért kell a telefonszám?</strong> A FoxPost SMS-ben értesít a csomag érkezéséről.
+              Személyes átvételnél Mónika telefonon hív, mikor jöhetsz érte.
+            </p>
+          </fieldset>
+
+          {/* Szállítási mód */}
+          <fieldset class="checkout-section">
+            <legend class="checkout-section__title">Szállítási mód</legend>
+
+            <div class="shipping-options">
+              <label class="shipping-option">
+                <input type="radio" name="shippingMethod" value="foxpost" data-shipping-radio />
+                <div class="shipping-option__content">
+                  <div class="shipping-option__head">
+                    <span class="shipping-option__name">FoxPost csomagautomata</span>
+                    <span class="shipping-option__price" data-foxpost-price>1.990 Ft</span>
+                  </div>
+                  <p class="shipping-option__desc">
+                    Országosan, 600+ átvevőhelyen. SMS-ben értesít.
+                  </p>
+                </div>
+              </label>
+
+              <label class="shipping-option">
+                <input type="radio" name="shippingMethod" value="personal" data-shipping-radio />
+                <div class="shipping-option__content">
+                  <div class="shipping-option__head">
+                    <span class="shipping-option__name">Személyes átvétel — Vác</span>
+                    <span class="shipping-option__price">Ingyen</span>
+                  </div>
+                  <p class="shipping-option__desc">
+                    Mona Studio · 2600 Vác, Zrínyi Miklós u. 3. · Egy kávé mellett.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </fieldset>
+
+          {/* Szállítási cím (csak FoxPost-nál) */}
+          <fieldset class="checkout-section" data-shipping-address-section>
+            <legend class="checkout-section__title">Szállítási cím</legend>
+
+            <div class="form-row">
+              <label class="form-field">
+                <span class="form-field__label">Utca, házszám <span class="required">*</span></span>
+                <input type="text" name="shippingAddress" autocomplete="street-address" />
+              </label>
+            </div>
+
+            <div class="form-row form-row--two">
+              <label class="form-field">
+                <span class="form-field__label">Irányítószám <span class="required">*</span></span>
+                <input type="text" name="shippingZip" pattern="[0-9]{4}" autocomplete="postal-code" />
+              </label>
+              <label class="form-field">
+                <span class="form-field__label">Város <span class="required">*</span></span>
+                <input type="text" name="shippingCity" autocomplete="address-level2" />
+              </label>
+            </div>
+
+            <p class="form-hint">
+              <strong>FoxPost címválasztás</strong>: a rendelés feldolgozása után
+              elküldjük a linket, ahol a hozzád legközelebbi automatát választhatod ki.
+            </p>
+          </fieldset>
+
+          {/* Fizetési mód */}
+          <fieldset class="checkout-section">
+            <legend class="checkout-section__title">Fizetési mód</legend>
+
+            <div class="payment-options">
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="transfer" checked />
+                <div class="payment-option__content">
+                  <span class="payment-option__name">Átutalás</span>
+                  <p class="payment-option__desc">
+                    Az utalási adatokat emailben küldjük. A csomagot az utalás
+                    megérkezése után indítjuk útnak.
+                  </p>
+                </div>
+              </label>
+
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="on_delivery" />
+                <div class="payment-option__content">
+                  <span class="payment-option__name">Utánvét</span>
+                  <p class="payment-option__desc">
+                    A futárnak fizetsz amikor megérkezik a csomag.
+                    <em>(+ 0 Ft, nincs felár)</em>
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <p class="form-hint">
+              Bankkártyás fizetés (SimplePay) <strong>hamarosan</strong> elérhető lesz.
+            </p>
+          </fieldset>
+
+          {/* Megjegyzés */}
+          <fieldset class="checkout-section">
+            <legend class="checkout-section__title">Megjegyzés <em>(opcionális)</em></legend>
+
+            <label class="form-field">
+              <textarea name="customerNote" rows="3" placeholder="Bármilyen kérés vagy kérdés..."></textarea>
+            </label>
+          </fieldset>
+
+          {/* GDPR */}
+          <fieldset class="checkout-section">
+            <label class="form-checkbox">
+              <input type="checkbox" name="gdpr" required />
+              <span>
+                Elolvastam és elfogadom az <a href="/aszf" target="_blank">ÁSZF</a> és
+                <a href="/adatvedelem" target="_blank">Adatvédelmi tájékoztató</a> tartalmát. <span class="required">*</span>
+              </span>
+            </label>
+          </fieldset>
+
+          <button
+            type="submit"
+            class="btn btn-primary checkout__submit"
+            data-checkout-submit
+          >
+            <span data-submit-text>Megrendelem</span>
+          </button>
+
+          <div class="checkout__error" data-checkout-error hidden></div>
+        </form>
+
+        {/* ─── JOBB OLDAL — Összegzés (sticky) ──────────────────────── */}
+        <aside class="checkout__summary">
+          <h2 class="checkout__summary-title">Rendelés összegzése</h2>
+
+          <ul class="checkout-items" data-checkout-items></ul>
+
+          <div class="checkout-totals">
+            <div class="checkout-totals__row">
+              <span>Részösszeg</span>
+              <span data-summary-subtotal>0 Ft</span>
+            </div>
+            <div class="checkout-totals__row">
+              <span>Szállítás</span>
+              <span data-summary-shipping>—</span>
+            </div>
+            <div class="checkout-totals__row checkout-totals__row--total">
+              <span>Összesen</span>
+              <span data-summary-total>0 Ft</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { getCartSummary, clearCart, setShippingMethod } from "@/lib/cart";
+    import type { CartItem, ShippingMethod } from "@/lib/types/shop";
+
+    const form = document.querySelector<HTMLFormElement>("[data-checkout-form]");
+    const emptyContainer = document.querySelector<HTMLElement>("[data-checkout-empty]");
+    const contentContainer = document.querySelector<HTMLElement>("[data-checkout-content]");
+    const itemsContainer = document.querySelector<HTMLUListElement>("[data-checkout-items]");
+    const submitBtn = document.querySelector<HTMLButtonElement>("[data-checkout-submit]");
+    const submitText = document.querySelector<HTMLElement>("[data-submit-text]");
+    const errorContainer = document.querySelector<HTMLElement>("[data-checkout-error]");
+    const shippingAddressSection = document.querySelector<HTMLElement>("[data-shipping-address-section]");
+
+    function formatPrice(ft: number): string {
+      return `${ft.toLocaleString("hu-HU")} Ft`;
+    }
+
+    function escapeHtml(s: string): string {
+      return s.replace(/[<>&"]/g, c =>
+        ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" } as any)[c]
+      );
+    }
+
+    // ─── Kosár tartalom megjelenítése ──────────────────────────────
+    function renderSummary() {
+      const summary = getCartSummary();
+
+      if (summary.items.length === 0) {
+        if (emptyContainer) emptyContainer.hidden = false;
+        if (contentContainer) contentContainer.style.display = "none";
+        return;
+      }
+
+      if (emptyContainer) emptyContainer.hidden = true;
+      if (contentContainer) contentContainer.style.display = "";
+
+      // Tételek
+      if (itemsContainer) {
+        itemsContainer.innerHTML = "";
+        summary.items.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "checkout-item";
+          li.innerHTML = `
+            <div class="checkout-item__image-wrap">
+              ${item.imageUrl
+                ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="checkout-item__image">`
+                : `<div class="checkout-item__image-placeholder"></div>`
+              }
+              <span class="checkout-item__qty">${item.qty}</span>
+            </div>
+            <div class="checkout-item__details">
+              <p class="checkout-item__name">${escapeHtml(item.name)}</p>
+              <p class="checkout-item__price">${formatPrice(item.priceAtAddFt * item.qty)}</p>
+            </div>
+          `;
+          itemsContainer.appendChild(li);
+        });
+      }
+
+      // Összegzés
+      document.querySelector("[data-summary-subtotal]")!.textContent = formatPrice(summary.subtotalFt);
+      document.querySelector("[data-summary-shipping]")!.textContent =
+        summary.shippingFt === 0 ? "Ingyen" : formatPrice(summary.shippingFt);
+      document.querySelector("[data-summary-total]")!.textContent = formatPrice(summary.totalFt);
+
+      // Szállítási mód radio sync
+      document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
+        radio.checked = radio.value === summary.shippingMethod;
+      });
+
+      // Szállítási cím szekció láthatóság
+      if (shippingAddressSection) {
+        shippingAddressSection.style.display = summary.shippingMethod === "foxpost" ? "" : "none";
+      }
+    }
+
+    // ─── Szállítási mód váltás ──────────────────────────────────────
+    document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
+      radio.addEventListener("change", () => {
+        if (radio.checked) {
+          setShippingMethod(radio.value as ShippingMethod);
+          renderSummary();
+        }
+      });
+    });
+
+    // Kosár frissülés event
+    window.addEventListener("mona-cart-update", renderSummary);
+
+    // ─── Form submit ────────────────────────────────────────────────
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn || !submitText) return;
+
+      const summary = getCartSummary();
+      if (summary.items.length === 0) {
+        showError("A kosár üres.");
+        return;
+      }
+
+      // Form data összeállítás
+      const formData = new FormData(form);
+      const payload = {
+        guestName: formData.get("guestName"),
+        guestEmail: formData.get("guestEmail"),
+        guestPhone: formData.get("guestPhone"),
+        shippingMethod: summary.shippingMethod,
+        shippingAddress: formData.get("shippingAddress") || undefined,
+        shippingCity: formData.get("shippingCity") || undefined,
+        shippingZip: formData.get("shippingZip") || undefined,
+        paymentMethod: formData.get("paymentMethod"),
+        customerNote: formData.get("customerNote") || undefined,
+        items: summary.items.map(i => ({
+          productId: i.productId,
+          qty: i.qty,
+        })),
+      };
+
+      // Loading állapot
+      submitBtn.disabled = true;
+      submitText.textContent = "Megrendelés feldolgozása...";
+      errorContainer!.hidden = true;
+
+      try {
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Hiba történt a megrendelés feldolgozása közben.");
+        }
+
+        // Sikeres! Ürítjük a kosarat és átirányítunk
+        clearCart();
+        window.location.href = data.redirectUrl || `/penztar/koszonjuk?rendeles=${data.orderNumber}`;
+      } catch (err: any) {
+        console.error("[checkout] error:", err);
+        showError(err.message || "Hiba történt. Próbáld újra!");
+        submitBtn.disabled = false;
+        submitText.textContent = "Megrendelem";
+      }
+    });
+
+    function showError(message: string) {
+      if (!errorContainer) return;
+      errorContainer.hidden = false;
+      errorContainer.textContent = message;
+      errorContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // Initial render
+    renderSummary();
+  </script>
+</BaseLayout>
+
+<style>
+.checkout {
+  padding-block: var(--space-8);
+}
+
+.checkout-empty {
+  text-align: center;
+  padding: var(--space-10);
+}
+
+.checkout__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .checkout__layout {
+    grid-template-columns: 1fr 380px;
+    gap: var(--space-8);
+  }
+}
+
+/* ─── Form ──────────────────────────────────── */
+.checkout__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.checkout-section {
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-elevated);
+  padding: var(--space-5);
+  margin: 0;
+}
+
+.checkout-section__title {
+  font-family: var(--mona-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  width: 100%;
+}
+
+.checkout-section__title em {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  font-weight: 400;
+  font-style: normal;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .form-row--two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-field__label {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--mona-text-2);
+  text-transform: uppercase;
+}
+
+.required {
+  color: var(--mona-sale);
+}
+
+.form-field input,
+.form-field textarea {
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  padding: 10px 12px;
+  font-family: var(--mona-sans);
+  font-size: 15px;
+  color: var(--mona-text);
+  min-height: 44px;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--mona-warm);
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--mona-text-3);
+  margin: var(--space-2) 0 0;
+}
+
+.form-hint strong {
+  color: var(--mona-text-2);
+  font-weight: 500;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mona-text-2);
+}
+
+.form-checkbox input {
+  margin-top: 4px;
+}
+
+.form-checkbox a {
+  color: var(--mona-warm);
+  text-decoration: underline;
+}
+
+/* ─── Szállítási opciók ─────────────────────── */
+.shipping-options,
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shipping-option,
+.payment-option {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-bg);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.shipping-option:has(input:checked),
+.payment-option:has(input:checked) {
+  border-color: var(--mona-warm);
+  background: var(--mona-surface);
+}
+
+.shipping-option input,
+.payment-option input {
+  margin-top: 4px;
+}
+
+.shipping-option__content,
+.payment-option__content {
+  flex: 1;
+}
+
+.shipping-option__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-1);
+}
+
+.shipping-option__name,
+.payment-option__name {
+  font-family: var(--mona-serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.shipping-option__price {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text);
+  font-weight: 500;
+}
+
+.shipping-option__desc,
+.payment-option__desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.payment-option__desc em {
+  color: var(--mona-text-3);
+}
+
+/* ─── Submit gomb ────────────────────────────── */
+.checkout__submit {
+  width: 100%;
+  font-size: 16px;
+  padding: 14px;
+  min-height: 52px;
+}
+
+.checkout__error {
+  background: rgba(166, 66, 54, 0.08);
+  border-left: 3px solid var(--mona-error);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  color: var(--mona-error);
+}
+
+/* ─── Összegzés (jobb oldal) ─────────────────── */
+.checkout__summary {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: fit-content;
+}
+
+@media (min-width: 1024px) {
+  .checkout__summary {
+    position: sticky;
+    top: calc(var(--header-height, 80px) + var(--space-4));
+  }
+}
+
+.checkout__summary-title {
+  font-family: var(--mona-serif);
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.checkout-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.checkout-item {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.checkout-item__image-wrap {
+  position: relative;
+  width: 60px;
+  aspect-ratio: 4 / 5;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  overflow: hidden;
+}
+
+.checkout-item__image,
+.checkout-item__image-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.checkout-item__qty {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--mona-warm);
+  color: var(--mona-elevated);
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkout-item__name {
+  font-family: var(--mona-serif);
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.checkout-item__price {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.checkout-totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.checkout-totals__row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+}
+
+.checkout-totals__row--total {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mona-text);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 0.5px solid var(--mona-border);
+}
+</style>

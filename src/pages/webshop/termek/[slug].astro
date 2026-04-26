@@ -1,0 +1,916 @@
+---
+// src/pages/webshop/termek/[slug].astro
+// Egyedi termékoldal — galéria, leírás, kosárba
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import ProductCard from "@/components/shop/ProductCard.astro";
+import { getProduct, listProducts } from "@/lib/products";
+import {
+  effectivePrice,
+  isOnSale,
+  discountPercent,
+  stockStatus,
+} from "@/lib/types/shop";
+
+const env = Astro.locals.runtime.env;
+const db = (env as any).DB;
+
+const { slug } = Astro.params;
+const product = await getProduct(db, slug!);
+
+if (!product) {
+  return Astro.redirect("/webshop", 302);
+}
+
+// Ár / akció
+const price = effectivePrice(product);
+const onSale = isOnSale(product);
+const discount = discountPercent(product);
+const stock = stockStatus(product);
+
+// Képek — primary először
+const images = (product.images ?? []).slice().sort((a, b) => {
+  if (a.isPrimary && !b.isPrimary) return -1;
+  if (!a.isPrimary && b.isPrimary) return 1;
+  return a.sortOrder - b.sortOrder;
+});
+const primaryImage = images[0];
+
+// Kapcsolódó termékek — ugyanaz a kategória, kivéve self
+const related = product.category
+  ? (await listProducts(db, {
+      categorySlug: product.category.slug,
+      perPage: 5,
+      sortBy: "recommended",
+    })).products.filter(p => p.id !== product.id).slice(0, 4)
+  : [];
+
+const formatPrice = (ft: number) => `${ft.toLocaleString("hu-HU")} Ft`;
+
+const breadcrumbs = [
+  { label: "Főoldal", href: "/" },
+  { label: "Webshop", href: "/webshop" },
+];
+if (product.category) {
+  breadcrumbs.push({ label: product.category.name, href: `/webshop/${product.category.slug}` });
+}
+breadcrumbs.push({ label: product.name });
+
+// SEO
+const metaTitle = product.metaTitle ?? `${product.name} — Mona Studio webshop`;
+const metaDescription = product.metaDescription ?? product.shortDescription ?? `${product.name} a Mona Studio webshopjában — szakmai ajánlással.`;
+const ogImage = primaryImage?.url ? `https://monastudio.hu${primaryImage.url}` : undefined;
+
+// Schema.org Product JSON-LD (termékek SEO-ja)
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": product.name,
+  "description": product.shortDescription ?? product.description?.slice(0, 200),
+  "sku": product.slug,
+  "image": primaryImage ? `https://monastudio.hu${primaryImage.url}` : undefined,
+  "brand": product.brand ? { "@type": "Brand", "name": product.brand.name } : undefined,
+  "offers": {
+    "@type": "Offer",
+    "url": `https://monastudio.hu/webshop/termek/${product.slug}`,
+    "price": price,
+    "priceCurrency": "HUF",
+    "availability": stock === "out_of_stock"
+      ? "https://schema.org/OutOfStock"
+      : "https://schema.org/InStock",
+    "seller": { "@type": "Organization", "name": "Mona Studio" },
+  },
+};
+---
+
+<BaseLayout
+  title={metaTitle}
+  description={metaDescription}
+  image={ogImage}
+  canonical={`https://monastudio.hu/webshop/termek/${product.slug}`}
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </Fragment>
+
+  <PageHero
+    title={product.name}
+    breadcrumbs={breadcrumbs}
+  />
+
+  <article class="product-page section">
+    <div class="container">
+      <div class="product-page__layout">
+
+        {/* ─── BAL OLDAL — Kép galéria ──────────────────────────── */}
+        <div class="product-gallery">
+          {primaryImage ? (
+            <div class="product-gallery__main">
+              <img
+                src={primaryImage.url}
+                alt={primaryImage.altText ?? product.name}
+                width="640"
+                height="800"
+                fetchpriority="high"
+                data-gallery-main
+              />
+
+              {/* Akció / új / ajánlott badge */}
+              {onSale && (
+                <span class="product-gallery__badge product-gallery__badge--sale">
+                  −{discount}%
+                </span>
+              )}
+              {!onSale && product.isNew && (
+                <span class="product-gallery__badge product-gallery__badge--new">
+                  Új
+                </span>
+              )}
+              {!onSale && !product.isNew && product.isRecommended && (
+                <span class="product-gallery__badge product-gallery__badge--recommended">
+                  Mónika ajánlja
+                </span>
+              )}
+            </div>
+          ) : (
+            <div class="product-gallery__placeholder" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="6" width="18" height="14" rx="1.5"/>
+                <path d="M3 16l5-5 4 4 3-3 6 6"/>
+                <circle cx="8" cy="11" r="1.5"/>
+              </svg>
+            </div>
+          )}
+
+          {/* Thumbnail-ok ha több kép van */}
+          {images.length > 1 && (
+            <div class="product-gallery__thumbs">
+              {images.map((img, idx) => (
+                <button
+                  type="button"
+                  class:list={["product-gallery__thumb", { "product-gallery__thumb--active": idx === 0 }]}
+                  data-gallery-thumb={img.url}
+                  aria-label={`Kép ${idx + 1}: ${img.altText ?? product.name}`}
+                >
+                  <img src={img.url} alt="" width="80" height="100" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ─── JOBB OLDAL — Tartalom ─────────────────────────────── */}
+        <div class="product-info">
+
+          {/* Márka eyebrow */}
+          {product.brand && (
+            <a href={`/webshop/markak/${product.brand.slug}`} class="product-info__brand">
+              {product.brand.name}
+              {product.brand.country && <span> · {product.brand.country}</span>}
+            </a>
+          )}
+
+          <h1 class="product-info__name">{product.name}</h1>
+
+          {/* Rövid leírás */}
+          {product.shortDescription && (
+            <p class="product-info__lead">{product.shortDescription}</p>
+          )}
+
+          {/* Ár blokk */}
+          <div class="product-info__price-row">
+            {onSale ? (
+              <>
+                <span class="product-info__price product-info__price--sale">
+                  {formatPrice(price)}
+                </span>
+                <span class="product-info__price-original">
+                  {formatPrice(product.priceFt)}
+                </span>
+                <span class="product-info__discount">
+                  −{discount}%
+                </span>
+              </>
+            ) : (
+              <span class="product-info__price">{formatPrice(price)}</span>
+            )}
+          </div>
+
+          {/* Méret */}
+          {product.sizeValue && product.sizeUnit && (
+            <p class="product-info__size">
+              <strong>Kiszerelés:</strong> {product.sizeValue} {product.sizeUnit}
+            </p>
+          )}
+
+          {/* Készlet státusz */}
+          {stock === "in_stock" && (
+            <p class="product-info__stock product-info__stock--in">
+              ✓ Raktáron
+            </p>
+          )}
+          {stock === "low_stock" && (
+            <p class="product-info__stock product-info__stock--low">
+              ⚠ Kevés van készleten ({product.stockQty} db)
+            </p>
+          )}
+          {stock === "out_of_stock" && (
+            <p class="product-info__stock product-info__stock--out">
+              Jelenleg nincs készleten
+            </p>
+          )}
+
+          {/* Mónika ajánlása — kiemelt blokk */}
+          {product.monikaRecommends && (
+            <aside class="monika-recommends">
+              <p class="monika-recommends__eyebrow">Mónika ajánlása</p>
+              <p class="monika-recommends__text" set:html={
+                product.monikaRecommends.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+              } />
+            </aside>
+          )}
+
+          {/* Kosárba blokk */}
+          <div class="product-buy" data-product-buy>
+            <div class="product-buy__qty">
+              <label for="qty-input" class="product-buy__qty-label">Mennyiség</label>
+              <div class="qty-control">
+                <button type="button" class="qty-control__btn" data-qty-decrement aria-label="Csökkentés">−</button>
+                <input
+                  id="qty-input"
+                  type="number"
+                  class="qty-control__input"
+                  value="1"
+                  min="1"
+                  max={product.stockQty}
+                  data-qty-input
+                />
+                <button type="button" class="qty-control__btn" data-qty-increment aria-label="Növelés">+</button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary product-buy__cta"
+              data-add-to-cart
+              data-product-id={product.id}
+              data-product-slug={product.slug}
+              disabled={stock === "out_of_stock"}
+            >
+              {stock === "out_of_stock" ? "Nincs készleten" : "Kosárba teszem"}
+            </button>
+          </div>
+
+          {/* Mini info — szállítás */}
+          <div class="product-shipping-info">
+            <p class="product-shipping-info__line">
+              <strong>Személyes átvétel:</strong> ingyen — Vác, Zrínyi M. u. 3.
+            </p>
+            <p class="product-shipping-info__line">
+              <strong>FoxPost csomagautomata:</strong> 1.990 Ft országosan
+            </p>
+            <p class="product-shipping-info__line product-shipping-info__line--accent">
+              <strong>20.000 Ft fölött ingyenes szállítás</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── TABS — leírás / összetevők / használat ────────────── */}
+      <div class="product-tabs">
+        <nav class="product-tabs__nav" role="tablist">
+          <button type="button" class="product-tabs__btn product-tabs__btn--active" data-tab="description" role="tab" aria-selected="true">
+            Leírás
+          </button>
+          {product.ingredients && (
+            <button type="button" class="product-tabs__btn" data-tab="ingredients" role="tab" aria-selected="false">
+              Összetevők
+            </button>
+          )}
+          {product.usageInstructions && (
+            <button type="button" class="product-tabs__btn" data-tab="usage" role="tab" aria-selected="false">
+              Használat
+            </button>
+          )}
+        </nav>
+
+        <div class="product-tabs__panels">
+          <div class="product-tabs__panel product-tabs__panel--active" data-tab-content="description" role="tabpanel">
+            <div class="prose" set:html={
+              product.description?.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                .replace(/\n\n/g, "</p><p>")
+                .replace(/^/, "<p>").concat("</p>")
+            } />
+          </div>
+
+          {product.ingredients && (
+            <div class="product-tabs__panel" data-tab-content="ingredients" role="tabpanel" hidden>
+              <p class="product-tabs__inci">{product.ingredients}</p>
+              <p class="product-tabs__inci-note">
+                A teljes INCI lista a termék csomagolásán található. Ha bizonyos
+                összetevőre érzékeny vagy, mindig ellenőrizd vásárlás előtt.
+              </p>
+            </div>
+          )}
+
+          {product.usageInstructions && (
+            <div class="product-tabs__panel" data-tab-content="usage" role="tabpanel" hidden>
+              <p class="product-tabs__usage">{product.usageInstructions}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  </article>
+
+  {/* ─── KAPCSOLÓDÓ TERMÉKEK ────────────────────────────────────── */}
+  {related.length > 0 && (
+    <section class="related section section--bg">
+      <div class="container">
+        <header class="related__header">
+          <p class="eyebrow">Hasonló termékek</p>
+          <h2 class="related__title">{product.category?.name} kategóriából</h2>
+        </header>
+
+        <div class="related__grid">
+          {related.map(p => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ─── INTERAKCIÓK SCRIPT ─────────────────────────────────────── */}
+  <script>
+    import { addToCart, openCartDrawer } from "@/lib/cart";
+
+    // ─── Galéria — thumb-ra kattintáskor a fő kép cserélődik ────────
+    document.querySelectorAll<HTMLButtonElement>("[data-gallery-thumb]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const url = btn.dataset.galleryThumb;
+        if (!url) return;
+        const main = document.querySelector<HTMLImageElement>("[data-gallery-main]");
+        if (main) main.src = url;
+
+        // Active class kezelés
+        document.querySelectorAll(".product-gallery__thumb--active").forEach(el => {
+          el.classList.remove("product-gallery__thumb--active");
+        });
+        btn.classList.add("product-gallery__thumb--active");
+      });
+    });
+
+    // ─── Mennyiség választó ─────────────────────────────────────────
+    const qtyInput = document.querySelector<HTMLInputElement>("[data-qty-input]");
+    const decBtn = document.querySelector<HTMLButtonElement>("[data-qty-decrement]");
+    const incBtn = document.querySelector<HTMLButtonElement>("[data-qty-increment]");
+
+    decBtn?.addEventListener("click", () => {
+      if (!qtyInput) return;
+      const val = parseInt(qtyInput.value, 10);
+      if (val > 1) qtyInput.value = String(val - 1);
+    });
+    incBtn?.addEventListener("click", () => {
+      if (!qtyInput) return;
+      const val = parseInt(qtyInput.value, 10);
+      const max = parseInt(qtyInput.max, 10);
+      if (val < max) qtyInput.value = String(val + 1);
+    });
+
+    // ─── Kosárba gomb ────────────────────────────────────────────────
+    const addBtn = document.querySelector<HTMLButtonElement>("[data-add-to-cart]");
+    addBtn?.addEventListener("click", async () => {
+      if (addBtn.disabled) return;
+
+      const productId = parseInt(addBtn.dataset.productId ?? "0", 10);
+      const slug = addBtn.dataset.productSlug;
+      const qty = parseInt(qtyInput?.value ?? "1", 10);
+
+      if (!productId || !slug) return;
+
+      // Lekérjük a termék adatokat /api/products/{slug}-ből
+      try {
+        addBtn.disabled = true;
+        addBtn.textContent = "Kosárba helyezem...";
+
+        const res = await fetch(`/api/products/${slug}`);
+        if (!res.ok) throw new Error("Termék nem található");
+        const product = await res.json();
+
+        addToCart(product, qty);
+
+        // Drawer megnyitása sikeres add után
+        setTimeout(() => openCartDrawer(), 200);
+
+        addBtn.textContent = "✓ Kosárban";
+        setTimeout(() => {
+          addBtn.disabled = false;
+          addBtn.textContent = "Kosárba teszem";
+        }, 1500);
+      } catch (err) {
+        console.error("Kosár hozzáadás hiba:", err);
+        addBtn.disabled = false;
+        addBtn.textContent = "Hiba — próbáld újra";
+        setTimeout(() => {
+          addBtn.textContent = "Kosárba teszem";
+        }, 2000);
+      }
+    });
+
+    // ─── Tabok ──────────────────────────────────────────────────────
+    document.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.tab;
+        if (!target) return;
+
+        // Tab gombok
+        document.querySelectorAll("[data-tab]").forEach(b => {
+          b.classList.remove("product-tabs__btn--active");
+          b.setAttribute("aria-selected", "false");
+        });
+        btn.classList.add("product-tabs__btn--active");
+        btn.setAttribute("aria-selected", "true");
+
+        // Tab tartalmak
+        document.querySelectorAll<HTMLElement>("[data-tab-content]").forEach(panel => {
+          if (panel.dataset.tabContent === target) {
+            panel.classList.add("product-tabs__panel--active");
+            panel.removeAttribute("hidden");
+          } else {
+            panel.classList.remove("product-tabs__panel--active");
+            panel.setAttribute("hidden", "");
+          }
+        });
+      });
+    });
+  </script>
+</BaseLayout>
+
+<style>
+.product-page {
+  padding-block: var(--space-8);
+}
+
+.product-page__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .product-page__layout {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-10);
+  }
+}
+
+/* ─── Galéria ──────────────────────────────────────────────────── */
+.product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.product-gallery__main {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  overflow: hidden;
+}
+
+.product-gallery__main img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--space-8);
+}
+
+.product-gallery__placeholder {
+  aspect-ratio: 4 / 5;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mona-text-3);
+  opacity: 0.4;
+}
+
+.product-gallery__badge {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  padding: 6px 14px;
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 1px;
+}
+.product-gallery__badge--sale {
+  background: var(--mona-sale);
+  color: var(--mona-elevated);
+}
+.product-gallery__badge--new {
+  background: var(--mona-nature);
+  color: var(--mona-elevated);
+}
+.product-gallery__badge--recommended {
+  background: var(--mona-warm);
+  color: var(--mona-elevated);
+}
+
+.product-gallery__thumbs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.product-gallery__thumb {
+  flex: 0 0 auto;
+  width: 80px;
+  aspect-ratio: 4 / 5;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.product-gallery__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--space-2);
+}
+.product-gallery__thumb--active {
+  border-color: var(--mona-warm);
+  border-width: 1px;
+}
+
+/* ─── Termék info ──────────────────────────────────────────────── */
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.product-info__brand {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mona-warm);
+  text-decoration: none;
+  border-bottom: 0.5px solid transparent;
+  align-self: flex-start;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.product-info__brand:hover {
+  border-bottom-color: var(--mona-warm);
+}
+
+.product-info__name {
+  font-family: var(--mona-serif);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--mona-text);
+  margin: 0;
+}
+
+.product-info__lead {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.product-info__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-block: var(--space-3);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.product-info__price {
+  font-family: var(--mona-serif);
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.product-info__price--sale {
+  color: var(--mona-sale);
+}
+
+.product-info__price-original {
+  font-family: var(--mona-sans);
+  font-size: 18px;
+  color: var(--mona-text-3);
+  text-decoration: line-through;
+}
+
+.product-info__discount {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  background: var(--mona-sale);
+  color: var(--mona-elevated);
+  padding: 4px 10px;
+  border-radius: 1px;
+  letter-spacing: 0.04em;
+}
+
+.product-info__size {
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+
+.product-info__size strong {
+  color: var(--mona-text);
+  font-weight: 500;
+}
+
+.product-info__stock {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 1px;
+}
+
+.product-info__stock--in {
+  color: var(--mona-success);
+  background: rgba(90, 107, 90, 0.1);
+}
+.product-info__stock--low {
+  color: var(--mona-sale);
+  background: rgba(184, 90, 60, 0.1);
+}
+.product-info__stock--out {
+  color: var(--mona-text-3);
+  background: var(--mona-bg);
+  font-style: italic;
+}
+
+/* ─── Mónika ajánlása ──────────────────────────────────────────── */
+.monika-recommends {
+  background: var(--mona-elevated);
+  border-left: 3px solid var(--mona-warm);
+  padding: var(--space-5);
+  border-radius: 1px;
+}
+
+.monika-recommends__eyebrow {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mona-warm);
+  margin: 0 0 var(--space-2);
+}
+
+.monika-recommends__text {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin: 0;
+  font-style: italic;
+}
+
+.monika-recommends__text :global(strong) {
+  color: var(--mona-text);
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* ─── Kosárba blokk ────────────────────────────────────────────── */
+.product-buy {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  padding-top: var(--space-4);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.product-buy__qty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.product-buy__qty-label {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  border: 0.5px solid var(--mona-border);
+  border-radius: 1px;
+  background: var(--mona-elevated);
+  height: 48px;
+}
+
+.qty-control__btn {
+  width: 40px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: var(--mona-text-2);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease);
+}
+
+.qty-control__btn:hover {
+  background: var(--mona-bg);
+}
+
+.qty-control__input {
+  width: 50px;
+  height: 100%;
+  border: none;
+  border-inline: 0.5px solid var(--mona-border);
+  background: transparent;
+  text-align: center;
+  font-family: var(--mona-sans);
+  font-size: 16px;
+  color: var(--mona-text);
+}
+.qty-control__input::-webkit-inner-spin-button,
+.qty-control__input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qty-control__input { -moz-appearance: textfield; }
+
+.product-buy__cta {
+  flex: 1;
+  height: 48px;
+  font-size: 15px;
+}
+
+/* ─── Szállítás info ───────────────────────────────────────────── */
+.product-shipping-info {
+  background: var(--mona-bg);
+  padding: var(--space-4);
+  border-radius: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.product-shipping-info__line {
+  font-size: 13px;
+  color: var(--mona-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.product-shipping-info__line strong {
+  color: var(--mona-text);
+  font-weight: 500;
+}
+
+.product-shipping-info__line--accent {
+  color: var(--mona-nature);
+}
+
+.product-shipping-info__line--accent strong {
+  color: var(--mona-nature);
+}
+
+/* ─── TABS ─────────────────────────────────────────────────────── */
+.product-tabs {
+  margin-top: var(--space-10);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+.product-tabs__nav {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 0.5px solid var(--mona-border);
+  overflow-x: auto;
+}
+
+.product-tabs__btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mona-text-3);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.product-tabs__btn:hover {
+  color: var(--mona-text-2);
+}
+
+.product-tabs__btn--active {
+  color: var(--mona-text);
+  border-bottom-color: var(--mona-warm);
+}
+
+.product-tabs__panels {
+  padding: var(--space-6) 0;
+}
+
+.product-tabs__panel {
+  display: none;
+}
+
+.product-tabs__panel--active {
+  display: block;
+}
+
+.product-tabs__panel .prose,
+.product-tabs__panel p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+  max-width: var(--container-prose);
+}
+
+.product-tabs__inci {
+  font-family: var(--mona-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--mona-text-2);
+  background: var(--mona-bg);
+  padding: var(--space-4);
+  border-radius: 1px;
+  word-break: break-word;
+}
+
+.product-tabs__inci-note {
+  font-size: 13px;
+  color: var(--mona-text-3);
+  font-style: italic;
+  margin-top: var(--space-3);
+}
+
+/* ─── Kapcsolódó termékek ───────────────────────────────────────── */
+.related {
+  background: var(--mona-surface);
+  border-block: 0.5px solid var(--mona-border);
+  padding-block: var(--space-10);
+}
+
+.related__header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.related__title {
+  font-family: var(--mona-serif);
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.related__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .related__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .related__grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+  }
+}
+</style>

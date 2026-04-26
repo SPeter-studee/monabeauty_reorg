@@ -1,0 +1,631 @@
+---
+// src/pages/kosar.astro
+// Full page kosár nézet — alternatív a CartDrawer-hez
+// Ide érkezik aki: explicit a /kosar URL-t használja, vagy a Header kosár ikont
+// Ctrl+klikkel/új fülben nyitja meg.
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="Kosár — Mona Studio"
+  description="A kosaradban lévő termékek áttekintése és pénztárhoz továbblépés."
+  noindex
+>
+  <PageHero
+    title="Kosár"
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Webshop", href: "/webshop" },
+      { label: "Kosár" }
+    ]}
+  />
+
+  <section class="cart-page section">
+    <div class="container">
+
+      {/* Üres állapot */}
+      <div class="cart-page__empty" data-cart-page-empty>
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M3 3h2l3.6 11.59a2 2 0 002 1.41h7.72a2 2 0 002-1.41L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="20" r="1.5"/>
+          <circle cx="18" cy="20" r="1.5"/>
+        </svg>
+        <h2 class="cart-page__empty-title">A kosarad üres</h2>
+        <p class="cart-page__empty-text">
+          Nézz be a webshopba — Mónika személyes ajánlásával válogatott
+          KRX termékek érzékeny és mikrobiom-támogatott bőrápoláshoz.
+        </p>
+        <a href="/webshop" class="btn btn-primary">
+          Irány a webshop →
+        </a>
+      </div>
+
+      {/* Tartalmas állapot */}
+      <div class="cart-page__layout" data-cart-page-content hidden>
+
+        {/* Bal oldal: termékek */}
+        <div class="cart-page__items-wrap">
+          <header class="cart-page__items-header">
+            <h2 class="cart-page__items-title">Termékek</h2>
+            <span class="cart-page__items-count" data-cart-page-count>0</span>
+          </header>
+
+          <ul class="cart-page__items" data-cart-page-items></ul>
+        </div>
+
+        {/* Jobb oldal: összegzés */}
+        <aside class="cart-page__summary">
+          <h2 class="cart-page__summary-title">Összegzés</h2>
+
+          {/* Szállítási mód */}
+          <div class="cart-shipping">
+            <p class="cart-shipping__label">Szállítási mód</p>
+            <div class="cart-shipping__options">
+              <label class="cart-shipping__option">
+                <input type="radio" name="shipping-page" value="foxpost" data-shipping-radio>
+                <div class="cart-shipping__option-content">
+                  <span class="cart-shipping__option-name">FoxPost csomagautomata</span>
+                  <span class="cart-shipping__option-price">1.990 Ft</span>
+                </div>
+              </label>
+              <label class="cart-shipping__option">
+                <input type="radio" name="shipping-page" value="personal" data-shipping-radio>
+                <div class="cart-shipping__option-content">
+                  <span class="cart-shipping__option-name">Személyes átvétel — Vác</span>
+                  <span class="cart-shipping__option-price">Ingyen</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Totals */}
+          <div class="cart-totals">
+            <div class="cart-totals__row">
+              <span>Részösszeg</span>
+              <span data-cart-page-subtotal>0 Ft</span>
+            </div>
+            <div class="cart-totals__row">
+              <span>Szállítás</span>
+              <span data-cart-page-shipping>0 Ft</span>
+            </div>
+            <div class="cart-totals__row cart-totals__row--total">
+              <span>Összesen</span>
+              <span data-cart-page-total>0 Ft</span>
+            </div>
+
+            <div class="cart-totals__free-progress" data-page-free-progress hidden>
+              <div class="cart-totals__free-bar">
+                <div class="cart-totals__free-fill" data-page-free-fill></div>
+              </div>
+              <p class="cart-totals__free-text" data-page-free-text></p>
+            </div>
+          </div>
+
+          <a href="/penztar" class="btn btn-primary cart-page__checkout">
+            Tovább a pénztárhoz →
+          </a>
+
+          <a href="/webshop" class="cart-page__continue">
+            ← Vásárlás folytatása
+          </a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { getCartSummary, updateQuantity, removeFromCart, setShippingMethod } from "@/lib/cart";
+    import type { CartItem, ShippingMethod } from "@/lib/types/shop";
+    import { FREE_SHIPPING_THRESHOLD_FT } from "@/lib/types/shop";
+
+    const emptyContainer = document.querySelector<HTMLElement>("[data-cart-page-empty]");
+    const contentContainer = document.querySelector<HTMLElement>("[data-cart-page-content]");
+    const itemsContainer = document.querySelector<HTMLUListElement>("[data-cart-page-items]");
+    const countLabel = document.querySelector<HTMLElement>("[data-cart-page-count]");
+
+    function formatPrice(ft: number): string {
+      return `${ft.toLocaleString("hu-HU")} Ft`;
+    }
+
+    function escapeHtml(s: string): string {
+      return s.replace(/[<>&"]/g, c =>
+        ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" } as any)[c]
+      );
+    }
+
+    function renderItem(item: CartItem): HTMLLIElement {
+      const li = document.createElement("li");
+      li.className = "cart-page-item";
+      li.innerHTML = `
+        <a href="/webshop/termek/${escapeHtml(item.slug)}" class="cart-page-item__image-link">
+          ${item.imageUrl
+            ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="cart-page-item__image" loading="lazy">`
+            : `<div class="cart-page-item__image-placeholder"></div>`
+          }
+        </a>
+        <div class="cart-page-item__info">
+          ${item.brandName ? `<p class="cart-page-item__brand">${escapeHtml(item.brandName)}</p>` : ""}
+          <a href="/webshop/termek/${escapeHtml(item.slug)}" class="cart-page-item__name">${escapeHtml(item.name)}</a>
+          <p class="cart-page-item__unit-price">${formatPrice(item.priceAtAddFt)} / db</p>
+        </div>
+        <div class="cart-page-item__qty">
+          <button type="button" class="cart-page-item__qty-btn" data-qty-dec="${item.productId}" aria-label="Csökkentés">−</button>
+          <span class="cart-page-item__qty-value">${item.qty}</span>
+          <button type="button" class="cart-page-item__qty-btn" data-qty-inc="${item.productId}" ${item.qty >= item.maxQty ? "disabled" : ""} aria-label="Növelés">+</button>
+        </div>
+        <div class="cart-page-item__total">
+          <span class="cart-page-item__price">${formatPrice(item.priceAtAddFt * item.qty)}</span>
+          <button type="button" class="cart-page-item__remove" data-remove="${item.productId}">Eltávolítás</button>
+        </div>
+      `;
+
+      li.querySelector(`[data-qty-dec="${item.productId}"]`)?.addEventListener("click", () => {
+        updateQuantity(item.productId, item.qty - 1);
+      });
+      li.querySelector(`[data-qty-inc="${item.productId}"]`)?.addEventListener("click", () => {
+        updateQuantity(item.productId, item.qty + 1);
+      });
+      li.querySelector(`[data-remove="${item.productId}"]`)?.addEventListener("click", () => {
+        removeFromCart(item.productId);
+      });
+
+      return li;
+    }
+
+    function renderFreeShippingProgress(subtotal: number) {
+      const progress = document.querySelector<HTMLElement>("[data-page-free-progress]");
+      const fill = document.querySelector<HTMLElement>("[data-page-free-fill]");
+      const text = document.querySelector<HTMLElement>("[data-page-free-text]");
+      if (!progress || !fill || !text) return;
+
+      if (subtotal >= FREE_SHIPPING_THRESHOLD_FT) {
+        progress.hidden = false;
+        fill.style.width = "100%";
+        text.textContent = "✓ Ingyenes szállításra jogosult!";
+        text.classList.add("cart-totals__free-text--achieved");
+      } else if (subtotal > 0) {
+        progress.hidden = false;
+        const percent = (subtotal / FREE_SHIPPING_THRESHOLD_FT) * 100;
+        fill.style.width = `${percent}%`;
+        const remaining = FREE_SHIPPING_THRESHOLD_FT - subtotal;
+        text.textContent = `Még ${formatPrice(remaining)} az ingyenes szállításhoz`;
+        text.classList.remove("cart-totals__free-text--achieved");
+      } else {
+        progress.hidden = true;
+      }
+    }
+
+    function render() {
+      const summary = getCartSummary();
+
+      if (summary.items.length === 0) {
+        if (emptyContainer) emptyContainer.hidden = false;
+        if (contentContainer) contentContainer.hidden = true;
+        return;
+      }
+
+      if (emptyContainer) emptyContainer.hidden = true;
+      if (contentContainer) contentContainer.hidden = false;
+
+      // Tételek
+      if (itemsContainer) {
+        itemsContainer.innerHTML = "";
+        summary.items.forEach(item => itemsContainer.appendChild(renderItem(item)));
+      }
+
+      if (countLabel) {
+        countLabel.textContent = summary.itemCount === 1
+          ? "1 darab"
+          : `${summary.itemCount} darab`;
+      }
+
+      // Összegzés
+      document.querySelector("[data-cart-page-subtotal]")!.textContent = formatPrice(summary.subtotalFt);
+      document.querySelector("[data-cart-page-shipping]")!.textContent =
+        summary.shippingFt === 0 ? "Ingyen" : formatPrice(summary.shippingFt);
+      document.querySelector("[data-cart-page-total]")!.textContent = formatPrice(summary.totalFt);
+
+      // Szállítási mód radio sync
+      document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
+        radio.checked = radio.value === summary.shippingMethod;
+      });
+
+      renderFreeShippingProgress(summary.subtotalFt);
+    }
+
+    // Szállítási mód váltás
+    document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
+      radio.addEventListener("change", () => {
+        if (radio.checked) {
+          setShippingMethod(radio.value as ShippingMethod);
+        }
+      });
+    });
+
+    // Updates
+    window.addEventListener("mona-cart-update", render);
+
+    // Init
+    render();
+  </script>
+</BaseLayout>
+
+<style>
+.cart-page {
+  padding-block: var(--space-8);
+}
+
+/* ─── Üres állapot ──────────────────────────── */
+.cart-page__empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-5);
+  max-width: var(--container-text);
+  margin-inline: auto;
+}
+
+.cart-page__empty svg {
+  color: var(--mona-text-3);
+  opacity: 0.4;
+  margin-bottom: var(--space-5);
+}
+
+.cart-page__empty-title {
+  font-family: var(--mona-serif);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--mona-text);
+  margin: 0 0 var(--space-3);
+}
+
+.cart-page__empty-text {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0 0 var(--space-6);
+}
+
+/* ─── Layout ────────────────────────────────── */
+.cart-page__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .cart-page__layout {
+    grid-template-columns: 1fr 380px;
+    gap: var(--space-8);
+  }
+}
+
+/* ─── Items oldal ───────────────────────────── */
+.cart-page__items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+.cart-page__items-title {
+  font-family: var(--mona-serif);
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.cart-page__items-count {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+}
+
+.cart-page__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.cart-page-item {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: 0.5px solid var(--mona-border);
+}
+
+@media (min-width: 640px) {
+  .cart-page-item {
+    grid-template-columns: 100px 1fr auto auto;
+    align-items: center;
+  }
+}
+
+.cart-page-item:last-child {
+  border-bottom: none;
+}
+
+.cart-page-item__image-link {
+  display: block;
+  width: 100px;
+  aspect-ratio: 4 / 5;
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  overflow: hidden;
+}
+
+.cart-page-item__image,
+.cart-page-item__image-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--space-2);
+}
+
+.cart-page-item__info {
+  min-width: 0;
+}
+
+.cart-page-item__brand {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mona-warm);
+  margin: 0 0 var(--space-1);
+}
+
+.cart-page-item__name {
+  display: block;
+  font-family: var(--mona-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--mona-text);
+  text-decoration: none;
+  line-height: 1.3;
+  margin-bottom: var(--space-1);
+}
+
+.cart-page-item__name:hover {
+  color: var(--mona-warm);
+}
+
+.cart-page-item__unit-price {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  margin: 0;
+}
+
+.cart-page-item__qty {
+  display: flex;
+  align-items: center;
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-elevated);
+  height: 36px;
+  align-self: center;
+}
+
+.cart-page-item__qty-btn {
+  width: 32px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--mona-text-2);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cart-page-item__qty-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cart-page-item__qty-value {
+  width: 32px;
+  text-align: center;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  border-inline: 0.5px solid var(--mona-border);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-page-item__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.cart-page-item__price {
+  font-family: var(--mona-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.cart-page-item__remove {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  cursor: pointer;
+  text-decoration: underline;
+  min-height: auto;
+  transition: color var(--motion-fast) var(--ease);
+}
+
+.cart-page-item__remove:hover {
+  color: var(--mona-error);
+}
+
+/* ─── Summary jobb oldal ───────────────────── */
+.cart-page__summary {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: fit-content;
+  position: sticky;
+  top: calc(var(--header-height, 80px) + var(--space-4));
+}
+
+.cart-page__summary-title {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--mona-text);
+}
+
+.cart-page__checkout {
+  width: 100%;
+}
+
+.cart-page__continue {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  text-decoration: none;
+  text-align: center;
+  border-bottom: 0.5px solid transparent;
+  padding-bottom: 1px;
+  align-self: center;
+  transition: color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+}
+
+.cart-page__continue:hover {
+  color: var(--mona-text);
+  border-bottom-color: var(--mona-text-3);
+}
+
+/* Shipping options + totals — copied from CartDrawer style */
+.cart-shipping__label {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+  margin: 0 0 var(--space-2);
+}
+
+.cart-shipping__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cart-shipping__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-bg);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.cart-shipping__option:has(input:checked) {
+  border-color: var(--mona-warm);
+}
+
+.cart-shipping__option input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.cart-shipping__option-content {
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
+  align-items: center;
+}
+
+.cart-shipping__option-name {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text);
+}
+
+.cart-shipping__option-price {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-2);
+}
+
+.cart-totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.cart-totals__row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text-2);
+}
+
+.cart-totals__row--total {
+  font-family: var(--mona-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mona-text);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.cart-totals__free-progress {
+  margin-top: var(--space-3);
+}
+
+.cart-totals__free-bar {
+  height: 4px;
+  background: var(--mona-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.cart-totals__free-fill {
+  height: 100%;
+  background: var(--mona-warm);
+  width: 0%;
+  transition: width var(--motion-slow) var(--ease);
+}
+
+.cart-totals__free-text {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-3);
+  margin: 0;
+}
+
+.cart-totals__free-text--achieved {
+  color: var(--mona-success);
+  font-weight: 500;
+}
+</style>
