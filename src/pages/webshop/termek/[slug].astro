@@ -701,12 +701,14 @@ const schema = {
   align-items: flex-end;
   padding-top: var(--space-4);
   border-top: 0.5px solid var(--mona-border);
+  flex-wrap: wrap;
 }
 
 .product-buy__qty {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .product-buy__qty-label {
@@ -721,10 +723,12 @@ const schema = {
 .qty-control {
   display: flex;
   align-items: center;
+  justify-content: center;
   border: 0.5px solid var(--mona-border);
   border-radius: 1px;
   background: var(--mona-elevated);
   height: 48px;
+  width: fit-content;
 }
 
 .qty-control__btn {
@@ -736,6 +740,11 @@ const schema = {
   color: var(--mona-text-2);
   cursor: pointer;
   transition: background var(--motion-fast) var(--ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .qty-control__btn:hover {
@@ -748,22 +757,29 @@ const schema = {
   border: none;
   border-inline: 0.5px solid var(--mona-border);
   background: transparent;
-  text-align: center;
+  text-align: center !important;
   font-family: var(--mona-sans);
   font-size: 16px;
   color: var(--mona-text);
+  padding: 0;
+  flex-shrink: 0;
 }
 .qty-control__input::-webkit-inner-spin-button,
 .qty-control__input::-webkit-outer-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
-.qty-control__input { -moz-appearance: textfield; }
+.qty-control__input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 
 .product-buy__cta {
   flex: 1;
   height: 48px;
   font-size: 15px;
+  min-width: 200px;
 }
 
 /* ─── Szállítás info ───────────────────────────────────────────── */
@@ -808,6 +824,13 @@ const schema = {
   gap: var(--space-2);
   border-bottom: 0.5px solid var(--mona-border);
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge legacy */
+}
+
+.product-tabs__nav::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari/Edge */
 }
 
 .product-tabs__btn {

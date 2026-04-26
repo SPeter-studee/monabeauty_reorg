@@ -24,6 +24,11 @@ html {
   -webkit-font-smoothing: antialiased;
   font-family: var(--mona-sans);
   scroll-behavior: smooth;
+
+  /* CRITICAL: meggátolja a horizontális overflow-t (lásd Mona V0.7.3 fix) */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ── Sticky footer pattern ─────────────────────────────────────────────── */
@@ -39,6 +44,11 @@ body {
   /* Sticky footer */
   display: flex;
   flex-direction: column;
+
+  /* CRITICAL: nem lóghat ki vízszintesen */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 main {
