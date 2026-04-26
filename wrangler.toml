@@ -13,7 +13,7 @@ database_id = "7b7e5aa5-b54f-4c17-94ab-ed0dedbf33d6"
 # ── KV namespace (cache, OAuth state) ─────────────────────────────────────────
 [[kv_namespaces]]
 binding = "CONTENT"
-id = "REPLACE_WITH_YOUR_KV_ID"
+id = "b2da4e4639ec4141a4f0c91ab3c5e8b7"
 
 # ── R2 bucket (termék képek) ─────────────────────────────────────────────────
 [[r2_buckets]]
