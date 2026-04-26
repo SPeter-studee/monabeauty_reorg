@@ -11,18 +11,26 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.7.8] — 2026-04-26 — Pénztár GDPR checkbox stílus fix
+## [0.7.8] — 2026-04-27 — Pénztár + kosár UI fix-ek
 
 ### Javítva
-- **`.form-checkbox` CSS** (`src/pages/penztar/index.astro`) — a checkout GDPR checkbox jelmagyarázat csúnya nagybetűs/szétfolyt szövegként jelent meg, mert a `reset.css` globális `label` szabálya (`text-transform: uppercase` + `letter-spacing: 0.1em`) átöröklődött a `<span>`-be:
-  - **Hozzáadva**: `text-transform: none`, `letter-spacing: 0`, `font-weight: 400`, `margin-bottom: 0` — explicit override
-  - **Hozzáadva**: `width: 18px; height: 18px` a checkbox input-on (egységes a v0.7.5 radio méretével)
-  - **Hozzáadva**: `accent-color: var(--mona-warm)` — brand színű pipa (eddig fehér default volt)
-  - **Hozzáadva**: `text-underline-offset: 2px` + `:hover` link — finomabb tipográfia
-  - A `.auth__checkbox` és `.contact-form__checkbox` mintát követi (ott már jó volt)
+- **Pénztár — GDPR checkbox layout**:
+  - A `.form-checkbox` `<span>` szövege a globális `reset.css` `label` szabálya miatt
+    nagybetűsen + szétfolyt letter-spacing-gel jelent meg ("ELOLVASTAM ÉS ELFOGADOM
+    AZ ÁSZF...")
+  - Fix: explicit `text-transform: none` + `letter-spacing: normal` mind a `.form-checkbox`
+    label-en, mind a belső `> span`-en (védőháló)
+  - Checkbox méret egységesítve a v0.7.5 standardra: 18×18px (mint a radio gombok)
+  - `accent-color: var(--mona-warm)` — branded checkbox szín
+- **`/kosar` full page — termékkép méret**:
+  - Eddig csak `aspect-ratio: 4 / 5` volt, explicit `max-height` nélkül
+  - Egyes esetekben a kép kifolyt a 100×125px keretből és túl nagyra nyúlt
+  - Fix: explicit `width: 100px; height: 125px; max-width/max-height` mind a link wrapper-en, 
+    mind a belső `<img>`-en (a CartDrawer és checkout summary mintájára — v0.7.5)
 
 ### Megjegyzés
-- A `0.7.3` – `0.7.7` közötti verziók nem kerültek dokumentálva ebbe a changelog-ba. Ezek elsősorban a `0.7.5`-ben lezárt UI fix kör (Sprint 3 véglegesítés) finomításai voltak.
+- A v0.7.3–0.7.7 közötti változások nem kerültek bele ebbe a changelog-ba — 
+  visszamenőleges dokumentálásuk **külön session-ben** történik
 
 ---
 
