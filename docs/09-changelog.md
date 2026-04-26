@@ -7,7 +7,38 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadva
-- _A következő szolgáltatás oldalak a Sprint 2B 2. körében_
+- _A következő statikus oldalak a Sprint 2B 3. körében (galéria, vélemények, jogi oldalak)_
+
+---
+
+## [0.4.0] — 2026-04-26 — Sprint 2B (2. kör) — Szolgáltatás oldalak
+
+### Hozzáadva
+- **8 szolgáltatás markdown** (`src/content/services/`):
+  - Szemöldök tetoválás (szálazás + ombre technika)
+  - Szemöldök laminálás + Szempilla lifting (egy oldalon)
+  - Nanopen kezelés (London Beauty hialuron por)
+  - Arckezelések (7 variáns: Rejuven, Mesotica peptides, Savas hámlasztás, Tini, Hidratáló, Frissítő, Arc-dekoltázs masszázs)
+  - Műszempilla (1D, 3D, 5D, 7D volumen)
+  - Gyantázás (patronos + wax)
+  - Szemöldök formázás és festés, szempilla festés
+  - Smink (egyedi árazással)
+- **Új oldalak**:
+  - `/szolgaltatasok` — hub (kiemelt + grid kártyákkal)
+  - `/szolgaltatasok/[slug]` — egyedi szolgáltatás Schema.org Service markup-pal
+- **Új komponens**: `ServiceCard.astro` — hero képpel és ár-jelzéssel
+- **17 új kép** (`public/images/`):
+  - `services/` — 10 hero kép (Mona-branded, professzionális)
+  - `sections/` — `hero-main.webp` (responsive 480/900 variánsokkal), `blog-hero.webp`, `galeria-hero.webp`, `szolgaltatasok-hero.webp`
+  - `og-default.jpg` — frissítve (Mónika szalon háttérrel)
+- **Schema.org Service markup**: provider (BeautySalon), areaServed (Vác, Budapest), opcionális offers (priceFrom)
+- **Related kezelések blokk** minden egyedi szolgáltatás oldal alján (3 random másik)
+
+### Featured kezelések
+- Arckezelések (a leggazdagabb tartalom + Eclado/Mesotica brand fókusz)
+- Szemöldök tetoválás (`sortOrder: 5`)
+- Szemöldök laminálás + Szempilla lifting (`sortOrder: 20`)
+- Nanopen kezelés (`sortOrder: 30`)
 
 ---
 

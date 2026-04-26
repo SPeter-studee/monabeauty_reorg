@@ -144,29 +144,56 @@ A Mona Studio V2 projekt sprint naplója — minden sprint mit tartalmazott, mib
 
 ---
 
-## ⏳ Sprint 2B (2. kör) — Szolgáltatás oldalak
+## ✅ Sprint 2B (2. kör) — Szolgáltatás oldalak
 
-**Cél**: 8 szolgáltatás oldal a meglévő `monastudio.hu` tartalmából.
+**Időszak**: 2026-04-26  
+**Cél**: 8 szolgáltatás oldal a meglévő `monastudio.hu` tartalmából + hub oldal.
 
-### Mit fogunk építeni
+### Mit építettünk
 
-**Új oldalak:**
-- `/szolgaltatasok` — hub (összes szolgáltatás kártyán)
-- `/szolgaltatasok/[slug]` — egyedi szolgáltatás (markdown alapú)
-
-**Markdown tartalom (folyamatban):**
-- ⏳ `szemoldok-tetovalas.md`
+**Markdown tartalom (8/8 kész):**
+- ✅ `szemoldok-tetovalas.md` (szálazás + ombre)
 - ✅ `szemoldok-laminalas-szempilla-lifting.md`
 - ✅ `nanopen-kezeles.md`
-- ⏳ `arckezeles.md`
+- ✅ `arckezelesek.md` (7 variáns: Rejuven, Mesotica, Savas hámlasztás, Tini, Hidratáló, Frissítő, Arc-dekoltázs masszázs)
 - ✅ `muszempilla.md`
-- ⏳ `gyantazas.md`
-- ⏳ `szemoldok-szempilla-festes.md`
-- ⏳ `smink.md`
+- ✅ `gyantazas.md`
+- ✅ `szemoldok-szempilla-festes.md`
+- ✅ `smink.md` (egyedi árazással)
 
-**Új komponensek:**
-- `ServiceCard.astro` — szolgáltatás kártya
-- `ServiceContent.astro` — szolgáltatás oldal renderer
+**Új oldalak:**
+- `/szolgaltatasok` — hub (kiemelt + grid kártyákkal)
+- `/szolgaltatasok/[slug]` — egyedi szolgáltatás, Schema.org Service markup, hero kép
+
+**Új komponens:**
+- `ServiceCard.astro` — kártya hero képpel és ár-jelzéssel
+
+**Képek bemásolva** (`public/images/`):
+- `services/` — 10 hero kép a 8 szolgáltatáshoz (Mona-branded, professzionális)
+- `sections/` — `hero-main.webp` (responsive 480/900 variánsokkal), `blog-hero.webp`, `galeria-hero.webp`, `szolgaltatasok-hero.webp`
+- `og-default.jpg` — frissítve (Mónika szalon háttérrel)
+
+### Schema változás
+- Content Collections: `cover` és `heroImage` mezők → `coverImageUrl` / `heroImageUrl` string formátum (public mappára mutató path)
+- Egyszerűbb karbantartás, közvetlenül szerkeszthető markdown frontmatter-ben
+
+### Döntések
+
+- **Markdown alapú szolgáltatások** — könnyen szerkeszthető, később admin felületen át is módosítható
+- **Featured flag** — `arckezelesek`, `szemoldok-tetovalas`, `szemoldok-laminalas-szempilla-lifting`, `nanopen-kezeles` kiemelve
+- **Schema.org Service markup** — Local SEO: provider (BeautySalon), areaServed (Vác, Budapest), opcionális offers (priceFrom)
+- **Smink egyedi árazás** — `priceNote` mező, fix ár nincs (egyeztetés alapján)
+- **Slug konzisztencia**: `arckezelesek` többes szám (összetett oldal 7 kezeléssel)
+- **Két szolgáltatás összevonva** egy oldalra: szemöldök laminálás + szempilla lifting (egy kezelés alkalom)
+
+### Fájlok (új)
+- 8 új markdown fájl (`src/content/services/`)
+- 1 új komponens (`ServiceCard.astro`)
+- 2 új oldal (hub + dynamic slug)
+- 17 új kép (`public/images/services/` + `public/images/sections/` + `og-default.jpg`)
+- `src/content/config.ts` schema módosítás
+- 2 új oldal (`/szolgaltatasok/index.astro`, `/szolgaltatasok/[slug].astro`)
+- 1 új komponens (`ServiceCard.astro`)
 
 ---
 
@@ -319,7 +346,7 @@ A Mona Studio V2 projekt sprint naplója — minden sprint mit tartalmazott, mib
 | Sprint 1 | 2026-04-25 | ✅ Kész | 30+ |
 | Sprint 2A | 2026-04-25 | ✅ Kész | 8 új + 5 módosítás |
 | Sprint 2B (1. kör) | 2026-04-26 | ✅ Kész | 13 új + 3 módosítás |
-| Sprint 2B (2. kör) | 2026-04-26 | 🟡 Folyamatban (3/8) | 8+ |
+| Sprint 2B (2. kör) | 2026-04-26 | ✅ Kész | 11 új |
 | Sprint 2B (3. kör) | TBD | ⏳ | 10+ |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |

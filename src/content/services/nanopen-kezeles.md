@@ -3,6 +3,8 @@ title: "Nanopen kezelés"
 description: "Intenzív hatóanyagbevitel London Beauty prémium hialuron porral és személyre szabott ampullákkal — látványos hidratálás és bőrmegújítás."
 shortDescription: "Intenzív hialuron-por és személyre szabott ampullák a bőr mélyebb rétegeibe."
 icon: "syringe"
+heroImageUrl: "/images/services/hialuron-kezeles-hero.webp"
+heroImageAlt: "Nanopen kezelés Mona Studio szalonban"
 sortOrder: 30
 featured: true
 ---

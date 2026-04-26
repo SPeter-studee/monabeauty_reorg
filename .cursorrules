@@ -157,7 +157,7 @@ Lásd `docs/08-sprint-log.md` a teljes részletekért:
 - ✅ Sprint 1 (0.1.0): Astro alap, design system, layout, i18n
 - ✅ Sprint 2A (0.2.0): cookie consent, toast, newsletter, layout fixes
 - ✅ Sprint 2B 1. kör (0.3.0): blog, rólam, kapcsolat, 404
-- 🟡 Sprint 2B 2. kör: szolgáltatás oldalak (3/8)
+- ✅ Sprint 2B 2. kör (0.4.0): 8 szolgáltatás oldal + hub + szolgáltatás detail
 - ⏳ Sprint 2B 3. kör: galéria, vélemények, jogi oldalak, főoldal bővítés
 - ⏳ Sprint 3: webshop
 - ⏳ Sprint 4: ügyfél törzs (auth)

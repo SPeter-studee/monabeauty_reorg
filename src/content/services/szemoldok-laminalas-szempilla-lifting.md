@@ -3,6 +3,8 @@ title: "Szemöldök laminálás & Szempilla lifting"
 description: "Természetes, mégis látványos eredmény — dúsabb szemöldök és szempilla, vegyszerek nélkül. A kezelések tartósan emelik, formázzák és rendezik a szálakat."
 shortDescription: "Tartós formázás és ívelés a saját szálakkal — természetes, mégis hangsúlyos."
 icon: "sparkles"
+heroImageUrl: "/images/services/szemoldok-laminalas-szempilla-lifting-hero.webp"
+heroImageAlt: "Szemöldök laminálás és szempilla lifting eredménye — előtte és utána"
 sortOrder: 20
 featured: true
 ---

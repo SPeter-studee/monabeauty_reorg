@@ -1,0 +1,156 @@
+---
+// src/components/services/ServiceCard.astro
+
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  service: CollectionEntry<"services">;
+  featured?: boolean;
+}
+
+const { service, featured = false } = Astro.props;
+const { title, shortDescription, heroImageUrl, heroImageAlt, priceFrom, priceNote } = service.data;
+---
+
+<article class={`service-card ${featured ? "service-card--featured" : ""}`}>
+  <a href={`/szolgaltatasok/${service.slug}`} class="service-card__link">
+
+    {heroImageUrl && (
+      <div class="service-card__image-wrap">
+        <img
+          src={heroImageUrl}
+          alt={heroImageAlt ?? title}
+          class="service-card__image"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+    )}
+
+    <div class="service-card__body">
+      <h3 class="service-card__title">{title}</h3>
+      <p class="service-card__description">{shortDescription}</p>
+
+      {priceFrom && (
+        <p class="service-card__price">
+          <span class="service-card__price-from">-tól</span>
+          <span class="service-card__price-value">{priceFrom.toLocaleString("hu-HU")} Ft</span>
+        </p>
+      )}
+
+      {priceNote && !priceFrom && (
+        <p class="service-card__price-note">{priceNote}</p>
+      )}
+
+      <span class="service-card__cta" aria-hidden="true">Részletek →</span>
+    </div>
+  </a>
+</article>
+
+<style>
+.service-card {
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  overflow: hidden;
+  transition: border-color var(--motion-fast) var(--ease),
+              transform var(--motion-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .service-card:hover {
+    border-color: var(--mona-text);
+    transform: translateY(-2px);
+  }
+  .service-card:hover .service-card__image {
+    transform: scale(1.03);
+  }
+}
+
+.service-card--featured {
+  border: 0.5px solid var(--mona-warm);
+}
+
+.service-card__link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.service-card__image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--mona-surface);
+}
+
+.service-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--motion-base) var(--ease);
+}
+
+.service-card__body {
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.service-card__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.25rem, 2vw + 0.75rem, 1.5rem);
+  line-height: 1.2;
+  color: var(--mona-text);
+  margin: 0;
+}
+
+.service-card__description {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--mona-text-2);
+  margin: 0;
+  flex: 1;
+}
+
+.service-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.service-card__price-from {
+  font-size: 11px;
+  color: var(--mona-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.service-card__price-value {
+  font-family: var(--mona-sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--mona-text);
+}
+
+.service-card__price-note {
+  font-size: 12px;
+  color: var(--mona-text-3);
+  font-style: italic;
+  margin-top: var(--space-3);
+}
+
+.service-card__cta {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 0.5px;
+  margin-top: var(--space-3);
+}
+</style>

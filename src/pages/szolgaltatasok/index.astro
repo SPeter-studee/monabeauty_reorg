@@ -1,140 +1,62 @@
 ---
 // src/pages/szolgaltatasok/index.astro
-// Szolgáltatások hub oldal — minden szolgáltatás kártyaként
+// Szolgáltatások hub oldal — kártyák a 8 szolgáltatáshoz
+
+export const prerender = true;
 
 import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PageHero from "@/components/common/PageHero.astro";
+import ServiceCard from "@/components/services/ServiceCard.astro";
 
 const allServices = await getCollection("services");
-const sortedServices = allServices.sort(
-  (a, b) => a.data.sortOrder - b.data.sortOrder
-);
+const sortedServices = allServices.sort((a, b) => a.data.sortOrder - b.data.sortOrder);
 ---
 
 <BaseLayout
   title="Szolgáltatások — Mona Studio"
-  description="Szakmai bőrápolás és szépségápolás Vácon. Szemöldök tetoválás, laminálás, arckezelés, nanopen, műszempilla, gyantázás, smink — Szabó Mónika kozmetikustól."
+  description="Szemöldök tetoválás, laminálás, nanopen kezelés, arckezelések, műszempilla, gyantázás, smink és további szolgáltatások — Szabó Mónika kozmetikus, Vác."
+  image="https://monastudio.hu/images/sections/szolgaltatasok-hero.webp"
 >
   <PageHero
     title="Szolgáltatások"
-    description="Minden kezelés személyre szabott — előbb diagnózis, aztán megoldás. Itt áttekintheted a választható szolgáltatásokat."
+    description="Személyre szabott kozmetikai kezelések — szemöldök tetoválástól az arckezelésig. Minden vendégem egyedi diagnózissal és kezeléssel távozik."
     breadcrumbs={[
       { label: "Főoldal", href: "/" },
       { label: "Szolgáltatások" }
     ]}
   />
 
-  <section class="section">
+  <section class="services section">
     <div class="container">
-      {sortedServices.length > 0 ? (
-        <div class="services-grid">
-          {sortedServices.map(service => (
-            <a href={`/szolgaltatasok/${service.slug}`} class="service-card">
-              <h2 class="service-card__title">{service.data.title}</h2>
-              <p class="service-card__description">{service.data.shortDescription}</p>
-              {(service.data.duration || service.data.priceFrom) && (
-                <div class="service-card__meta">
-                  {service.data.duration && <span>{service.data.duration}</span>}
-                  {service.data.priceFrom && (
-                    <span>
-                      {new Intl.NumberFormat("hu-HU").format(service.data.priceFrom)} Ft-tól
-                    </span>
-                  )}
-                </div>
-              )}
-              <span class="service-card__arrow" aria-hidden="true">Részletek →</span>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="text-center text-secondary">Hamarosan megjelennek a szolgáltatások.</p>
-      )}
+      <div class="services__grid">
+        {sortedServices.map(service => (
+          <ServiceCard service={service} featured={service.data.featured} />
+        ))}
+      </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-.services-grid {
+.services__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-3);
-  max-width: var(--container-lg);
+  gap: var(--space-5);
+  max-width: var(--container-xl);
   margin-inline: auto;
 }
 
 @media (min-width: 640px) {
-  .services-grid {
+  .services__grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
   }
 }
 
 @media (min-width: 1024px) {
-  .services-grid {
+  .services__grid {
     grid-template-columns: repeat(3, 1fr);
   }
-}
-
-.service-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-5) var(--space-5) var(--space-6);
-  background: var(--mona-surface);
-  border: 0.5px solid var(--mona-border);
-  text-decoration: none;
-  color: var(--mona-text);
-  transition: border-color var(--motion-fast) var(--ease),
-              transform var(--motion-fast) var(--ease);
-}
-
-@media (hover: hover) {
-  .service-card:hover {
-    border-color: var(--mona-text);
-    transform: translateY(-2px);
-  }
-}
-
-.service-card__title {
-  font-family: var(--mona-serif);
-  font-size: 1.5rem;
-  line-height: 1.2;
-  margin: 0;
-  color: var(--mona-text);
-}
-
-.service-card__description {
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--mona-text-2);
-  flex: 1;
-  margin: 0;
-}
-
-.service-card__meta {
-  display: flex;
-  gap: var(--space-3);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--mona-text-3);
-}
-
-.service-card__meta span {
-  position: relative;
-}
-
-.service-card__meta span:not(:last-child)::after {
-  content: "·";
-  position: absolute;
-  right: -8px;
-}
-
-.service-card__arrow {
-  font-size: 13px;
-  color: var(--mona-text);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 0.5px;
-  margin-top: var(--space-2);
 }
 </style>

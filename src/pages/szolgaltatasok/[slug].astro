@@ -2,6 +2,8 @@
 // src/pages/szolgaltatasok/[slug].astro
 // Egyedi szolgáltatás oldal — markdown content + Schema.org Service
 
+export const prerender = true;
+
 import { getCollection, type CollectionEntry } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PageHero from "@/components/common/PageHero.astro";
@@ -21,18 +23,25 @@ interface Props {
 const { service } = Astro.props;
 const { Content } = await service.render();
 const {
-  title, description, shortDescription,
-  duration, priceFrom, priceNote, bookingUrl
+  title,
+  description,
+  heroImageUrl,
+  heroImageAlt,
+  duration,
+  priceFrom,
+  priceNote,
+  bookingUrl,
 } = service.data;
 
-const formattedPrice = priceFrom
-  ? new Intl.NumberFormat("hu-HU").format(priceFrom)
-  : null;
+const ogImage = heroImageUrl
+  ? new URL(heroImageUrl, Astro.site).href
+  : undefined;
 ---
 
 <BaseLayout
   title={`${title} — Mona Studio`}
   description={description}
+  image={ogImage}
 >
   {/* Schema.org Service markup */}
   <Fragment slot="head">
@@ -53,7 +62,10 @@ const formattedPrice = priceFrom
           "addressCountry": "HU"
         }
       },
-      "areaServed": { "@type": "City", "name": "Vác" },
+      "areaServed": [
+        { "@type": "City", "name": "Vác" },
+        { "@type": "City", "name": "Budapest" }
+      ],
       ...(priceFrom && {
         "offers": {
           "@type": "Offer",
@@ -61,6 +73,9 @@ const formattedPrice = priceFrom
           "priceCurrency": "HUF",
           "availability": "https://schema.org/InStock"
         }
+      }),
+      ...(heroImageUrl && {
+        "image": new URL(heroImageUrl, Astro.site).href
       })
     })} />
   </Fragment>
@@ -68,48 +83,70 @@ const formattedPrice = priceFrom
   <PageHero
     eyebrow="Szolgáltatás"
     title={title}
-    description={shortDescription}
+    description={description}
     breadcrumbs={[
       { label: "Főoldal", href: "/" },
       { label: "Szolgáltatások", href: "/szolgaltatasok" },
       { label: title }
     ]}
+    variant="compact"
+    align="left"
   />
 
-  <article class="service section">
+  {heroImageUrl && (
+    <div class="service-detail__hero">
+      <div class="container container-prose">
+        <img
+          src={heroImageUrl}
+          alt={heroImageAlt ?? title}
+          class="service-detail__hero-image"
+          loading="eager"
+          decoding="async"
+        >
+      </div>
+    </div>
+  )}
+
+  <article class="service-detail section">
     <div class="container container-prose">
 
-      {/* Meta info (idő + ár) */}
-      {(duration || formattedPrice) && (
-        <div class="service__meta">
+      {/* Meta sor */}
+      {(duration || priceFrom || priceNote) && (
+        <div class="service-detail__meta">
           {duration && (
-            <div class="service__meta-item">
-              <p class="eyebrow">Időtartam</p>
-              <p>{duration}</p>
+            <div class="service-detail__meta-item">
+              <span class="service-detail__meta-label">Időtartam</span>
+              <span class="service-detail__meta-value">{duration}</span>
             </div>
           )}
-          {formattedPrice && (
-            <div class="service__meta-item">
-              <p class="eyebrow">Ártól</p>
-              <p>{formattedPrice} Ft</p>
-              {priceNote && <p class="service__price-note">{priceNote}</p>}
+          {priceFrom && (
+            <div class="service-detail__meta-item">
+              <span class="service-detail__meta-label">Ár</span>
+              <span class="service-detail__meta-value">
+                {priceFrom.toLocaleString("hu-HU")} Ft-tól
+              </span>
+            </div>
+          )}
+          {priceNote && !priceFrom && (
+            <div class="service-detail__meta-item service-detail__meta-item--note">
+              <span class="service-detail__meta-value">{priceNote}</span>
             </div>
           )}
         </div>
       )}
 
       {/* Markdown tartalom */}
-      <div class="service__content">
+      <div class="service-detail__content">
         <Content />
       </div>
 
       {/* CTA */}
-      <div class="service__cta">
+      <div class="service-detail__cta">
         <a href={bookingUrl ?? "/idopontfoglalas"} class="btn btn-primary btn-lg">
           Időpontfoglalás
         </a>
         <a href="/kapcsolat" class="btn btn-secondary">
-          Kérdezz a kezelésről
+          Kérdésem van
         </a>
       </div>
 
@@ -118,112 +155,127 @@ const formattedPrice = priceFrom
 </BaseLayout>
 
 <style>
-.service__meta {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--mona-surface);
-  margin-bottom: var(--space-8);
+.service-detail__hero {
+  margin-block: var(--space-6) var(--space-8);
 }
 
-@media (min-width: 640px) {
-  .service__meta {
-    grid-template-columns: 1fr 1fr;
-  }
+.service-detail__hero-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-none);
 }
 
-.service__meta-item .eyebrow {
-  margin-bottom: var(--space-2);
+.service-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 0.5px solid var(--mona-border);
 }
 
-.service__meta-item p {
+.service-detail__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.service-detail__meta-item--note {
+  flex: 1;
+}
+
+.service-detail__meta-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+}
+
+.service-detail__meta-value {
+  font-family: var(--mona-sans);
   font-size: 1rem;
   color: var(--mona-text);
   font-weight: 500;
 }
 
-.service__price-note {
-  font-size: 12px !important;
-  font-weight: 400 !important;
-  color: var(--mona-text-3) !important;
-  margin-top: 4px;
-}
-
-.service__content {
+/* Markdown content */
+.service-detail__content {
   font-size: 1.0625rem;
   line-height: 1.75;
   color: var(--mona-text);
 }
 
-.service__content :global(h2) {
+.service-detail__content :global(h2) {
   font-family: var(--mona-serif);
-  font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem);
-  margin-top: var(--space-8);
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  margin-top: var(--space-10);
   margin-bottom: var(--space-4);
+  color: var(--mona-text);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid var(--mona-border);
 }
 
-.service__content :global(h3) {
+.service-detail__content :global(h2):first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.service-detail__content :global(h3) {
   font-family: var(--mona-serif);
   font-size: 1.375rem;
   margin-top: var(--space-6);
   margin-bottom: var(--space-3);
+  color: var(--mona-text);
 }
 
-.service__content :global(p) {
+.service-detail__content :global(p) {
   margin-bottom: var(--space-4);
 }
 
-.service__content :global(ul),
-.service__content :global(ol) {
-  margin-bottom: var(--space-4);
-  padding-left: 1.5rem;
-}
-
-.service__content :global(ul) {
+.service-detail__content :global(ul) {
   list-style: none;
-  padding-left: 0;
+  margin-bottom: var(--space-4);
+  padding: 0;
 }
 
-.service__content :global(ul li) {
+.service-detail__content :global(ul li) {
   position: relative;
   padding-left: var(--space-5);
   margin-bottom: var(--space-2);
-  line-height: 1.65;
 }
 
-.service__content :global(ul li::before) {
+.service-detail__content :global(ul li)::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.7em;
-  width: 12px;
-  height: 0.5px;
+  top: 0.6em;
+  width: 8px;
+  height: 1px;
   background: var(--mona-warm);
 }
 
-.service__content :global(strong) {
+.service-detail__content :global(strong) {
   font-weight: 500;
   color: var(--mona-text);
 }
 
-.service__content :global(blockquote) {
+.service-detail__content :global(blockquote) {
   border-left: 2px solid var(--mona-warm);
   padding: var(--space-3) var(--space-5);
   margin-block: var(--space-5);
   background: var(--mona-elevated);
   font-family: var(--mona-serif);
   font-style: italic;
-  font-size: 1.125rem;
 }
 
-.service__cta {
+.service-detail__cta {
   display: flex;
-  gap: var(--space-3);
   flex-wrap: wrap;
-  justify-content: center;
+  gap: var(--space-3);
   padding-top: var(--space-8);
-  margin-top: var(--space-8);
+  margin-top: var(--space-10);
   border-top: 0.5px solid var(--mona-border);
 }
 </style>
