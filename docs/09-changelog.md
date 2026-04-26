@@ -11,7 +11,7 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.7.8] — 2026-04-27 — Pénztár + kosár + header mobile UI fix-ek
+## [0.7.8] — 2026-04-27 — Pénztár + kosár + header mobile redesign
 
 ### Javítva
 - **Pénztár — GDPR checkbox layout**:
@@ -27,25 +27,50 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
   - Egyes esetekben a kép kifolyt a 100×125px keretből és túl nagyra nyúlt
   - Fix: explicit `width: 100px; height: 125px; max-width/max-height` mind a link wrapper-en, 
     mind a belső `<img>`-en (a CartDrawer és checkout summary mintájára — v0.7.5)
-- **Header — `Időpontfoglalás` gomb mobile-on látszott** (specificitás bug):
+
+### Változott — Header mobile redesign
+- **`Időpontfoglalás` gomb mobile-on rejtve** (specificitás bug fix):
   - A `.hide-tablet { display: none }` és a `.btn { display: inline-flex }` ütközött 
-    (mindkettő 0,1,0 specificitás), és mivel a `buttons.css` később töltődik mint 
-    a `layout.css`, a `.btn` nyert → a gomb a 1024px-es breakpoint alatt is látszott, 
-    csonkulva a header sáv padding-jában
+    (mindkettő 0,1,0 specificitás), a `buttons.css` később töltődik mint `layout.css`,
+    ezért a `.btn` nyert → a gomb a 1024px alatt is látszott csonkulva
   - Fix: `.hide-mobile`, `.hide-tablet`, `.hide-desktop` utility-k `!important` flag-gel
   - Plusz: `display: initial` → `display: revert` (jobban viselkedik flex/grid 
     container-eknél, pl. `.lang-switcher`)
-- **Header — Mobile menu drawer iránya**:
-  - A drawer eddig **jobbról** csúszott be (`translateX(100%)`)
-  - Fix: most **balról** csúszik be (`translateX(-100%)`)
-- **Header — Logo mobile méret**:
-  - `font-size: 18px` → `20px` (mobile), `20px` → `22px` (tablet), `22px` → `24px` (desktop)
-  - `justify-content: center` a logo flex container-en — vertikálisan központosítva 
-    a header sávban (ahol a tagline rejtett)
+  - Az `Időpontfoglalás` gomb mobile/tablet portrait/landscape mind rejtett — 
+    a dropdown menüből érhető el, ahol már eddig is volt CTA-ként
+- **Mobile menu: full-screen drawer → dropdown overlay**:
+  - Az eddigi balról csúszó full-screen drawer helyett **dropdown overlay** a header alól
+  - `position: absolute; top: 100%` — a sticky header-hez kötve
+  - Animáció: `max-height: 0 → calc(100vh - var(--header-height))`
+  - Backdrop overlay a tartalom fölött (`rgb(0 0 0 / 0.32)`) — kattintás bezár
+  - A `.mobile-menu__header` (logo + bezárás gomb) eltávolítva — a hamburger ikon 
+    maga vált X-re, ha nyitva van a menü
+  - Link kattintás auto-zárja a menüt
+  - Viewport átméretezés desktop-ra (≥1024px) miközben nyitva van — auto-zár
+- **HU/EN nyelvválasztó visszahozva mobile-on a header bar-ra**:
+  - Eddig csak desktop (≥1024px) — most minden viewport-on látszik
+  - `.hide-tablet` osztály levéve a `.lang-switcher`-ről
+  - A duplikált `.mobile-menu__lang` blokk a dropdown footer-éből eltávolítva
+  - Plusz fix: `.lang-switcher` explicit `display: inline-flex` (eddig csak `align-items: center`
+    volt rajta `display` nélkül — feltehetően öröklött bug)
+- **Header bar 5 elemes layout — esztétikus elrendezés mobile-on**:
+  ```
+  [Mona Studio]  [HU·EN]  [🛍️]  [👤]  [☰]
+  ```
+  - Action ikonok: 40×40px → 36×36px keskeny mobile-on (≤768px), SVG 20px → 18px
+  - Action gap: `var(--space-1)` (~4px) → `2px` keskeny mobile-on
+  - Logo méret: 18px (≤480px) → 20px (≥480px) → 22px (≥768px) → 24px (≥1024px)
+  - Logo `justify-content: center` — vertikálisan központosítva
+- **Hamburger / X ikon váltás animálva**:
+  - Egy gomb, két SVG (`.site-header__hamburger-icon` + `.site-header__close-icon`)
+  - `aria-expanded="true"` állapot kapcsolja átmenetet (opacity + 90° rotate)
+  - `aria-label` is dinamikusan vált ("Menü megnyitása" / "Menü bezárása")
 
 ### Megjegyzés
 - A v0.7.3–0.7.7 közötti változások nem kerültek bele ebbe a changelog-ba — 
   visszamenőleges dokumentálásuk **külön session-ben** történik
+- A teljes responsive logika érvényes mobile portrait + landscape + tablet portrait + 
+  landscape mobile mind ≤1024px tartományban — egységes mobile menu viselkedés
 
 ---
 

@@ -54,7 +54,7 @@ const isActive = (href: string) =>
         {t.nav.book}
       </a>
 
-      <div class="lang-switcher hide-tablet" aria-label="Nyelvválasztó">
+      <div class="lang-switcher" aria-label="Nyelvválasztó">
         <a href="/" class={locale === "hu" ? "active" : ""}>HU</a>
         <span aria-hidden="true">·</span>
         <a href="/en/" class={locale === "en" ? "active" : ""}>EN</a>
@@ -83,28 +83,22 @@ const isActive = (href: string) =>
         aria-controls="mobile-menu"
         data-mobile-menu-toggle
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <svg class="site-header__hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
           <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"/>
           <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
           <line x1="3" y1="18" x2="21" y2="18" stroke-linecap="round"/>
+        </svg>
+        <svg class="site-header__close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
         </svg>
       </button>
 
     </div>
   </div>
 
-  <!-- Mobile menu drawer -->
+  <!-- Mobile dropdown overlay (v0.7.8) — a header alól nyílik le, a tartalom fölé esik -->
   <div class="mobile-menu" id="mobile-menu" data-mobile-menu data-open="false" aria-hidden="true">
-    <div class="mobile-menu__header">
-      <span class="site-header__logo-name">Mona Studio</span>
-      <button class="site-header__action" aria-label="Menü bezárása" data-mobile-menu-close>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
-          <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
-        </svg>
-      </button>
-    </div>
-
     <nav class="mobile-menu__nav" aria-label="Mobil menü">
       {navItems.map(item => (
         <a href={item.href} aria-current={isActive(item.href) ? "page" : undefined}>
@@ -117,12 +111,6 @@ const isActive = (href: string) =>
       <a href="/idopontfoglalas" class="btn btn-primary mobile-menu__cta">
         {t.nav.book}
       </a>
-
-      <div class="mobile-menu__lang">
-        <a href="/" class={locale === "hu" ? "active" : ""}>HU</a>
-        <span aria-hidden="true">·</span>
-        <a href="/en/" class={locale === "en" ? "active" : ""}>EN</a>
-      </div>
 
       <div class="mobile-menu__social">
         <a
@@ -158,6 +146,9 @@ const isActive = (href: string) =>
       </div>
     </div>
   </div>
+
+  <!-- Backdrop (csak akkor látszik ha a menü nyitva van) -->
+  <div class="mobile-menu-backdrop" data-mobile-menu-backdrop hidden></div>
 </header>
 
 <script>
@@ -197,7 +188,7 @@ const isActive = (href: string) =>
   // ── Mobile menu scroll lock (iOS Safari kompatibilis) ────────────────────
   const menu = document.querySelector<HTMLDivElement>("[data-mobile-menu]");
   const toggleBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-toggle]");
-  const closeBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-close]");
+  const backdrop = document.querySelector<HTMLDivElement>("[data-mobile-menu-backdrop]");
 
   let savedScrollY = 0;
 
@@ -221,6 +212,8 @@ const isActive = (href: string) =>
     menu?.setAttribute("data-open", "true");
     menu?.setAttribute("aria-hidden", "false");
     toggleBtn?.setAttribute("aria-expanded", "true");
+    toggleBtn?.setAttribute("aria-label", "Menü bezárása");
+    if (backdrop) backdrop.hidden = false;
     lockBodyScroll();
 
     // Focus első link-re az accessibility-hez
@@ -233,15 +226,39 @@ const isActive = (href: string) =>
     menu?.setAttribute("data-open", "false");
     menu?.setAttribute("aria-hidden", "true");
     toggleBtn?.setAttribute("aria-expanded", "false");
+    toggleBtn?.setAttribute("aria-label", "Menü megnyitása");
+    if (backdrop) backdrop.hidden = true;
     unlockBodyScroll();
     toggleBtn?.focus();
   };
 
-  toggleBtn?.addEventListener("click", openMenu);
-  closeBtn?.addEventListener("click", closeMenu);
+  // Hamburger maga vált hamburger → X között (egy gomb, két állapot)
+  toggleBtn?.addEventListener("click", () => {
+    if (menu?.getAttribute("data-open") === "true") {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+
+  // Backdrop kattintás bezárja
+  backdrop?.addEventListener("click", closeMenu);
+
+  // Menü link kattintás után automatikusan bezárja
+  menu?.querySelectorAll<HTMLAnchorElement>(".mobile-menu__nav a").forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
 
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && menu?.getAttribute("data-open") === "true") {
+      closeMenu();
+    }
+  });
+
+  // Ha a viewport átmegy desktop-ra (>= 1024px) miközben a menü nyitva van, zárjuk
+  const desktopMq = window.matchMedia("(min-width: 1024px)");
+  desktopMq.addEventListener("change", (e) => {
+    if (e.matches && menu?.getAttribute("data-open") === "true") {
       closeMenu();
     }
   });
