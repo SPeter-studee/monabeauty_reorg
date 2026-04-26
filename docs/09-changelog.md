@@ -13,6 +13,110 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.17] — 2026-04-27 — Szállítási mód csak a pénztáron (drawer + /kosar tisztítás)
+
+### Változott — UX javítás
+
+A drawer és `/kosar` oldal **alapból kiválasztott szállítási módot** mutatott 
+("FoxPost csomagautomata 1.990 Ft"), és **automatikusan hozzáadta** az "Összesen"-hez. 
+Ez **sticker shock**-ot okozott: a vendég 12.100 Ft-ot tett a kosárba, és hirtelen 
+14.090 Ft-ot látott anélkül hogy bármit választott volna.
+
+**Új viselkedés**:
+- A **CartDrawer** csak a **részösszeget** mutatja
+- A **`/kosar` full page** is csak a **részösszeget** mutatja
+- Mindkét helyen finom magyarázó jegyzet: *"A szállítást a pénztár oldalon választhatod."*
+- A **`/penztar` oldal** változatlan — ott választható a szállítási mód, és onnan 
+  számolódik a teljes összeg
+
+### Eltávolítva
+- **CartDrawer markup**:
+  - `.cart-shipping` blokk (FoxPost / Személyes átvétel radio-k)
+  - `.cart-totals__row` "Szállítás" sor
+  - `.cart-totals__row--total` "Összesen" sor
+  - JS: `data-cart-shipping`, `data-cart-total` updates
+  - JS: `[data-shipping-radio]` change event listener
+  - Import: `setShippingMethod`, `ShippingMethod` típus
+- **`/kosar` oldal markup és JS**: ugyanezek
+- **CSS**: `.cart-shipping*` osztályok (8 db) — törölve mindkét fájlból
+
+### Hozzáadva
+- `.cart-totals__shipping-note` osztály mindkét fájlban — finom jegyzet (12px italic, 
+  `--mona-text-3` szín, jobbra igazítva)
+- A "Részösszeg" sor mostantól a totals blokk **kiemelt** sora 
+  (`.cart-totals__row--total` osztállyal)
+
+### Megjegyzés a logikáról
+- A `cart.ts` `getCartSummary()`, `getShippingMethod()`, `setShippingMethod()`, 
+  `calculateShipping()` **változatlanul működnek** — csak a CartDrawer és /kosar 
+  oldalak **nem használják** őket
+- A `/penztar` oldal **továbbra is** ezeket használja, és menti a localStorage-be 
+  a vendég választását (a következő rendelésnél visszatöltődik)
+- A `localStorage` default érték továbbra is `"foxpost"` — ez OK, mert a vendég 
+  csak a `/penztar` oldalon látja és módosíthatja, **nem akadékoskodik** a 
+  drawer-ben
+
+### Fájlok (3)
+- `package.json` — verzió `0.7.16` → `0.7.17`
+- `src/components/shop/CartDrawer.astro` — szállítási markup + JS + CSS törlés
+- `src/pages/kosar.astro` — ugyanezek
+
+---
+
+
+
+## [0.7.16] — 2026-04-27 — CartDrawer flex scroll fix + toast eltávolítás
+
+### Javítva
+- **CartDrawer scroll layout** ⭐ — a drawer **továbbra is egészében görgethető** volt 
+  még 1 termékes kosár esetén is, a v0.7.13 kép-eltávolítás ellenére
+- **Diagnózis**: a 3-zónás flex layout (header / body / footer) **bug-os volt**:
+  1. `.cart-drawer__panel` — nem volt explicit `height: 100%` és `overflow: hidden`
+  2. `.cart-drawer__header` — nem volt `flex-shrink: 0` (zsugorodhatott)
+  3. `.cart-drawer__body` — `flex: 1` rajta volt **DE** `min-height: 0` hiányzott
+     (klasszikus flex bug: alapértelmezett `min-height: auto` nem engedi a 
+     gyermek tartalom-átfutást, az `overflow-y: auto` hatástalan)
+  4. `.cart-drawer__footer` — nem volt `flex-shrink: 0` (zsugorodhatott)
+- **Fix** — minden zóna explicit shrink + a body explicit grow + min-height:
+  ```css
+  .cart-drawer__panel { height: 100%; overflow: hidden; }
+  .cart-drawer__header { flex-shrink: 0; }
+  .cart-drawer__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .cart-drawer__footer { flex-shrink: 0; }
+  ```
+- **Eredmény**: a header és footer **fixen marad**, csak a középső termék-lista 
+  görgethető — a "Tovább a pénztárhoz" gomb mindig látszik
+
+### Eltávolítva
+- **Toast notification a kosárba tételkor** (a "Kosárba helyezve" üzenet a képernyő 
+  alján, "nagy pipa"):
+  - A v0.7.12 quick-add óta a CartDrawer **automatikusan megnyílik** kosárba tétel után
+  - A toast + drawer együtt = **dupla feedback**, redundáns és zavaró
+  - **`cart.ts`**: `toastCartAdd` hívás eltávolítva az `addToCart` végéről
+  - Az import is kommentbe (megőrizve mint dokumentáció)
+- A toast **rendszer maga megmarad** (`toastError`, `toastSuccess` továbbra is elérhetők
+  pl. a Mailchimp hibák, checkout hibák stb. üzenetére) — csak a cart-add eseményre 
+  vonatkozó szabad-ezzel-élés szűnik meg
+
+### Konzisztens UX viselkedés
+- **Termékoldalról "Kosárba"** → CartDrawer megnyílik (200ms késleltetéssel)
+- **Termékkártya quick-add ikon vagy szöveges gomb** → CartDrawer megnyílik
+- **Mindenhol egységes**: a kosárba tétel feedback-je a drawer auto-megnyitása
+
+### Tanulság
+A **klasszikus flex layout bug**: `flex: 1` egy elemen + `overflow: auto` rajta = 
+**nem működik**, ha nincs explicit `min-height: 0` (vagy `min-width: 0` vízszintes 
+flex esetén). A flex item alapértelmezett `min-height: auto` érték nem engedi a 
+gyermek tartalom-overflow-t, ezért az `overflow: auto` látszólag inaktívvá válik. 
+Ez egy ismert CSS-trükk amit minden komplex flex layout-nál használni kell.
+
+### Fájlok (3)
+- `package.json` — verzió `0.7.15` → `0.7.16`
+- `src/components/shop/CartDrawer.astro` — flex layout fix
+- `src/lib/cart.ts` — toast hívás eltávolítása
+
+---
+
 ## [0.7.15] — 2026-04-27 — Mónika ajánlja → eyebrow-ként a tartalmi blokkban
 
 ### Változott

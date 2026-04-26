@@ -1,6 +1,6 @@
 {
   "name": "mona-studio",
-  "version": "0.7.15",
+  "version": "0.7.17",
   "type": "module",
   "scripts": {
     "dev": "astro dev",

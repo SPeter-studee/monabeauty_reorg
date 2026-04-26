@@ -17,7 +17,9 @@ import {
   effectivePrice,
   FREE_SHIPPING_THRESHOLD_FT,
 } from "./types/shop";
-import { toastCartAdd } from "./toast";
+// import { toastCartAdd } from "./toast";
+// v0.7.14: toast eltávolítva az addToCart-ból — a CartDrawer auto-megnyitás
+// már elegendő visszajelzés a kosárba tételről (a v0.7.12 quick-add óta).
 
 const STORAGE_KEY = "mona_cart_v2";          // v2 — séma változás miatt új kulcs
 const SHIPPING_KEY = "mona_cart_shipping";
@@ -219,7 +221,7 @@ export function addToCart(
   }
 
   saveCart(cart);
-  toastCartAdd(product.name, price * qty);
+  // v0.7.14: toast hívás eltávolítva — a CartDrawer megnyitása már elegendő feedback
 
   return { success: true, capped };
 }

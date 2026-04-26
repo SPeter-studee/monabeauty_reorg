@@ -59,41 +59,15 @@ import PageHero from "@/components/common/PageHero.astro";
         <aside class="cart-page__summary">
           <h2 class="cart-page__summary-title">Összegzés</h2>
 
-          {/* Szállítási mód */}
-          <div class="cart-shipping">
-            <p class="cart-shipping__label">Szállítási mód</p>
-            <div class="cart-shipping__options">
-              <label class="cart-shipping__option">
-                <input type="radio" name="shipping-page" value="foxpost" data-shipping-radio>
-                <div class="cart-shipping__option-content">
-                  <span class="cart-shipping__option-name">FoxPost csomagautomata</span>
-                  <span class="cart-shipping__option-price">1.990 Ft</span>
-                </div>
-              </label>
-              <label class="cart-shipping__option">
-                <input type="radio" name="shipping-page" value="personal" data-shipping-radio>
-                <div class="cart-shipping__option-content">
-                  <span class="cart-shipping__option-name">Személyes átvétel — Vác</span>
-                  <span class="cart-shipping__option-price">Ingyen</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Totals */}
+          {/* Totals — csak részösszeg, szállítás a pénztárban */}
           <div class="cart-totals">
-            <div class="cart-totals__row">
+            <div class="cart-totals__row cart-totals__row--total">
               <span>Részösszeg</span>
               <span data-cart-page-subtotal>0 Ft</span>
             </div>
-            <div class="cart-totals__row">
-              <span>Szállítás</span>
-              <span data-cart-page-shipping>0 Ft</span>
-            </div>
-            <div class="cart-totals__row cart-totals__row--total">
-              <span>Összesen</span>
-              <span data-cart-page-total>0 Ft</span>
-            </div>
+            <p class="cart-totals__shipping-note">
+              A szállítást a pénztár oldalon választhatod.
+            </p>
 
             <div class="cart-totals__free-progress" data-page-free-progress hidden>
               <div class="cart-totals__free-bar">
@@ -116,8 +90,8 @@ import PageHero from "@/components/common/PageHero.astro";
   </section>
 
   <script>
-    import { getCartSummary, updateQuantity, removeFromCart, setShippingMethod } from "@/lib/cart";
-    import type { CartItem, ShippingMethod } from "@/lib/types/shop";
+    import { getCartSummary, updateQuantity, removeFromCart } from "@/lib/cart";
+    import type { CartItem } from "@/lib/types/shop";
     import { FREE_SHIPPING_THRESHOLD_FT } from "@/lib/types/shop";
 
     const emptyContainer = document.querySelector<HTMLElement>("[data-cart-page-empty]");
@@ -221,28 +195,11 @@ import PageHero from "@/components/common/PageHero.astro";
           : `${summary.itemCount} darab`;
       }
 
-      // Összegzés
+      // Összegzés — csak részösszeg, szállítás a pénztárban
       document.querySelector("[data-cart-page-subtotal]")!.textContent = formatPrice(summary.subtotalFt);
-      document.querySelector("[data-cart-page-shipping]")!.textContent =
-        summary.shippingFt === 0 ? "Ingyen" : formatPrice(summary.shippingFt);
-      document.querySelector("[data-cart-page-total]")!.textContent = formatPrice(summary.totalFt);
-
-      // Szállítási mód radio sync
-      document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
-        radio.checked = radio.value === summary.shippingMethod;
-      });
 
       renderFreeShippingProgress(summary.subtotalFt);
     }
-
-    // Szállítási mód váltás
-    document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
-      radio.addEventListener("change", () => {
-        if (radio.checked) {
-          setShippingMethod(radio.value as ShippingMethod);
-        }
-      });
-    });
 
     // Updates
     window.addEventListener("mona-cart-update", render);
@@ -541,71 +498,7 @@ import PageHero from "@/components/common/PageHero.astro";
   border-bottom-color: var(--mona-text-3);
 }
 
-/* Shipping options + totals — copied from CartDrawer style */
-.cart-shipping__label {
-  font-family: var(--mona-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--mona-text-3);
-  margin: 0 0 var(--space-2);
-}
-
-.cart-shipping__options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.cart-shipping__option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: 0.5px solid var(--mona-border);
-  background: var(--mona-bg);
-  cursor: pointer;
-  transition: border-color var(--motion-fast) var(--ease);
-}
-
-.cart-shipping__option:has(input:checked) {
-  border-color: var(--mona-warm);
-}
-
-.cart-shipping__option input {
-  margin: 0;
-  cursor: pointer;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  accent-color: var(--mona-warm);
-}
-
-.cart-shipping__option-content {
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.cart-shipping__option-name {
-  font-family: var(--mona-sans);
-  font-size: 13px;
-  color: var(--mona-text);
-  flex: 1;
-  min-width: 0;
-}
-
-.cart-shipping__option-price {
-  font-family: var(--mona-sans);
-  font-size: 13px;
-  color: var(--mona-text-2);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+/* v0.7.17: cart-shipping CSS eltávolítva — szállítási mód a /penztar oldalon */
 
 .cart-totals {
   display: flex;
@@ -613,6 +506,16 @@ import PageHero from "@/components/common/PageHero.astro";
   gap: var(--space-2);
   padding-block: var(--space-3);
   border-block: 0.5px solid var(--mona-border);
+}
+
+.cart-totals__shipping-note {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--mona-text-3);
+  margin: 0;
+  padding-top: var(--space-2);
+  text-align: right;
 }
 
 .cart-totals__row {

@@ -1152,6 +1152,29 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
   szabály mögött, ami a v0.7.0 óta korlátozta)
 - Prominentebb pozíció — közvetlenül a termék neve felett
 
+### v0.7.16 — CartDrawer flex scroll fix + toast eltávolítás ⭐
+- **A drawer 1 termékes kosár esetén is egészében görgethető volt** (header + footer is)
+- **Diagnózis**: a 3-zónás flex layout (header/body/footer) bug-os — a `body`-n 
+  hiányzott a `min-height: 0` (klasszikus flex bug), a header/footer-en a 
+  `flex-shrink: 0`
+- **Fix**: minden zóna explicit shrink + body-n `flex: 1 1 auto; min-height: 0; 
+  overflow-y: auto` + panelen `height: 100%; overflow: hidden`
+- **Plusz**: toast notification eltávolítva az `addToCart`-ból — a CartDrawer 
+  auto-megnyitás (v0.7.12 óta) elegendő feedback, a toast + drawer együtt 
+  redundáns volt
+
+### v0.7.17 — Szállítási mód csak a pénztáron
+- **Sticker shock megelőzés**: a drawer és `/kosar` alapból kiválasztott 
+  szállítási módot mutatott (FoxPost 1.990 Ft), és **automatikusan hozzáadta** 
+  az "Összesen"-hez. A vendég 12.100 Ft-ot tett a kosárba, és hirtelen 14.090 Ft-ot 
+  látott — cart abandonment kockázat
+- **Új viselkedés**: a drawer és `/kosar` **csak részösszeget** mutat, finom 
+  jegyzettel: *"A szállítást a pénztár oldalon választhatod."*
+- A `/penztar` oldal változatlan — ott választható a szállítás, a teljes összeg 
+  csak ott látszik
+- A `cart.ts` API változatlan (`getShippingMethod`, `setShippingMethod`, 
+  `calculateShipping` — a `/penztar` továbbra is használja)
+
 ### Sprint 5-be áttéve
 - **Mónika ajánlja badge prominentebb megjelenítés** a kártyán (vizuálisan kiemelve, 
   pl. nagyobb, nyilvánvalóbb pozícióban)
@@ -1181,6 +1204,22 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
    a CSS **NEM matchol**. Ha a komponens client-side state-et renderel (pl. kosár), 
    a `<style>` taget `<style is:global>`-ra kell cserélni. Ez a v0.7.3 óta meglévő 
    "fantom CSS" magyarázata.
+9. **Flex item `min-height: auto` = overflow csapda** ⭐ — egy `flex: 1` elemen 
+   `overflow: auto` **NEM működik**, ha nincs explicit `min-height: 0` rajta. 
+   A flex item alapértelmezett `min-height: auto` érték nem engedi a gyermek 
+   tartalom-overflow-t, ezért az egész flex container görgethetővé válhat 
+   ahelyett hogy csak a középső flex item lenne az. A v0.7.16 CartDrawer fix.
+10. **Dupla feedback = zaj**: ha egy felhasználói akció (pl. kosárba tétel) 
+    **két különböző UI-elemben** ad visszajelzést (toast + drawer auto-megnyitás), 
+    akkor **az egyiket el kell távolítani**. A vendég nem tudja eldönteni hogy 
+    melyikre figyeljen, és a párhuzamos animációk vizuálisan zaklatottá teszik 
+    a UX-et. A Mónika brand csendes, fókuszált — egy visszajelzés.
+11. **Sticker shock megelőzés**: a vendég **soha ne lásson** olyan költséget 
+    amit nem tudatosan választott. A korai kosár nézetekben (drawer, /kosar) 
+    csak a tényleges termék-összeget mutassuk, a szállítást és egyéb költségeket 
+    a checkout oldalra kell halasztani — ott a vendég már elkötelezett a 
+    vásárlásba és felkészült a pontos teljes összeg megismerésére. Ez egy 
+    bevált e-commerce minta (Sephora, Net-a-Porter, Glossier).
 
 ### Mi maradt (Sprint 5+ -be)
 - Termékoldal galéria swipe gesture mobile-on

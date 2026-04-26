@@ -47,41 +47,15 @@
     </div>
 
     <footer class="cart-drawer__footer" data-cart-drawer-footer hidden>
-      {/* Szállítási mód választó */}
-      <div class="cart-shipping">
-        <p class="cart-shipping__label">Szállítási mód</p>
-        <div class="cart-shipping__options">
-          <label class="cart-shipping__option">
-            <input type="radio" name="shipping" value="foxpost" data-shipping-radio>
-            <div class="cart-shipping__option-content">
-              <span class="cart-shipping__option-name">FoxPost csomagautomata</span>
-              <span class="cart-shipping__option-price" data-foxpost-price>1.990 Ft</span>
-            </div>
-          </label>
-          <label class="cart-shipping__option">
-            <input type="radio" name="shipping" value="personal" data-shipping-radio>
-            <div class="cart-shipping__option-content">
-              <span class="cart-shipping__option-name">Személyes átvétel — Vác</span>
-              <span class="cart-shipping__option-price">Ingyen</span>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Összegzés */}
+      {/* Összegzés — csak részösszeg, szállítás a pénztárban */}
       <div class="cart-totals">
-        <div class="cart-totals__row">
+        <div class="cart-totals__row cart-totals__row--total">
           <span>Részösszeg</span>
           <span data-cart-subtotal>0 Ft</span>
         </div>
-        <div class="cart-totals__row">
-          <span>Szállítás</span>
-          <span data-cart-shipping>0 Ft</span>
-        </div>
-        <div class="cart-totals__row cart-totals__row--total">
-          <span>Összesen</span>
-          <span data-cart-total>0 Ft</span>
-        </div>
+        <p class="cart-totals__shipping-note">
+          A szállítást a pénztár oldalon választhatod.
+        </p>
 
         <div class="cart-totals__free-progress" data-free-progress hidden>
           <div class="cart-totals__free-bar">
@@ -94,16 +68,13 @@
       <a href="/penztar" class="btn btn-primary cart-drawer__checkout">
         Tovább a pénztárhoz →
       </a>
-      <a href="/kosar" class="cart-drawer__view-cart">
-        Kosár megtekintése
-      </a>
     </footer>
   </aside>
 </div>
 
 <script>
-  import { getCartSummary, updateQuantity, removeFromCart, setShippingMethod } from "@/lib/cart";
-  import type { CartItem, ShippingMethod } from "@/lib/types/shop";
+  import { getCartSummary, updateQuantity, removeFromCart } from "@/lib/cart";
+  import type { CartItem } from "@/lib/types/shop";
   import { FREE_SHIPPING_THRESHOLD_FT } from "@/lib/types/shop";
 
   const drawer = document.querySelector<HTMLElement>("[data-cart-drawer]");
@@ -175,16 +146,8 @@
       });
     }
 
-    // Összegzés
+    // Összegzés — csak részösszeg, szállítás a pénztárban
     document.querySelector("[data-cart-subtotal]")!.textContent = formatPrice(summary.subtotalFt);
-    document.querySelector("[data-cart-shipping]")!.textContent =
-      summary.shippingFt === 0 ? "Ingyen" : formatPrice(summary.shippingFt);
-    document.querySelector("[data-cart-total]")!.textContent = formatPrice(summary.totalFt);
-
-    // Szállítási mód radio sync
-    document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
-      radio.checked = radio.value === summary.shippingMethod;
-    });
 
     // Free shipping progress
     renderFreeShippingProgress(summary.subtotalFt);
@@ -244,15 +207,6 @@
     }
   }
 
-  // ─── Szállítási mód váltás ────────────────────────────────────────────────
-  document.querySelectorAll<HTMLInputElement>("[data-shipping-radio]").forEach(radio => {
-    radio.addEventListener("change", () => {
-      if (radio.checked) {
-        setShippingMethod(radio.value as ShippingMethod);
-      }
-    });
-  });
-
   // ─── HTML escape helpers ──────────────────────────────────────────────────
   function escapeHtml(s: string): string {
     return s.replace(/[<>&"]/g, c =>
@@ -301,6 +255,7 @@
   top: 0;
   right: 0;
   bottom: 0;
+  height: 100%;
   width: 100%;
   max-width: 480px;
   background: var(--mona-bg);
@@ -309,6 +264,7 @@
   transform: translateX(100%);
   transition: transform var(--motion-base) var(--ease);
   box-shadow: -4px 0 24px rgba(44, 41, 38, 0.1);
+  overflow: hidden;
 }
 
 .cart-drawer[aria-hidden="false"] .cart-drawer__panel {
@@ -316,11 +272,18 @@
 }
 
 .cart-drawer__header {
-  padding: var(--space-5);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 0.5px solid var(--mona-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+@media (max-width: 640px) {
+  .cart-drawer__header {
+    padding: var(--space-3) var(--space-4);
+  }
 }
 
 .cart-drawer__title {
@@ -349,13 +312,21 @@
 }
 
 .cart-drawer__body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--space-5);
+  overflow-x: hidden;
+  padding: var(--space-4) var(--space-5);
 
   /* Vékony, diszkrét scrollbar (Chrome/Edge/Safari) */
   scrollbar-width: thin;
   scrollbar-color: var(--mona-border) transparent;
+}
+
+@media (max-width: 640px) {
+  .cart-drawer__body {
+    padding: var(--space-3) var(--space-4);
+  }
 }
 
 .cart-drawer__body::-webkit-scrollbar {
@@ -417,13 +388,13 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .cart-item {
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: 0.5px solid var(--mona-border);
 }
 
@@ -435,7 +406,7 @@
 .cart-item__details {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 4px;
   min-width: 0;
 }
 
@@ -543,12 +514,20 @@
 
 /* ─── Footer ────────────────────────────────── */
 .cart-drawer__footer {
-  padding: var(--space-5);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
   border-top: 0.5px solid var(--mona-border);
   background: var(--mona-elevated);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .cart-drawer__footer {
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-2);
+  }
 }
 
 /* CRITICAL: a hidden attribute felülírja a display:flex-et */
@@ -558,70 +537,8 @@
   display: none !important;
 }
 
-.cart-shipping__label {
-  font-family: var(--mona-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--mona-text-3);
-  margin: 0 0 var(--space-2);
-}
-
-.cart-shipping__options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.cart-shipping__option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: 0.5px solid var(--mona-border);
-  background: var(--mona-bg);
-  cursor: pointer;
-  transition: border-color var(--motion-fast) var(--ease);
-}
-
-.cart-shipping__option:has(input:checked) {
-  border-color: var(--mona-warm);
-}
-
-.cart-shipping__option input {
-  margin: 0;
-  cursor: pointer;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  accent-color: var(--mona-warm);
-}
-
-.cart-shipping__option-content {
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.cart-shipping__option-name {
-  font-family: var(--mona-sans);
-  font-size: 13px;
-  color: var(--mona-text);
-  flex: 1;
-  min-width: 0;
-}
-
-.cart-shipping__option-price {
-  font-family: var(--mona-sans);
-  font-size: 13px;
-  color: var(--mona-text-2);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+/* v0.7.17: cart-shipping CSS osztályok eltávolítva — a szállítási mód
+   választó már nincs a drawer-ben (csak a /penztar oldalon történik) */
 
 /* ─── Totals ───────────────────────────────── */
 .cart-totals {
@@ -630,6 +547,16 @@
   gap: var(--space-2);
   padding-block: var(--space-3);
   border-block: 0.5px solid var(--mona-border);
+}
+
+.cart-totals__shipping-note {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--mona-text-3);
+  margin: 0;
+  padding-top: var(--space-2);
+  text-align: right;
 }
 
 .cart-totals__row {
@@ -652,6 +579,13 @@
 
 .cart-totals__free-progress {
   margin-top: var(--space-3);
+}
+
+/* Mobile-on: rejtve hogy a CartDrawer scroll nélkül elférjen */
+@media (max-width: 640px) {
+  .cart-totals__free-progress {
+    display: none !important;
+  }
 }
 
 .cart-totals__free-bar {
