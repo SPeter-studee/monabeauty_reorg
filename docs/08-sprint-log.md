@@ -1044,6 +1044,36 @@ A webshop élesen rendelést tud fogadni:
 
 ---
 
+## ✅ UI csiszolási hullám (v0.7.3 – v0.7.8)
+
+**Időszak**: 2026-04-26 – 2026-04-27  
+**Cél**: Sprint 3 funkciói után screenshot-feedback alapú **UI patch-ek** — business logika,
+D1 séma, API-k változatlanok.
+
+### Verziók röviden
+- **v0.7.3** — Cart UI: radio méret + accent, üres kosár vs footer (`[hidden] !important`),
+  FoxPost név/ár sortörés; checkout radio méret
+- **v0.7.4** — Termékoldal qty/tab + **globális `overflow-x: hidden`** (`reset.css`) ⭐
+- **v0.7.5** — Termékkép korlátok (drawer + checkout summary), `<fieldset>` → `<div>` /
+  `<h3>` (Chrome legend glitch)
+- **v0.7.6** — Header kompakt, tagline rejtés mobil/tablet, `hide-tablet` + layout helper
+- **v0.7.7** — Header bundle + `updateCartCount` duplikáció javítás
+- **v0.7.8** — GDPR checkbox, `/kosar` kép, header mobile redesign — részletek:
+  [`09-changelog.md`](./09-changelog.md)
+
+### Tanulságok
+1. **Globális `reset.css`** — `overflow-x` hiánya hosszú ideig rejtett horizontális scroll bugot
+   okozott
+2. **`<fieldset>` + `<legend>`** kerülendő purely visual szekciókhoz (Chrome inkonzisztencia)
+3. **`accent-color`** natív radio/checkbox brand színhez
+4. **`wrangler pages deploy`** preview **≠** production — éles: **`git push`** + Cloudflare
+   Pages auto-build
+
+### Visszamenőleges forrás
+- Letöltések: **`changelog-supplement-v0.7.3-0.7.7.md`** (részletes ZIP-ek, ASCII layout,
+  session jegyzetek)
+
+---
 
 ## ✅ Sprint 3.2 (1. rész — javítások v0.6.2)
 

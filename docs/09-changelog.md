@@ -67,10 +67,87 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
   - `aria-label` is dinamikusan vált ("Menü megnyitása" / "Menü bezárása")
 
 ### Megjegyzés
-- A v0.7.3–0.7.7 közötti változások nem kerültek bele ebbe a changelog-ba — 
-  visszamenőleges dokumentálásuk **külön session-ben** történik
-- A teljes responsive logika érvényes mobile portrait + landscape + tablet portrait + 
+- A teljes responsive logika érvényes mobile portrait + landscape + tablet portrait +
   landscape mobile mind ≤1024px tartományban — egységes mobile menu viselkedés
+
+---
+
+## [0.7.7] — 2026-04-26 — Header mobile fix + hoisted kosár szkript
+
+### Javítva
+- **`Header.astro`**: egyetlen `updateCartCount()` — `getCartCount()` + `storage` /
+  `mona-cart-update` (dupla deklaráció build hiba megszüntetése)
+- **`header-mobile-fix` bundle**: `hide-tablet` az Időpontfoglalás + nyelvváltón;
+  `layout.css` / `header.css` szinkron a repóval
+
+### Megjegyzés
+- Patch bump `0.7.6` → `0.7.7`; követi a v0.7.6 kompakt header irányt
+
+---
+
+## [0.7.6] — 2026-04-26 — Header mobile/tablet kompakt + tagline rejtés
+
+### Probléma
+- ~390px-en a header **6 elemet** próbált egy sorba: logo+tagline, Időpontfoglalás,
+  HU·EN, kosár, user, hamburger → átlapolás / hamburger kicsúszás a viewport-ról
+
+### Változott
+- **`header.css`**: tagline csak **≥1024px**; logo kisebb mobil/tablet; header padding +
+  actions gap kompaktabb; action gombok `flex-shrink: 0`; lang switcher `inline-flex` desktopon
+- **`Header.astro`**: **`hide-mobile` → `hide-tablet`** az Időpontfoglalás gombon és a
+  `.lang-switcher`-en (`< 1024px` rejtés — mobil **és** tablet)
+- **`layout.css`**: `.hide-mobile` / `.hide-tablet` / `.hide-desktop` helper szabályok
+  konzisztens logikája
+
+---
+
+## [0.7.5] — 2026-04-26 — Termékkép korlátok + fieldset → div (checkout)
+
+### Változott
+- **`CartDrawer.astro`**: termékkép explicit **80×100px** keret (`max-width` / `max-height`,
+  `overflow: hidden`) — korábban a kép kitöltötte a drawer szélességét, belső scrollbar
+- **`penztar/index.astro`**: minden **`<fieldset>` → `<div class="checkout-section">`**,
+  **`<legend>` → `<h3 class="checkout-section__title">`** (Chrome `<legend>` barna doboz /
+  inkonzisztens render); checkout summary kép **60px** oszlop, grid `min-width: 0`;
+  qty badge miatt `overflow: hidden` levéve a kép wrap-ról ahol kellett
+- **Checkout radio**: 18×18px + `accent-color` (v0.7.3 minta)
+
+### Megjegyzés
+- Fieldset helyett div+h3: vizuálisan kontrollálhatóbb, mint a natív fieldset/legend
+
+---
+
+## [0.7.4] — 2026-04-26 — Termékoldal qty + tab scroll + globális overflow-x
+
+### Változott
+- **`webshop/termek/[slug].astro`**: qty középre (`justify-content: center`, input
+  `text-align: center`), `product-buy` flex-wrap + CTA `min-width`; tab nav vízszintes scroll
+  **scrollbar elrejtve** (`scrollbar-width: none`, webkit); number input `appearance`
+  normalizálás (Chrome/Firefox)
+- **`reset.css` ⭐**: `html, body` → `overflow-x: hidden; width: 100%; max-width: 100%` —
+  megszűnik a teljes oldal vízszintes „félpixel” scrollja (Sprint 1 óta rejtett bug)
+
+### Megjegyzés
+- **`wrangler pages deploy`** preview **≠** production; éles CF Pages: **`git push`**
+  auto-build — verzió-eltérések elkerülése miatt fontos
+- Patch bump `0.7.3` → `0.7.4`
+
+---
+
+## [0.7.3] — 2026-04-26 — Cart UI fix (radio + üres állapot + FoxPost sortörés)
+
+### Változott
+- **`CartDrawer.astro` + `kosar.astro`**: szállítási radio **`18×18px`**, `flex-shrink: 0`,
+  **`accent-color: var(--mona-warm)`** — korábban a flex layout ~60–70px „óriás” köröket
+  rajzolt; üres kosár vs footer: **`[hidden]`** selectorral `display: none !important`
+  (a komponens `display: flex|grid` felülírta a `hidden` alapértelmezését); FoxPost sor:
+  `min-width: 0`, ár **`white-space: nowrap`** — ne olvadjon össze a névvel
+- **`penztar/index.astro`**: checkout szállítási/fizetési radio ugyanilyen méret + accent
+
+### Megjegyzés
+- Patch bump `0.7.2` → `0.7.3`; **D1 / API / üzleti logika változatlan** — tisztán UI
+- A **0.7.3–0.7.6** patch-ek egy estén, screenshot-feedback alatt; részletes forrásanyag:
+  letöltések között **`changelog-supplement-v0.7.3-0.7.7.md`**
 
 ---
 
