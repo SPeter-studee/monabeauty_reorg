@@ -1044,36 +1044,82 @@ A webshop élesen rendelést tud fogadni:
 
 ---
 
-## ✅ UI csiszolási hullám (v0.7.3 – v0.7.8)
 
-**Időszak**: 2026-04-26 – 2026-04-27  
-**Cél**: Sprint 3 funkciói után screenshot-feedback alapú **UI patch-ek** — business logika,
-D1 séma, API-k változatlanok.
+## ✅ UI csiszolási hullám (v0.7.3 → v0.7.8)
 
-### Verziók röviden
-- **v0.7.3** — Cart UI: radio méret + accent, üres kosár vs footer (`[hidden] !important`),
-  FoxPost név/ár sortörés; checkout radio méret
-- **v0.7.4** — Termékoldal qty/tab + **globális `overflow-x: hidden`** (`reset.css`) ⭐
-- **v0.7.5** — Termékkép korlátok (drawer + checkout summary), `<fieldset>` → `<div>` /
-  `<h3>` (Chrome legend glitch)
-- **v0.7.6** — Header kompakt, tagline rejtés mobil/tablet, `hide-tablet` + layout helper
-- **v0.7.7** — Header bundle + `updateCartCount` duplikáció javítás
-- **v0.7.8** — GDPR checkbox, `/kosar` kép, header mobile redesign — részletek:
-  [`09-changelog.md`](./09-changelog.md)
+**Időszak**: 2026-04-26 este → 2026-04-27  
+**Cél**: A Sprint 3 funkciók funkcionálisan kész (v0.7.2), de UI-szempontból több 
+bug felmerült screenshot feedback alapján. Ezeket gyors iterációkban fixáltuk, 
+közel élesedhető szintre csiszolva a webshop és header UX-ét.
+
+### v0.7.3 — Cart UI alapfix-ek
+- Radio gombok mérete (volt: óriási kék körök → 18×18px patina arany, `accent-color`)
+- Üres állapot + footer egyszerre láthatóság fix (`[hidden] !important`)
+- "FoxPost csomagautomata 1.990 Ft" sortörés probléma (flex `min-width: 0`)
+
+### v0.7.4 — Termékoldal + globális ⭐
+- Qty kontroll középre igazítás (`text-align: center !important`)
+- Qty + Kosárba gomb wrapping (`flex-wrap: wrap`)
+- Tabok jobb felső scrollbar elrejtés (`scrollbar-width: none`)
+- **KRITIKUS**: globális `overflow-x: hidden` a `html, body`-n — Sprint 1 óta 
+  meglévő horizontális scroll bug, hónapokon át észrevétlen
+- Number input spinner standardizálás
+
+### v0.7.5 — Kép méretek + fieldset → div
+- CartDrawer termékkép explicit 80×100px kényszer (`max-width/max-height`)
+- Pénztár checkout summary kép 60px korlát
+- `<fieldset>`/`<legend>` → `<div>`/`<h3>` csere a /penztar oldalon (Chrome 
+  render glitch — fehér háttér + barna kontúr "barna doboz")
+
+### v0.7.6 — Header mobile responsive (1. próba)
+- Tagline mobile-tablet rejtve (csak desktop ≥1024px)
+- "Időpontfoglalás" + "HU·EN" `< 1024px`-en `hide-tablet` osztállyal
+- Layout helper logika tisztítása (`hide-mobile` / `hide-tablet` / `hide-desktop`)
+- ⚠️ **Bug**: a `.hide-tablet` valójában nem működött a `.btn`-en specificitás 
+  ütközés miatt — a v0.7.8 javítja
+
+### v0.7.7 — placeholder
+A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt is rendezi.
+
+### v0.7.8 — Header mobile redesign + checkbox + kosár kép
+- `.hide-tablet` specificitás bug végleges javítása (`!important`)
+- Mobile menu: full-screen drawer → **dropdown overlay** a header alól
+- HU/EN visszahozva a mobile bar-ra (5 elemes A variáns elrendezés)
+- Hamburger ↔ X ikon animált váltás
+- Action ikonok kompaktabbak keskeny mobile-on (36×36px)
+- Pénztár GDPR checkbox `text-transform: none` + `letter-spacing: normal` 
+  (a globális `label` szabály felülírása)
+- `/kosar` full page termékkép `max-width/max-height` korlát (a v0.7.5-ből kimaradt)
 
 ### Tanulságok
-1. **Globális `reset.css`** — `overflow-x` hiánya hosszú ideig rejtett horizontális scroll bugot
-   okozott
-2. **`<fieldset>` + `<legend>`** kerülendő purely visual szekciókhoz (Chrome inkonzisztencia)
-3. **`accent-color`** natív radio/checkbox brand színhez
-4. **`wrangler pages deploy`** preview **≠** production — éles: **`git push`** + Cloudflare
-   Pages auto-build
+1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
+   észrevétlen bug-ot okozott hónapokon át
+2. **`<fieldset>` + `<legend>`** kerülendő — előnye (screen reader csoportosítás) 
+   nem éri meg a Chrome render hátrányt; `<div>` + `<h3>` ugyanaz vizuálisan + 
+   ARIA `<section aria-labelledby>` ugyanazt a szemantikát adja ha kell
+3. **`accent-color` CSS** modern szép megoldás natív kontrollok színezésére — 
+   IE11 nem támogatja, de a célközönségünkben ez nem releváns (Mónika ügyfelei 
+   modern mobil böngészőt használnak)
+4. **Mobile-first responsive** kezdettől átgondolandó — utólag toldozni nehézkesebb 
+   mint elsőre megoldani; a v0.7.6 → v0.7.8 közötti két iteráció ezt mutatja
+5. **CLI direct deploy ≠ Production deploy** — `npm run deploy` preview-ra megy, 
+   csak `git push origin main` éri el a Production CF Pages auto-build-jét
+6. **Specificitás csapdák** — a `.btn { display: inline-flex }` és a 
+   `.hide-tablet { display: none }` 0,1,0 vs 0,1,0 → utility osztályoknak 
+   `!important` mehet ha azt akarjuk hogy "valóban" felülírjon mindent
+7. **`display: revert` jobb mint `display: initial`** — a `revert` visszaállítja a 
+   user-agent stylesheet alapértelmezést (pl. `<a>`-nak `inline`, `<div>`-nek `block`), 
+   az `initial` mindig `inline`-ra megy ami flex container-eket törhet
 
-### Visszamenőleges forrás
-- Letöltések: **`changelog-supplement-v0.7.3-0.7.7.md`** (részletes ZIP-ek, ASCII layout,
-  session jegyzetek)
+### Mi maradt (Sprint 5+ -be)
+- Termékoldal galéria swipe gesture mobile-on
+- Cookie banner mobil méret finomítás
+- localStorage v1 → v2 migration (régi `mona_cart` kulcsú adat törlése)
+- Setmore "Időpontfoglalás" funkció finomítása (a `/idopontfoglalas` oldal jelenleg 
+  csak placeholder)
 
 ---
+
 
 ## ✅ Sprint 3.2 (1. rész — javítások v0.6.2)
 
@@ -1351,11 +1397,11 @@ A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik
 | Sprint 3.2 (2. rész) | 2026-04-26 | ✅ Kész | Webshop hub + kategória + márka |
 | Sprint 3.3 | 2026-04-26 | ✅ Kész | Termékoldal + kosár drawer + /kosar |
 | Sprint 3.4 | 2026-04-26 | ✅ Kész | Pénztár + email + Mailchimp tag |
-| Sprint 3 | TBD | ⏳ | 25+ |
-| Sprint 4 | TBD | ⏳ | 15+ |
-| Sprint 5 | TBD | ⏳ | 30+ |
-| Sprint 6 | TBD | ⏳ | 20+ |
-| Sprint 7 | TBD | ⏳ | minimal |
+| UI csiszolási hullám | 2026-04-26 → 27 | ✅ Kész | v0.7.3-v0.7.8 (cart UI, termékoldal, header mobile) |
+| Sprint 4 | TBD | ⏳ | Ügyfél törzs (auth) — 15+ |
+| Sprint 5 | TBD | ⏳ | Admin felület — 30+ |
+| Sprint 6 | TBD | ⏳ | Integrációk + AI (FoxPost, Setmore, chatbot) — 20+ |
+| Sprint 7 | TBD | ⏳ | Cutover (DNS váltás) — minimal |
 
 ---
 

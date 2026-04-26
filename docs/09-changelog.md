@@ -13,6 +13,11 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ## [0.7.8] — 2026-04-27 — Pénztár + kosár + header mobile redesign
 
+> **Folytatása a v0.7.3–v0.7.6 UI csiszolási hullámnak** (lásd a verziókat alább).
+> A v0.7.6-ban bevezetett `hide-tablet` logika valójában nem működött (specificitás
+> ütközés a `.btn` osztállyal) — itt javítjuk véglegesen, és a mobile menüt
+> drawer-ből dropdown overlay-re alakítjuk.
+
 ### Javítva
 - **Pénztár — GDPR checkbox layout**:
   - A `.form-checkbox` `<span>` szövege a globális `reset.css` `label` szabálya miatt
@@ -24,35 +29,38 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
   - `accent-color: var(--mona-warm)` — branded checkbox szín
 - **`/kosar` full page — termékkép méret**:
   - Eddig csak `aspect-ratio: 4 / 5` volt, explicit `max-height` nélkül
-  - Egyes esetekben a kép kifolyt a 100×125px keretből és túl nagyra nyúlt
-  - Fix: explicit `width: 100px; height: 125px; max-width/max-height` mind a link wrapper-en, 
-    mind a belső `<img>`-en (a CartDrawer és checkout summary mintájára — v0.7.5)
+  - A v0.7.5 fix csak a CartDrawer-t és a checkout summary-t fedte le, a `/kosar` 
+    full page kimaradt — egyes esetekben a kép kifolyt a 100×125px keretből
+  - Fix: explicit `width: 100px; height: 125px; max-width/max-height` mind a link 
+    wrapper-en, mind a belső `<img>`-en (a CartDrawer és checkout summary mintájára)
 
-### Változott — Header mobile redesign
-- **`Időpontfoglalás` gomb mobile-on rejtve** (specificitás bug fix):
-  - A `.hide-tablet { display: none }` és a `.btn { display: inline-flex }` ütközött 
-    (mindkettő 0,1,0 specificitás), a `buttons.css` később töltődik mint `layout.css`,
-    ezért a `.btn` nyert → a gomb a 1024px alatt is látszott csonkulva
-  - Fix: `.hide-mobile`, `.hide-tablet`, `.hide-desktop` utility-k `!important` flag-gel
-  - Plusz: `display: initial` → `display: revert` (jobban viselkedik flex/grid 
-    container-eknél, pl. `.lang-switcher`)
-  - Az `Időpontfoglalás` gomb mobile/tablet portrait/landscape mind rejtett — 
-    a dropdown menüből érhető el, ahol már eddig is volt CTA-ként
+### Változott — Header mobile redesign (a v0.7.6 folytatása)
+
+- **`.hide-tablet` specificitás bug fix** ⭐:
+  - A v0.7.6-ban bevezetett `.hide-tablet` osztály **nem működött** az `Időpontfoglalás`
+    gombon: a `.hide-tablet { display: none }` és a `.btn { display: inline-flex }` 
+    ütközött (mindkettő 0,1,0 specificitás), és mivel a `buttons.css` később töltődik
+    mint a `layout.css`, a `.btn` nyert → a gomb tablet/landscape mobile-on csonkulva 
+    látszott
+  - Fix: `.hide-mobile`, `.hide-tablet`, `.hide-desktop` utility-k **`!important`** flag-gel
+  - Plusz: `display: initial` → `display: revert` (jobb flex/grid container kezelés —
+    a `.lang-switcher` korábban `display: initial` miatt `inline`-ra váltott volna 
+    desktop-on, ami a flex layout-ot törte)
 - **Mobile menu: full-screen drawer → dropdown overlay**:
   - Az eddigi balról csúszó full-screen drawer helyett **dropdown overlay** a header alól
   - `position: absolute; top: 100%` — a sticky header-hez kötve
   - Animáció: `max-height: 0 → calc(100vh - var(--header-height))`
-  - Backdrop overlay a tartalom fölött (`rgb(0 0 0 / 0.32)`) — kattintás bezár
+  - Backdrop overlay a tartalom fölött (`rgb(0 0 0 / 0.32)`) — kattintásra bezár
   - A `.mobile-menu__header` (logo + bezárás gomb) eltávolítva — a hamburger ikon 
     maga vált X-re, ha nyitva van a menü
   - Link kattintás auto-zárja a menüt
   - Viewport átméretezés desktop-ra (≥1024px) miközben nyitva van — auto-zár
 - **HU/EN nyelvválasztó visszahozva mobile-on a header bar-ra**:
-  - Eddig csak desktop (≥1024px) — most minden viewport-on látszik
-  - `.hide-tablet` osztály levéve a `.lang-switcher`-ről
-  - A duplikált `.mobile-menu__lang` blokk a dropdown footer-éből eltávolítva
-  - Plusz fix: `.lang-switcher` explicit `display: inline-flex` (eddig csak `align-items: center`
-    volt rajta `display` nélkül — feltehetően öröklött bug)
+  - A v0.7.6-ban `hide-tablet` osztályt kapott — most levéve
+  - Minden viewport-on látszik a bar-on (a duplikált `.mobile-menu__lang` blokk 
+    eltávolítva a dropdown footer-éből)
+  - Plusz fix: `.lang-switcher` explicit `display: inline-flex` (eddig csak 
+    `align-items: center` volt rajta `display` nélkül — örökölt bug)
 - **Header bar 5 elemes layout — esztétikus elrendezés mobile-on**:
   ```
   [Mona Studio]  [HU·EN]  [🛍️]  [👤]  [☰]
@@ -60,94 +68,205 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
   - Action ikonok: 40×40px → 36×36px keskeny mobile-on (≤768px), SVG 20px → 18px
   - Action gap: `var(--space-1)` (~4px) → `2px` keskeny mobile-on
   - Logo méret: 18px (≤480px) → 20px (≥480px) → 22px (≥768px) → 24px (≥1024px)
-  - Logo `justify-content: center` — vertikálisan központosítva
 - **Hamburger / X ikon váltás animálva**:
   - Egy gomb, két SVG (`.site-header__hamburger-icon` + `.site-header__close-icon`)
   - `aria-expanded="true"` állapot kapcsolja átmenetet (opacity + 90° rotate)
   - `aria-label` is dinamikusan vált ("Menü megnyitása" / "Menü bezárása")
 
 ### Megjegyzés
-- A teljes responsive logika érvényes mobile portrait + landscape + tablet portrait +
+- A teljes responsive logika érvényes mobile portrait + landscape + tablet portrait + 
   landscape mobile mind ≤1024px tartományban — egységes mobile menu viselkedés
+- Az `Időpontfoglalás` gomb most véglegesen rejtett ≤1024px alatt — a dropdown 
+  menüben CTA-ként elérhető
+
+### Fájlok (5)
+- `package.json` — verzió `0.7.7` → `0.7.8`
+- `src/components/common/Header.astro` — markup + JS átalakítás
+- `src/styles/components/header.css` — bar layout + dropdown overlay CSS
+- `src/styles/layout.css` — `.hide-*` utility-k `!important` + `revert`
+- `src/pages/penztar/index.astro` — `.form-checkbox` CSS
+- `src/pages/kosar.astro` — `.cart-page-item__image` méret
 
 ---
 
-## [0.7.7] — 2026-04-26 — Header mobile fix + hoisted kosár szkript
+## [0.7.7] — 2026-04-26 — (placeholder)
 
-### Javítva
-- **`Header.astro`**: egyetlen `updateCartCount()` — `getCartCount()` + `storage` /
-  `mona-cart-update` (dupla deklaráció build hiba megszüntetése)
-- **`header-mobile-fix` bundle**: `hide-tablet` az Időpontfoglalás + nyelvváltón;
-  `layout.css` / `header.css` szinkron a repóval
-
-### Megjegyzés
-- Patch bump `0.7.6` → `0.7.7`; követi a v0.7.6 kompakt header irányt
+> Ennek a verziónak a tényleges tartalma nem került naplózásra a session során 
+> (`package.json` 0.7.7-en volt rögzítve, de az ehhez kapcsolódó konkrét változtatás 
+> nem azonosítható egyértelműen). Lehetséges hogy egy gyors UI tweak vagy build hotfix 
+> volt — a rákövetkező v0.7.8 ezt a hiányt is rendezi a header redesign keretében.
 
 ---
 
 ## [0.7.6] — 2026-04-26 — Header mobile/tablet kompakt + tagline rejtés
 
+**Patch bump**. A Sprint 3 funkciók befejezése után utolsó jelentős UI fix: a mobil 
+header zsúfolt és nem fér ki. (Visszamenőlegesen dokumentálva.)
+
 ### Probléma
-- ~390px-en a header **6 elemet** próbált egy sorba: logo+tagline, Időpontfoglalás,
-  HU·EN, kosár, user, hamburger → átlapolás / hamburger kicsúszás a viewport-ról
+Mobile screen-en (iPhone Pro ~390px széles) a header **6 elemet** próbált egy sorba 
+zsúfolni: logo + tagline + Időpontfoglalás gomb + HU·EN + 3 ikon. Eredmény: 
+átlapolódás, vagy a hamburger menü kicsúszott a viewport-ról iOS Safari-ban.
 
 ### Változott
-- **`header.css`**: tagline csak **≥1024px**; logo kisebb mobil/tablet; header padding +
-  actions gap kompaktabb; action gombok `flex-shrink: 0`; lang switcher `inline-flex` desktopon
-- **`Header.astro`**: **`hide-mobile` → `hide-tablet`** az Időpontfoglalás gombon és a
-  `.lang-switcher`-en (`< 1024px` rejtés — mobil **és** tablet)
-- **`layout.css`**: `.hide-mobile` / `.hide-tablet` / `.hide-desktop` helper szabályok
-  konzisztens logikája
+- **`src/styles/components/header.css`**:
+  - Tagline mobile-tablet rejtve, csak desktop-on (≥1024px) látszik
+  - Logo szöveg kompaktabb: 18px mobile, 20px tablet, 22px desktop, `white-space: nowrap`
+  - Header padding kompaktabb mobile-on
+  - Actions gap szűkítve mobile-on
+  - Action gombok `flex-shrink: 0`
+- **`src/components/common/Header.astro`**:
+  - `hide-mobile` → `hide-tablet` csere az Időpontfoglalás gombon és a `.lang-switcher` 
+    div-en (cél: tablet-en is rejtett legyen)
+- **`src/styles/layout.css`** — responsive helper logika tisztítás:
+  ```css
+  .hide-mobile { display: none }              /* < 768px-en rejt */
+  @media (min-width: 768px) { .hide-mobile { display: initial } }
+  .hide-tablet { display: none }              /* < 1024px-en rejt */
+  @media (min-width: 1024px) { .hide-tablet { display: initial } }
+  .hide-desktop { display: initial }
+  @media (min-width: 1024px) { .hide-desktop { display: none } }
+  ```
+
+### Ismert probléma (a v0.7.8-ban javítva)
+A `.hide-tablet { display: none }` valójában **NEM működött** az Időpontfoglalás 
+gombon, mert specificitás-konfliktusban volt a `.btn { display: inline-flex }`-szel 
+(mindkettő 0,1,0), és a `buttons.css` később töltődik mint a `layout.css`. A v0.7.8 
+ezt `!important` flag-gel oldja meg.
+
+### Fájlok (4)
+- `package.json` — verzió `0.7.5` → `0.7.6`
+- `src/components/common/Header.astro`
+- `src/styles/components/header.css`
+- `src/styles/layout.css`
 
 ---
 
-## [0.7.5] — 2026-04-26 — Termékkép korlátok + fieldset → div (checkout)
+## [0.7.5] — 2026-04-26 — Kép méret korlátok + fieldset → div csere
+
+**Patch bump**. (Visszamenőlegesen dokumentálva.)
 
 ### Változott
-- **`CartDrawer.astro`**: termékkép explicit **80×100px** keret (`max-width` / `max-height`,
-  `overflow: hidden`) — korábban a kép kitöltötte a drawer szélességét, belső scrollbar
-- **`penztar/index.astro`**: minden **`<fieldset>` → `<div class="checkout-section">`**,
-  **`<legend>` → `<h3 class="checkout-section__title">`** (Chrome `<legend>` barna doboz /
-  inkonzisztens render); checkout summary kép **60px** oszlop, grid `min-width: 0`;
-  qty badge miatt `overflow: hidden` levéve a kép wrap-ról ahol kellett
-- **Checkout radio**: 18×18px + `accent-color` (v0.7.3 minta)
+- **`src/components/shop/CartDrawer.astro` — termékkép méret kényszerítés**:
+  ```css
+  .cart-item__image-link {
+    width: 80px; height: 100px;
+    max-width: 80px; max-height: 100px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .cart-item__image {
+    width: 100%; height: 100%;
+    max-width: 80px; max-height: 100px;
+    object-fit: contain;
+  }
+  ```
+  Korábban a kép a teljes drawer szélességére (~400px) kifújódott, mert a globális 
+  `img { max-width: 100% }` felülírta a 80px szándékot, és az `aspect-ratio: 4/5` 
+  egyedül nem volt elég kényszer.
+- **`src/pages/penztar/index.astro` — `<fieldset>` → `<div class="checkout-section">` csere** ⭐:
+  - Mind az 5 form szekciónál (Vásárlói adatok, Szállítási mód, Szállítási cím, 
+    Fizetési mód, Megjegyzés, GDPR)
+  - `<legend>` → `<h3 class="checkout-section__title">` csere
+  - **Indok**: a böngészők (különösen Chrome) inkonzisztensen renderelik a `<legend>`-et,
+    fehér háttér + barna kontúr glitch-csel ami a screenshot-okon "barna doboz"-ként 
+    jelent meg. A `<div>` + `<h3>` ugyanaz vizuálisan, viselkedés szempontból 
+    kontrollálhatóbb.
+- **Checkout summary kép méret korlát**:
+  ```css
+  .checkout-item { display: grid; grid-template-columns: 60px 1fr; min-width: 0 }
+  .checkout-item__image-wrap { width: 60px; max-width: 60px; flex-shrink: 0 }
+  .checkout-item__image { max-width: 60px }
+  ```
 
-### Megjegyzés
-- Fieldset helyett div+h3: vizuálisan kontrollálhatóbb, mint a natív fieldset/legend
+### Egységesítő ZIP
+A session során sok kis ZIP készült, a v0.7.5 záróverziójához egy **`v0.7.5-final-overrides.zip`** 
+(110 KB, 25 fájl) készült — a teljes Sprint 3.3 + 3.4 + UI fix-ek v0.7.3-5 egybe.
+
+### Fájlok (3)
+- `package.json` — verzió `0.7.4` → `0.7.5`
+- `src/components/shop/CartDrawer.astro`
+- `src/pages/penztar/index.astro`
 
 ---
 
-## [0.7.4] — 2026-04-26 — Termékoldal qty + tab scroll + globális overflow-x
+## [0.7.4] — 2026-04-26 — Termékoldal qty + tabok + globális overflow ⭐
+
+**Patch bump**. (Visszamenőlegesen dokumentálva.) — **Kritikus fix** a globális 
+horizontális overflow miatt.
 
 ### Változott
-- **`webshop/termek/[slug].astro`**: qty középre (`justify-content: center`, input
-  `text-align: center`), `product-buy` flex-wrap + CTA `min-width`; tab nav vízszintes scroll
-  **scrollbar elrejtve** (`scrollbar-width: none`, webkit); number input `appearance`
-  normalizálás (Chrome/Firefox)
-- **`reset.css` ⭐**: `html, body` → `overflow-x: hidden; width: 100%; max-width: 100%` —
-  megszűnik a teljes oldal vízszintes „félpixel” scrollja (Sprint 1 óta rejtett bug)
+- **`src/pages/webshop/termek/[slug].astro`**:
+  - **Qty kontroll középre igazítás**:
+    - `.qty-control { justify-content: center; width: fit-content }`
+    - `.qty-control__btn { display: flex; align-items: center; justify-content: center }`
+    - `.qty-control__input { text-align: center !important }`
+    - Korábban a `1`-es szám az input bal oldalán ragadt, mert valamelyik globális 
+      stylesheet `text-align: left`-et adott az `<input>`-nak.
+  - **Qty + Kosárba gomb wrapping**: `.product-buy { flex-wrap: wrap }` + 
+    `.product-buy__cta { min-width: 200px }`
+  - **Tabok scrollbar elrejtés**: `.product-tabs__nav { overflow-x: auto; overflow-y: hidden; 
+    scrollbar-width: none }` + `::-webkit-scrollbar { display: none }`
+  - **Number input spinner standardizálás**: `appearance: none|textfield`
+- **`src/styles/reset.css`** ⭐ **KRITIKUS**:
+  ```css
+  html { overflow-x: hidden; width: 100%; max-width: 100% }
+  body { overflow-x: hidden; width: 100%; max-width: 100% }
+  ```
+  Az "egész oldal végtelenül görgethető jobbra-balra" jelenség megszűnik. Ez a bug a 
+  Sprint 1 óta megvolt — valamelyik szekció kilógott a viewport-on túl.
 
-### Megjegyzés
-- **`wrangler pages deploy`** preview **≠** production; éles CF Pages: **`git push`**
-  auto-build — verzió-eltérések elkerülése miatt fontos
-- Patch bump `0.7.3` → `0.7.4`
+### Tanulság
+A `npm run deploy` CLI direct upload **preview URL-re** ment (pl. 
+`a6ce11d6.monabeauty2.pages.dev`), és **NEM Production-ra**. A Production a 
+GitHub → CF Pages auto-build-ből frissül `git push origin main`-nel. Ez félreértést 
+okozott — Peter `v0.7.3`-at látott a footer-ben, miközben a Claude `v0.7.4`-et 
+feltételezett aktívnak. **Tanulság**: production deploy-hoz mindig commit + push, 
+soha csak CLI deploy.
+
+### Fájlok (3)
+- `package.json` — verzió `0.7.3` → `0.7.4`
+- `src/pages/webshop/termek/[slug].astro`
+- `src/styles/reset.css`
 
 ---
 
-## [0.7.3] — 2026-04-26 — Cart UI fix (radio + üres állapot + FoxPost sortörés)
+## [0.7.3] — 2026-04-26 — Cart UI fix (radio + üres állapot + sortörés)
+
+**Patch bump**. (Visszamenőlegesen dokumentálva.) Az első UI fix kör v0.7.2 után.
 
 ### Változott
-- **`CartDrawer.astro` + `kosar.astro`**: szállítási radio **`18×18px`**, `flex-shrink: 0`,
-  **`accent-color: var(--mona-warm)`** — korábban a flex layout ~60–70px „óriás” köröket
-  rajzolt; üres kosár vs footer: **`[hidden]`** selectorral `display: none !important`
-  (a komponens `display: flex|grid` felülírta a `hidden` alapértelmezését); FoxPost sor:
-  `min-width: 0`, ár **`white-space: nowrap`** — ne olvadjon össze a névvel
-- **`penztar/index.astro`**: checkout szállítási/fizetési radio ugyanilyen méret + accent
+- **`src/components/shop/CartDrawer.astro`**:
+  - **Radio gombok méret rögzítés**: `.cart-shipping__option input { width: 18px; 
+    height: 18px; flex-shrink: 0; accent-color: var(--mona-warm) }`. Korábban a 
+    globális reset hiányos `input` szabálya miatt a flex layout ~60-70px átmérőjű 
+    kék óriási körökre fújta a radio gombokat.
+  - **Üres állapot + footer egyszerre láthatóság fix**: `.cart-drawer__footer`, 
+    `.cart-drawer__empty`, `.cart-drawer__items` `[hidden]` attribute selectorral 
+    `display: none !important`. Korábban a `display: flex/grid` felülírta a HTML 
+    `hidden` attribute alapértelmezett `display: none`-ját → "fantom kosár" 
+    (üres üzenet alatt mégis látszott a 31.000 Ft összesen).
+  - **"FoxPost csomagautomata 1.990 Ft" sortörés**: `.cart-shipping__option-content 
+    { gap: var(--space-2); min-width: 0 }`, `.cart-shipping__option-name { flex: 1; 
+    min-width: 0 }`, `.cart-shipping__option-price { white-space: nowrap; flex-shrink: 0 }`
+- **`src/pages/kosar.astro`** — ugyanazok a fix-ek mint a CartDrawer-ben
+- **`src/pages/penztar/index.astro`**:
+  - `.shipping-option input, .payment-option input { width: 18px; height: 18px; 
+    flex-shrink: 0; accent-color: var(--mona-warm) }`
 
 ### Megjegyzés
-- Patch bump `0.7.2` → `0.7.3`; **D1 / API / üzleti logika változatlan** — tisztán UI
-- A **0.7.3–0.7.6** patch-ek egy estén, screenshot-feedback alatt; részletes forrásanyag:
-  letöltések között **`changelog-supplement-v0.7.3-0.7.7.md`**
+- Az `[hidden] { display: none !important }` mintát Tailwind és más design rendszerek 
+  is használják — CSS specificitás-trükk, nem szép, de szükséges, ha a komponens 
+  `display: flex|grid` van állítva.
+- Az `accent-color` modern CSS feature (Chrome 93+, Firefox 92+, Safari 15.4+) — 
+  natív radio/checkbox színezésre. Régebbi böngészőkön a radio kék marad, de a 
+  mérete jó lesz (a fő bug).
+
+### Fájlok (4)
+- `package.json` — verzió `0.7.2` → `0.7.3`
+- `src/components/shop/CartDrawer.astro`
+- `src/pages/kosar.astro`
+- `src/pages/penztar/index.astro`
 
 ---
 

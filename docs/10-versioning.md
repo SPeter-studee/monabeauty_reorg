@@ -27,7 +27,7 @@ A verzió a `package.json`-ban van rögzítve:
 ```json
 {
   "name": "mona-studio",
-  "version": "0.7.8",
+  "version": "0.5.1",
   ...
 }
 ```
@@ -42,7 +42,7 @@ A weboldal **footer-jének alján** egy diszkrét sorban: `v0.5.1 · SP Design`.
 ### 2. HTML meta tag-ben (fejlesztőknek)
 Minden oldal `<head>`-jében:
 ```html
-<meta name="app-version" content="0.7.8">
+<meta name="app-version" content="0.5.1">
 <meta name="build-date" content="2026-04-26">
 ```
 Hasznos: Cloudflare deploy verifikáció, böngésző DevTools `<head>` ellenőrzés.
@@ -53,7 +53,7 @@ JSON válasz monitoring és CI/CD célra:
 curl https://monastudio.hu/api/version
 {
   "name": "Mona Studio",
-  "version": "0.7.8",
+  "version": "0.5.1",
   "buildDate": "2026-04-26",
   "runtime": "cloudflare-pages",
   "framework": "astro"
@@ -140,14 +140,15 @@ git push --tags
 | Sprint 3.3 | `0.7.0` | **MINOR** — vásárlási flow első fele |
 | Newsletter Mailchimp fix | `0.7.1` | patch (bug fix) |
 | Sprint 3.4 | `0.7.2` | patch (Sprint 3 lezárás) |
-| UI hullám — kosár + termékoldal + checkout kép | `0.7.3`–`0.7.5` | patch (screenshot iteráció) |
-| Header mobile/tablet + `.hide-*` utility | `0.7.6` | patch |
-| Header bundle + dupla cart script fix | `0.7.7` | patch |
-| GDPR checkbox + `/kosar` kép + header redesign | `0.7.8` | patch |
-| Sprint 3 (webshop) | `0.6.0` | minor (tervezett) |
-| Sprint 4 (auth) | `0.7.0` | minor (tervezett) |
-| Sprint 5 (admin) | `0.8.0` | minor (tervezett) |
-| Sprint 6 (integrációk) | `0.9.0` | minor (tervezett) |
+| UI csiszolási hullám — Cart UI | `0.7.3` | patch (radio gomb + üres állapot + sortörés) |
+| UI csiszolási hullám — Termékoldal + globális | `0.7.4` | patch ⭐ kritikus (overflow-x fix) |
+| UI csiszolási hullám — Kép méretek + fieldset→div | `0.7.5` | patch (CartDrawer + checkout) |
+| UI csiszolási hullám — Header mobile (1. próba) | `0.7.6` | patch (tagline + hide-tablet) |
+| UI csiszolási hullám — placeholder | `0.7.7` | patch (nem dokumentált tartalom) |
+| UI csiszolási hullám — Header redesign + checkbox + kosár | `0.7.8` | patch (dropdown overlay + 5 elemes bar) |
+| Sprint 4 (auth) | `0.8.0` | minor (tervezett) |
+| Sprint 5 (admin) | `0.9.0` | minor (tervezett) |
+| Sprint 6 (integrációk) | `0.10.0` | minor (tervezett) |
 | Sprint 7 (cutover) | `1.0.0` | **MAJOR** — éles indulás |
 
 ---
