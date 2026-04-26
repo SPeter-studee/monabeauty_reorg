@@ -295,6 +295,12 @@ import PageHero from "@/components/common/PageHero.astro";
   margin-inline: auto;
 }
 
+/* CRITICAL: hidden attribute felülírja display:grid/flex */
+.cart-page__layout[hidden],
+.cart-page__empty[hidden] {
+  display: none !important;
+}
+
 @media (min-width: 1024px) {
   .cart-page__layout {
     grid-template-columns: 1fr 380px;
@@ -551,6 +557,10 @@ import PageHero from "@/components/common/PageHero.astro";
 .cart-shipping__option input {
   margin: 0;
   cursor: pointer;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--mona-warm);
 }
 
 .cart-shipping__option-content {
@@ -558,18 +568,24 @@ import PageHero from "@/components/common/PageHero.astro";
   justify-content: space-between;
   flex: 1;
   align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .cart-shipping__option-name {
   font-family: var(--mona-sans);
   font-size: 13px;
   color: var(--mona-text);
+  flex: 1;
+  min-width: 0;
 }
 
 .cart-shipping__option-price {
   font-family: var(--mona-sans);
   font-size: 13px;
   color: var(--mona-text-2);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .cart-totals {
