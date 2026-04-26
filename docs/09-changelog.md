@@ -11,6 +11,75 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.6.3] — 2026-04-26 — Hírlevél újrapozícionálás Mónika hangjára
+
+### Változott
+- **`NewsletterForm.astro`** — teljes szöveg újraírás:
+  - Eyebrow: "Szakmai hírlevél" → **"Mónika havi naplója"**
+  - Cím: "Mónika kurátori válogatása" → **"Bőrápolás, közvetlenül tőlem"**
+  - Blurb: új koncepció — bőrtípus szerinti tanácsok, kezelés ajánlások, alkalmankénti próbatermék/kedvezmény
+  - CTA: "Feliratkozás" → **"Igen, küldd a naplót"**
+  - **Eltávolítva** a "kéretlen levelek nélkül" fordulat — implicit, és modernebbül "Csak email cím kell"
+  - **Eltávolítva** a "kizárólagos kedvezmények előfizetőknek" — Mónika brand-je nem kuponújság
+
+### Hozzáadva
+- **`/api/newsletter/subscribe.ts`** — strukturált Mailchimp tag rendszer:
+  - `source` paraméter támogatás (footer, popup, signup-form, stb.) a felhasználói viselkedés követéséhez
+  - Tag-ek: `website-signup` + forrás-jelölő automatikusan
+  - Üzenet hangja: "havi napló" — nem "feliratkozás"
+- **Sprint 4 hírlevél ↔ regisztráció összekapcsolás dokumentálva**:
+  - A `/api/auth/register` és OAuth callback-ek Sprint 4-ben Mailchimp lekérdezést végeznek (MD5 email hash)
+  - Ha az email már a Mailchimp listán van → `registered` tag automatikusan adódik
+  - Plusz `customers.is_newsletter_member` flag jelöli a kapcsolatot
+  - Jutalom-logika: első rendelés -10% (vagy más kedvezmény Mónika döntése alapján), korai hozzáférés új termékekhez, alkalmanként próbatermék
+
+### Stratégiai döntés
+- **A hírlevél nem előfizetés** — szakmai tartalom mindenkinek, **a regisztrált fiókokat plusz jutalmazzuk**
+- A "premium" / "subscriber" / "exkluzív" szóhasználat kerülése — nem illik Mónika természetes-szakmai brand-jébe
+- A tartalom **kevert**: bőrtípus tanácsok, kezelés ajánlások, termék bemutatók, alkalmanként próbatermékkel
+
+### Megjegyzés
+- Az `/api/newsletter/subscribe.ts` változás **backward-compatible** — a régi `{ email }` request body továbbra is működik (a `source` opcionális)
+- A frontend NewsletterForm jelenleg **nem küldi** a `source` paramétert — Sprint 3.2 (2. rész)-ben hozzáadjuk amikor több helyen lesz a form (pl. /webshop oldalon, vagy popup-ban)
+
+---
+
+## [0.6.2] — 2026-04-26 — Sprint 3.2 (1. rész — javítások)
+
+### Javítva
+- **`@astrojs/sitemap` SSR build crash** — `Cannot read properties of undefined (reading 'reduce')`:
+  - Verzió pinnelve `3.6.0`-ra (a `^3.2.0` caret 3.7.x-et hozott le, ami SSR módban broken)
+  - **`patch-package`** telepítve mint védőháló — `postinstall` hook + `patches/` mappa (lásd `patches/README.md`)
+- **`db:seed` idempotens lett** — többször is futtatható duplikálás / unique hiba nélkül:
+  - Kategóriák, márkák: `INSERT OR IGNORE`
+  - Termékek: `INSERT OR REPLACE` (megőrzi az ID-t, így a FK-k jók)
+  - Termékképek: `DELETE` slug-prefixre, aztán `INSERT`
+
+### Hozzáadva
+- **`migrations/9999_reset_seed_data.sql`** — biztonságos reset SQL ami **csak** a seed táblákat üríti (categories, brands, products, product_images). Az `orders` és `order_items` érintetlenül marad, az `order_items.product_id` NULL-ra állítódik a snapshot mezők megőrzésével.
+- **`db:reset` és `db:reseed` scriptek** (remote + local variánssal):
+  - `db:reset` — csak a seed adatok ürítése
+  - `db:reseed` — `db:reset` + `db:seed` egyben (tiszta újratöltés)
+- **`patches/` mappa** — `patch-package` által kezelt patch fájlok helye (jelenleg 1 fájl: `@astrojs+sitemap+3.7.2.patch` mint biztonsági fallback)
+- **7 KRX termékkép** elhelyezve: `public/images/products/krx-*.webp`
+  - Cica vonal: 4/4 kép
+  - Probiotic vonal: 3/4 kép (Probiotic utazó készlet képe később jön)
+
+### Változott
+- **`package.json`**:
+  - `"@astrojs/sitemap": "3.6.0"` (pin, nem caret)
+  - `+ "patch-package": "^8.0.0"` dependency
+  - `+ "postinstall": "patch-package"` script
+  - `+ db:reset, db:reseed (+ :local variánsok)` scriptek
+- **`migrations/0002_sprint3_seed_krx_products.sql`** — idempotens UPSERT-ekkel
+- **Verzió bump**: `0.6.1` → `0.6.2` (patch — bugfix)
+
+### Megjegyzés
+- A `patches/@astrojs+sitemap+3.7.2.patch` jelenleg **nem aktív** (3.6.0 van pinnelve), Cursor figyelmeztetést írhat ki ami **nem hiba** — a fájl csak akkor lép működésbe ha valaki frissítené 3.7.x-re a sitemap-et
+- Ha a Cursor pontos hash-eket akar a patch fájlban, regenerálható: `npx patch-package @astrojs/sitemap` (a node_modules-ből kiolvassa az aktuális tartalmat)
+
+---
+
 ## [0.6.1] — 2026-04-26 — Sprint 3.2 (1. rész) — KRX termékek migráció + Footer Maps
 
 ### Hozzáadva

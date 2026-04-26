@@ -1,17 +1,22 @@
 -- migrations/0002_sprint3_seed_krx_products.sql
 -- Sprint 3.2 — KRX termékek migráció a régi rendszer site_content.json-jából
+-- IDEMPOTENS verzió: többször is futtatható dupla sor / unique hiba nélkül.
 --
--- Forrás: site_content.json (régi monabeauty rendszer, KV CONTENT)
 -- 8 KRX termék: Cica vonal (4 db) + Probiotic vonal (4 db)
 -- Mónika ajánlások átdolgozva: rövid, marketing-fókuszú, bőrtípus + kombináció
 --
 -- Futtatás:
---   npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0002_sprint3_seed_krx_products.sql
+--   npm run db:seed         (remote)
+--   npm run db:seed:local   (lokális)
+--
+-- Tiszta újratöltéshez (ha tényleg nulláról kell):
+--   npm run db:reseed       (reset + seed egyben)
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- KATEGÓRIÁK
+-- INSERT OR IGNORE: ha már létezik a slug (UNIQUE), nem dob hibát
 -- ─────────────────────────────────────────────────────────────────────────────
-INSERT INTO categories (slug, name, description, sort_order) VALUES
+INSERT OR IGNORE INTO categories (slug, name, description, sort_order) VALUES
   ('arclemosok',    'Arctisztítás',
    'Lemosó, peeling, micellás víz — a bőr alapfeltételeit megteremtő termékek.',
    10),
@@ -31,7 +36,7 @@ INSERT INTO categories (slug, name, description, sort_order) VALUES
 -- ─────────────────────────────────────────────────────────────────────────────
 -- MÁRKA — KRX
 -- ─────────────────────────────────────────────────────────────────────────────
-INSERT INTO brands (slug, name, description, country, sort_order) VALUES
+INSERT OR IGNORE INTO brands (slug, name, description, country, sort_order) VALUES
   ('krx',
    'KRX',
    'Koreai professzionális szépségápolás. Két fő termékvonal: a **Cica** (Centella Asiatica alapú) az érzékeny, gyulladt bőrre, és a **Probiotic** (pre- és probiotikumok) a bőr mikrobiomjának helyreállítására. Mónika személyesen választott márkája — a szalonban végzett kezelések után otthoni ápolásként ajánlott.',
@@ -40,10 +45,16 @@ INSERT INTO brands (slug, name, description, country, sort_order) VALUES
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- TERMÉKEK — CICA VONAL (érzékeny, irritált, rosaceás bőrre)
+-- INSERT OR REPLACE: ha létezik a slug (UNIQUE), felülírja az új tartalommal.
+-- Megőrzi az ID-t, így a product_images FK kapcsolat megmarad.
+--
+-- ⚠️  Ha egy terméket KÉZIBŐL módosítottál (pl. ár), akkor a reseed felülírja!
+-- A megoldás: db:reset SOSEM töröl, csak db:reseed-del jár együtt → ott direkt
+-- akarjuk hogy minden visszakerüljön a seed értékekre.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- 1. Cica Oxigenizáló 2 in 1 arclemosó
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -69,7 +80,7 @@ INSERT INTO products (
 );
 
 -- 2. Cica Tonik
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -93,7 +104,7 @@ INSERT INTO products (
 );
 
 -- 3. Cica Szérum
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -119,7 +130,7 @@ A Centella Asiatica koncentrált formában — a szérumforma a leggyorsabb beha
 );
 
 -- 4. Cica Nappali Krém
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -149,7 +160,7 @@ Természetes összetevők: Centella Asiatica (tigrisfű), kínai Cassia, oliva k
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- 5. Probiotikus habzó arclemosó
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -175,7 +186,7 @@ INSERT INTO products (
 );
 
 -- 6. Probiotikus tonik
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -199,7 +210,7 @@ INSERT INTO products (
 );
 
 -- 7. Probiotic nappali krém
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -225,7 +236,7 @@ Rendszeres használata hozzájárul a bőr rugalmasságának megőrzéséhez, cs
 );
 
 -- 8. Probiotic line utazó készlet
-INSERT INTO products (
+INSERT OR REPLACE INTO products (
   slug, name, short_description, description,
   ingredients, usage_instructions, monika_recommends,
   price_ft, stock_qty,
@@ -254,10 +265,16 @@ INSERT INTO products (
 );
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- TERMÉK KÉPEK — placeholder URL-ek
--- A tényleges képek a régi rendszer images/products/ mappájából átmásolva,
--- vagy újak feltöltve.
+-- TERMÉK KÉPEK
+-- A 7 KRX termékhez van fotó (public/images/products/), a 8. (utazó készlet)
+-- később kap saját képet — egyelőre placeholder marad.
+--
+-- Idempotens megoldás: először töröljük, aztán beillesztjük.
+-- Ez azért biztonságos, mert a product_images-nek nincs FK referenciája máshová.
 -- ─────────────────────────────────────────────────────────────────────────────
+DELETE FROM product_images
+WHERE product_id IN (SELECT id FROM products WHERE slug LIKE 'krx-%');
+
 INSERT INTO product_images (product_id, url, alt_text, is_primary) VALUES
   ((SELECT id FROM products WHERE slug = 'krx-cica-2in1-arclemoso'),
    '/images/products/krx-cica-2in1-arclemoso.webp', 'KRX Cica Oxigenizáló 2 in 1 arclemosó', 1),
@@ -272,6 +289,7 @@ INSERT INTO product_images (product_id, url, alt_text, is_primary) VALUES
   ((SELECT id FROM products WHERE slug = 'krx-probiotic-tonik'),
    '/images/products/krx-probiotic-tonik.webp', 'KRX Probiotikus tonik', 1),
   ((SELECT id FROM products WHERE slug = 'krx-probiotic-nappali-krem'),
-   '/images/products/krx-probiotic-nappali-krem.webp', 'KRX Probiotic nappali krém', 1),
-  ((SELECT id FROM products WHERE slug = 'krx-probiotic-utazo-keszlet'),
-   '/images/products/probiotic-karacsonyi-keszlet.webp', 'KRX Probiotic utazó készlet', 1);
+   '/images/products/krx-probiotic-nappali-krem.webp', 'KRX Probiotic nappali krém', 1);
+
+-- A 8. (utazó készlet) kép később kerül be — addig kép nélkül jelenik meg
+-- (a komponensek default placeholder ikont mutatnak ha nincs is_primary kép)

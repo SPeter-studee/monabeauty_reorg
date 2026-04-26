@@ -720,6 +720,101 @@ git push
 
 ---
 
+## ✅ Sprint 3.2 (1. rész — javítások v0.6.2)
+
+**Időszak**: 2026-04-26  
+**Cél**: A 0.6.1 release után felmerült 3 probléma javítása + 7 termékkép behelyezése.
+
+### 1. `@astrojs/sitemap` build crash javítás
+
+**Probléma**: Az `^3.2.0` caret verzió a npm install során **3.7.1**-et hozott le, ami **SSR módban (`output: "server"`) crash-el** a `_routes` undefined miatt:
+
+```
+Cannot read properties of undefined (reading 'reduce')
+```
+
+**Megoldás kettős védelem**:
+
+1. **Pin pontos verzióra**: `"@astrojs/sitemap": "3.6.0"` (utolsó stabil 3.7.x előtti, lásd GitHub issue #15894)
+2. **`patch-package`** telepítve **védőhálóként** — `patches/@astrojs+sitemap+3.7.2.patch` készenlétben, hogy ha valaki valaha frissítené 3.7.x-re, a `(_routes ?? []).reduce` javítás automatikusan ráfusson `npm install` után (`postinstall` hook).
+
+A `patches/` mappa README-vel — Cursor-ban szükség esetén regenerálható a tényleges patch (`npx patch-package @astrojs/sitemap`).
+
+### 2. Idempotens `db:seed` SQL
+
+**Probléma**: A `0002_sprint3_seed_krx_products.sql` második futtatása **UNIQUE constraint hiba**val, vagy duplikált sorokkal végződött.
+
+**Megoldás**:
+- **Kategóriák, márkák**: `INSERT OR IGNORE INTO ...` — ha létezik, nem dob hibát
+- **Termékek**: `INSERT OR REPLACE INTO ...` — ha létezik a slug, felülírja a tartalommal (megőrzi az ID-t, így a `product_images` FK-k működnek)
+- **Termék képek**: először `DELETE` a slug-prefixre, aztán `INSERT` — biztonságos, mert ezek nincsenek máshol hivatkozva
+
+**Új SQL**: `migrations/9999_reset_seed_data.sql` — **csak a seed adatokat törli** (`categories`, `brands`, `products`, `product_images`). Az `orders` és `order_items` táblákat **NEM érinti**, és az `order_items.product_id`-t NULL-ra állítja a snapshot mezők (`product_slug`, `product_name`) megőrzésével.
+
+**Új scriptek**:
+- `npm run db:reset` / `db:reset:local` — csak a seed táblák ürítése
+- `npm run db:reseed` / `db:reseed:local` — `db:reset` + `db:seed` egyben (tiszta újratöltés)
+
+### 3. Termékképek elhelyezve (7/8)
+
+**`public/images/products/`** mappába behelyezve a Mónika által feltöltött 7 KRX termékkép:
+- `krx-cica-2in1-arclemoso.webp` (12 KB)
+- `krx-cica-tonik.webp` (12 KB)
+- `krx-cica-szerum.webp` (12 KB)
+- `krx-cica-nappali-krem.webp` (12 KB)
+- `krx-probiotikus-arclemoso.webp` (14 KB)
+- `krx-probiotic-tonik.webp` (10 KB)
+- `krx-probiotic-nappali-krem.webp` (12 KB)
+
+**Hiányzik**: a **Probiotic utazó készlet** (#8 termék) képe — egyelőre kép nélkül jelenik meg. A frontend komponensekbe (Sprint 3.2 2. rész) **default placeholder** ikont teszünk olyan termékekhez, ahol nincs `is_primary` kép.
+
+A SQL is frissítve: a 8. termék képét eltávolítottuk a SEED-ből (placeholder URL helyett semmi).
+
+### Cursor teendő push előtt
+
+```powershell
+# 1. Behúzás
+# 2. NPM install — KÖTELEZŐ! Új dep: patch-package
+npm install
+# A postinstall hook automatikusan lefut. Ha warning-ot ír a 3.7.2 patch-ről,
+# az NORMÁL — pinneltünk 3.6.0-ra, a patch csak biztonsági fallback.
+
+# 3. (Opcionális) Lokális teszt:
+npm run db:reseed:local
+npm run dev
+
+# 4. Remote tiszta újratöltés (törli a 8 régi terméket és újrarakja idempotensen):
+npm run db:reseed
+
+# 5. Build ellenőrzés (kritikus — sitemap nem szabad hogy crash-eljen):
+npm run build
+
+# 6. Ha a build sikeres → deploy:
+npm run deploy
+
+# 7. Commit
+git add -A
+git commit -m "Sprint 3.2 (1. rész javítás) — sitemap fix + idempotens seed + KRX képek v0.6.2
+
+- @astrojs/sitemap pin 3.6.0 (build crash fix SSR módban)
+- patch-package telepítve (postinstall hook + patches/)
+- Idempotens db:seed (INSERT OR IGNORE / REPLACE)
+- db:reset + db:reseed scriptek
+- 7/8 KRX termékkép a public/images/products/-ba"
+git push
+```
+
+### Fájlok (új + módosítás)
+- `package.json` — sitemap pin 3.6.0, patch-package dep, postinstall hook, reset/reseed scriptek
+- `patches/README.md` (új)
+- `patches/@astrojs+sitemap+3.7.2.patch` (új — biztonsági fallback)
+- `migrations/0002_sprint3_seed_krx_products.sql` — idempotensre átírva
+- `migrations/9999_reset_seed_data.sql` (új) — biztonságos reset
+- `public/images/products/krx-*.webp` — 7 termékkép behelyezve
+- Verzió bump: `0.6.1` → `0.6.2` (patch — bugfix)
+
+---
+
 ## ⏳ Sprint 4 — Ügyfél törzs (auth)
 
 **Cél**: Regisztráció, bejelentkezés (email+jelszó, Google OAuth, Facebook Login), profil oldal.
@@ -767,6 +862,67 @@ Ha valaha **iOS app**ot készítenénk a App Store-ra, **akkor kötelező** az A
 - Apple JWT (ES256) bonyolultabb mint a Google/FB OAuth
 
 A `customers` tábla **`apple_id` mezőt** előre létrehozzuk hogy ne kelljen séma-migrációt csinálni később.
+
+### Hírlevél ↔ regisztráció összekapcsolás (új — v0.6.3)
+
+**Koncepció**: Mónika havi naplója (Mailchimp newsletter) **nem előfizetés**, **nem premium** — szakmai tartalom, bárki feliratkozhat. **Ha egy regisztrált felhasználó email címe már a Mailchimp listán van**, automatikusan jutalmazzuk:
+
+**Sprint 4-ben implementálandó logika** (`/api/auth/register` és OAuth callback-ek):
+
+```typescript
+// Sprint 4 — registration flow
+async function onUserRegister(email: string) {
+  // 1. Customer rekord létrehozás D1-ben
+  const customerId = await createCustomer({ email, ... });
+
+  // 2. Mailchimp lekérdezés — már fel van-e iratkozva?
+  const memberHash = md5(email.toLowerCase());
+  const url = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members/${memberHash}`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${btoa(`anystring:${API_KEY}`)}` }
+  });
+
+  if (res.ok) {
+    // Már feliratkozott a havi naplóra → "registered" tag hozzáadás
+    const data = await res.json();
+    await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Basic ${btoa(`anystring:${API_KEY}`)}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        tags: [...data.tags.map(t => t.name), "registered"]
+      })
+    });
+
+    // Plusz: első rendelés kedvezmény vagy bonusz a customers táblába
+    await markCustomerAsNewsletterMember(customerId);
+  } else if (res.status === 404) {
+    // Nincs még a listán — ajánljuk fel a regisztráció során
+    // (a register form-ban egy checkbox: "Igen, küldjétek a havi naplót")
+  }
+}
+```
+
+**Mailchimp tagek struktúra**:
+- `website-signup` — alapszintű (minden feliratkozónak)
+- `website-footer` / `popup-modal` / `signup-form` — forrás-jelölő (forrás követésért)
+- `registered` — Sprint 4-ben aktív, a regisztrált fiókkal egyező email
+- `vasarlas-YYYY-MM` — Sprint 3.4-ben adódik a checkout után (havi szegmentáció)
+- `vasarolt-<termék-slug>` — termék-specifikus retargeting (pl. `vasarolt-krx-cica-szerum`)
+
+**`customers` tábla bővítés** Sprint 4-ben (megelőző mezők):
+- `is_newsletter_member BOOLEAN DEFAULT 0` — flag a hírlevél tagsághoz
+- `newsletter_joined_at TEXT` — mikor iratkozott fel (ha későbbi, regisztráció után jön)
+
+**Mit jutalmazunk**:
+- **Első rendelés -10%** ha a regisztráció előtt már newsletter tag volt (= már bízott Mónikában)
+- **Korai hozzáférés** új termékekhez — pl. KRX új formula 2 héttel hamarabb mint nyilvános indulás
+- **Próbatermék** — alkalmanként a rendelés mellé (Sprint 5-ben az admin tudja jelölni mikor legyen)
+
+A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik** Mónika döntése alapján.
 
 ---
 
@@ -835,6 +991,8 @@ A `customers` tábla **`apple_id` mezőt** előre létrehozzuk hogy ne kelljen s
 | Sprint 2B (6. kör) | 2026-04-26 | ✅ Kész | SEO + FB előkészítés |
 | Sprint 3.1 | 2026-04-26 | ✅ Kész | D1 séma + demo seed |
 | Sprint 3.2 (1. rész) | 2026-04-26 | ✅ Kész | KRX termékek + Footer Maps |
+| Sprint 3.2 (1. fix) | 2026-04-26 | ✅ Kész | sitemap+seed fix + képek |
+| Hírlevél újrapozícionálás | 2026-04-26 | ✅ Kész | "Mónika havi naplója" |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

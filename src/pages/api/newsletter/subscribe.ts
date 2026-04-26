@@ -5,13 +5,23 @@
 //   MAILCHIMP_API_KEY      — Mailchimp API kulcs (formátum: xxx-usX)
 //   MAILCHIMP_AUDIENCE_ID  — célközönség ID
 //   MAILCHIMP_SERVER       — adatközpont prefix (pl. "us21")
+//
+// Tagek:
+//   - "website-signup"     — minden feliratkozó automatikusan kap (forrás-jelölő)
+//   - "registered"         — Sprint 4-ben hozzáadódik amikor a fiók regisztráció
+//                            során egyezik az email — összekapcsolja a hírlevél
+//                            feliratkozót a regisztrált fiókkal
+//   - "vasarlas-YYYY-MM"   — Sprint 3.4-ben automatikusan adódik a checkout után
+//
+// FONTOS: ne használj "subscriber" vagy "premium" megnevezést — Mónika brand-je
+// szerint ez egy szakmai napló, nem előfizetés.
 
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const env = locals.runtime.env;
 
-  let body: { email?: string };
+  let body: { email?: string; source?: string };
   try {
     body = await request.json();
   } catch {
@@ -23,6 +33,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return Response.json({ error: "Érvénytelen email cím." }, { status: 400 });
   }
 
+  // Forrás-jelölő tag — honnan érkezett a feliratkozás (footer, popup, signup form)
+  // Sprint 4-ben hasznos lesz a felhasználói viselkedés elemzéséhez.
+  const sourceTag = body.source?.trim() || "website-footer";
+
   const apiKey = (env as any).MAILCHIMP_API_KEY;
   const audienceId = (env as any).MAILCHIMP_AUDIENCE_ID;
   const server = (env as any).MAILCHIMP_SERVER;
@@ -30,7 +44,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!apiKey || !audienceId || !server) {
     console.error("Mailchimp env vars hiányoznak");
     return Response.json(
-      { error: "A hírlevél szolgáltatás jelenleg nem érhető el." },
+      { error: "A havi napló szolgáltatás jelenleg nem érhető el." },
       { status: 503 }
     );
   }
@@ -48,7 +62,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       body: JSON.stringify({
         email_address: email,
         status: "pending",
-        tags: ["website-signup"],
+        tags: ["website-signup", sourceTag],
       }),
     });
 
@@ -58,7 +72,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (data.title === "Member Exists" || data.status === 400) {
       return Response.json({
         success: true,
-        message: "Már fel vagy iratkozva — köszönjük!",
+        message: "Már megkapod a havi naplót — köszönjük!",
       });
     }
 
@@ -69,7 +83,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return Response.json({
       success: true,
-      message: "A megerősítő emailt elküldtük.",
+      message: "A megerősítő emailt elküldtük. Köszönjük!",
     });
   } catch (err) {
     console.error("Newsletter error:", err);

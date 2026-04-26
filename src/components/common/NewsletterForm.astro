@@ -8,11 +8,15 @@
     <div class="newsletter__inner">
 
       <div class="newsletter__content">
-        <p class="eyebrow newsletter__kicker">Szakmai hírlevél</p>
-        <h2 class="newsletter__title">Mónika kurátori válogatása</h2>
+        <p class="eyebrow newsletter__kicker">Mónika havi naplója</p>
+        <h2 class="newsletter__title">Bőrápolás, közvetlenül tőlem</h2>
         <p class="newsletter__blurb">
-          Havonta egyszer küldök válogatást: új termékek, oktató cikkek és
-          kizárólagos kedvezmények előfizetőknek. Kéretlen levelek nélkül.
+          Havonta egyszer beszélek arról ami épp aktuális: bőrtípusra
+          szabott tanácsok, kezelés ajánlások, egy-egy új termék amit
+          kipróbáltam. Alkalmanként próbatermékkel vagy kedvezménnyel.
+        </p>
+        <p class="newsletter__blurb newsletter__blurb--small">
+          Csak email cím kell — és mindig leiratkozhatsz.
         </p>
       </div>
 
@@ -28,10 +32,10 @@
           required
         >
         <button type="submit" class="btn btn-primary">
-          <span data-newsletter-text>Feliratkozás</span>
+          <span data-newsletter-text>Igen, küldd a naplót</span>
         </button>
         <p class="newsletter__notice">
-          Adataidat csak a hírlevélhez használjuk. Bármikor leiratkozhatsz.
+          Az emailcímet csak a havi naplóhoz használjuk. Bármikor leiratkozhatsz.
         </p>
         <div class="newsletter__feedback" data-newsletter-feedback hidden></div>
       </form>
@@ -81,6 +85,12 @@
   color: var(--mona-text-2);
   max-width: 480px;
   margin: 0;
+}
+
+.newsletter__blurb--small {
+  font-size: 13px;
+  margin-top: var(--space-2);
+  opacity: 0.8;
 }
 
 .newsletter__form {
@@ -147,6 +157,8 @@
   const text = document.querySelector<HTMLSpanElement>("[data-newsletter-text]");
   const feedback = document.querySelector<HTMLDivElement>("[data-newsletter-feedback]");
 
+  const btnLabelDefault = "Igen, küldd a naplót";
+
   if (form && text && feedback) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -169,7 +181,7 @@
         const res = await fetch("/api/newsletter/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, source: "website-footer" }),
         });
         const result = await res.json();
 
@@ -180,12 +192,12 @@
         feedback.dataset.feedbackType = "success";
         feedback.removeAttribute("hidden");
         form.reset();
-        text.textContent = "Feliratkozás";
+        text.textContent = btnLabelDefault;
       } catch (err: any) {
         feedback.textContent = err.message || "Hiba történt. Próbáld újra később!";
         feedback.dataset.feedbackType = "error";
         feedback.removeAttribute("hidden");
-        text.textContent = "Feliratkozás";
+        text.textContent = btnLabelDefault;
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
