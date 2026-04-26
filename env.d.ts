@@ -23,6 +23,8 @@ interface Env {
   // Env vars / Secrets
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  FACEBOOK_APP_ID: string;          // Sprint 4 — FB Login
+  FACEBOOK_APP_SECRET: string;      // Sprint 4 — FB Login
   RESEND_API_KEY: string;
   MAILCHIMP_API_KEY: string;
   MAILCHIMP_AUDIENCE_ID: string;

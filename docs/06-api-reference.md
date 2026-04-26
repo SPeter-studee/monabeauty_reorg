@@ -191,11 +191,26 @@ Kapcsolat form üzenet — Resend-en email küldés `mona@monastudio.hu`-ra.
 | `/api/auth/register` | POST | Email + jelszó regisztráció |
 | `/api/auth/login` | POST | Email + jelszó bejelentkezés |
 | `/api/auth/logout` | POST | Session törlés |
-| `/api/auth/google` | GET | OAuth init (redirect Google-re) |
-| `/api/auth/google-callback` | GET | OAuth callback (token csere + session) |
+| `/api/auth/google` | GET | Google OAuth init (redirect) |
+| `/api/auth/google-callback` | GET | Google OAuth callback (token csere + session) |
+| `/api/auth/facebook` | GET | **Facebook Login init** ✨ |
+| `/api/auth/facebook-callback` | GET | **Facebook Login callback** ✨ |
 | `/api/profile` | GET / PATCH | Saját profil lekérés / módosítás |
 | `/api/profile/orders` | GET | Saját rendelési előzmények |
 | `/api/profile/addresses` | GET / POST / DELETE | Címkönyv |
+
+**Megjegyzés**: Apple Sign-In **nincs** Sprint 4-ben — későbbre halasztva (csak iOS app esetén kötelező). A `customers` tábla **`apple_id` mező** előre létrehozva, hogy ne kelljen séma-migráció.
+
+### Facebook Login követelmények (Sprint 4 előtt)
+
+1. Facebook Developer fiók: https://developers.facebook.com
+2. Új App létrehozása — "Consumer" típus
+3. **Facebook Login** termék hozzáadása
+4. **Valid OAuth Redirect URIs**: `https://monastudio.hu/api/auth/facebook-callback`
+5. **App Review** kell **csak** ha publikálni akarjuk az `email` permission-t — a `public_profile` automatikusan engedélyezett
+6. Cloudflare Pages env vars:
+   - `FACEBOOK_APP_ID`
+   - `FACEBOOK_APP_SECRET`
 
 ### Sprint 5 — Admin
 

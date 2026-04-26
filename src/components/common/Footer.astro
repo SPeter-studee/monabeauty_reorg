@@ -81,7 +81,15 @@ const buildDate = import.meta.env.PUBLIC_BUILD_DATE ?? "";
 
     <div class="site-footer__bottom">
       <p class="site-footer__copyright">
-        © {year} Mona Studio · 2600 Vác, Zrínyi Miklós u. 3. · +36 20 913 0126
+        © {year} Mona Studio ·{" "}
+        <a
+          href="https://www.google.com/maps/place/Mona+Studio/@47.7821181,19.1300852,17z"
+          target="_blank"
+          rel="noopener"
+          class="site-footer__map-link"
+          aria-label="Mona Studio térkép Google Maps-en"
+        >2600 Vác, Zrínyi Miklós u. 3.</a> ·{" "}
+        <a href="tel:+36209130126" class="site-footer__phone-link">+36 20 913 0126</a>
       </p>
       <div class="site-footer__legal">
         <a href="/aszf">{t.footer.terms}</a>
@@ -117,6 +125,24 @@ const buildDate = import.meta.env.PUBLIC_BUILD_DATE ?? "";
   }
   .site-footer__cookie-btn:hover {
     opacity: 1;
+  }
+
+  /* Footer cím + telefon linkek (Sprint 3.2 — Google Maps integráció) */
+  .site-footer__map-link,
+  .site-footer__phone-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 0.5px solid transparent;
+    transition: border-color var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .site-footer__map-link:hover,
+    .site-footer__phone-link:hover {
+      color: var(--mona-warm);
+      border-bottom-color: var(--mona-warm);
+    }
   }
 
   /* Verzió szekció — diszkrét, jobb oldalt vagy középen, kis betűmérettel */

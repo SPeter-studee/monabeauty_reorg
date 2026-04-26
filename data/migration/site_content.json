@@ -1,0 +1,759 @@
+{
+  "meta": {
+    "pageTitle": "Mona Studio — A szépség benned van",
+    "tagline": "A szépség benned van",
+    "brandName": "Mona Studio"
+  },
+  "images": {
+    "logo": "images/logo.png",
+    "logoAlt": "Mona Studio logó",
+    "hero": "images/hero.webp",
+    "heroAlt": "Mona Studio — portré",
+    "kiemelt": "images/szolgaltatasok.webp",
+    "kiemeltAlt": "Szolgáltatások — Mona Studio",
+    "dualLeft": "images/Blog.webp",
+    "dualRight": "images/galeria.webp",
+    "dualLeftAlt": "Blog — Mona Studio",
+    "dualRightAlt": "Galéria — Mona Studio"
+  },
+  "header": {
+    "bookingLabel": "Időpontfoglalás",
+    "bookingHref": "index.html#szolgaltatasok"
+  },
+  "hero": {
+    "sub": "",
+    "heading": "Szabó Mónika",
+    "lead1": "Kozmetikus vagyok, több mint 20 év tapasztalattal.",
+    "lead2": "Hiszek abban, hogy a természetes hatóanyagok és a modern technológia együtt hozzák meg a valódi eredményeket.",
+    "leadEmphasis": "Nálam a bőrápolás nem sablon,\nhanem személyre szabott figyelem.",
+    "ctaLabel": "Időpontfoglalás",
+    "ctaHref": "index.html#szolgaltatasok"
+  },
+  "webshop": {
+    "enabled": true,
+    "title": "Szakmai ajánlással",
+    "intro": "A szalonban ajánlott kozmetikumok — görgetsd a kártyákat vagy léptess a nyilakkal; a teljes listát a webshop oldalon éred el. **Több információért kattints a kártyára.**",
+    "ctaLabel": "Irány a webshop",
+    "ctaHref": "webshop.html",
+    "homeProductIndices": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "webshopPage": {
+    "pageTitle": "Webshop — Mona Studio",
+    "heading": "Szakmai ajánlással",
+    "intro": ""
+  },
+  "szolgaltatasokPage": {
+    "pageTitle": "Szolgáltatások — Mona Studio",
+    "heading": "Szolgáltatások",
+    "intro": "Fedezd fel kezeléseimet és programjaimat, majd foglalj időpontot a fejlécben lévő gombbal vagy közvetlenül a chatban."
+  },
+  "blogPage": {
+    "pageTitle": "Blog — Mona Studio",
+    "heading": "Blog",
+    "intro": "Bőrápolási tippek, kezelési útmutatók és szakmai cikkek Szabó Mónikától — 20 év tapasztalattal."
+  },
+  "galeriaPage": {
+    "pageTitle": "Galéria — Mona Studio",
+    "heading": "Galéria",
+    "intro": "Valódi vendégek, valódi eredmények — nézd meg munkáimat és győződj meg a kezelések hatékonyságáról."
+  },
+  "sminkPage": {
+    "pageTitle": "Smink Vácon — Alkalmi és Esküvői Smink | Mona Studio",
+    "heading": "Smink",
+    "intro": "Alkalmi és mindennapi smink — személyre szabott színek és technikák. Időpont a fejléc foglalás gombjánál.",
+    "heroImage": "images/smink-hero2.webp",
+    "heroImageAlt": "Smink — Mona Studio",
+    "bodyText": "Legyen szó esküvőről, szalagavatóról, alkalmi eseményről vagy akár hétköznapi megjelenésről, a cél minden esetben a harmonikus, tartós és igényes végeredmény. A megfelelő technikával és színekkel a smink nem elfed, hanem kiemel — magabiztos, ragyogó megjelenést biztosít.",
+    "featuresTitle": "Mitől különleges",
+    "features": [
+      "személyre szabott smink",
+      "természetes vagy hangsúlyos hatás",
+      "tartós, egész napos viselet",
+      "arcformához és stílushoz igazítva",
+      "kiemeli az egyéni szépséget"
+    ],
+    "occasionsTitle": "Mikor ajánlott",
+    "occasions": [
+      "esküvőre",
+      "szalagavatóra",
+      "alkalmi eseményekre",
+      "fotózáshoz",
+      "hétköznapi, igényes megjelenéshez"
+    ],
+    "priceTitle": "Az ár mindig egyedi",
+    "priceNote": "Mivel minden smink más — más alkalom, más igény — az árat minden esetben egyénileg, előzetes egyeztetés alapján határozzuk meg. Vedd fel velem a kapcsolatot, és megbeszéljük a részleteket."
+  },
+  "laminalasliftingPage": {
+    "pageTitle": "Szemöldök Laminálás és Szempilla Lifting Vácon | Mona Studio",
+    "heading": "Szemöldök laminálás & Szempilla lifting",
+    "intro": "Természetes, mégis látványos eredmény — dúsabb szemöldök és szempilla, vegyszerek nélkül. A kezelések tartósan emelik, formázzák és rendezik a szálakat.",
+    "heroImage": "images/szemoldok-laminalas-szempilla-lifting-hero.webp",
+    "browTitle": "Szemöldök laminálás",
+    "browFeatures": [
+      "dúsabb, rendezettebb szemöldök",
+      "természetes, mégis formázott hatás",
+      "tartós, több hétig látható eredmény",
+      "könnyen kezelhető szemöldök a mindennapokban",
+      "ápolt, esztétikus megjelenés"
+    ],
+    "browRecommended": [
+      "rendezetlen, lefelé növő szálak esetén",
+      "ritkább szemöldöknél",
+      "természetes, mégis hangsúlyos hatásra",
+      "smink nélküli, ápolt megjelenéshez"
+    ],
+    "lashTitle": "Szempilla lifting",
+    "lashFeatures": [
+      "természetes hatás a saját pillákkal",
+      "ívelt, nyitott tekintet",
+      "tartós, több hétig látható eredmény",
+      "smink nélküli, ápolt megjelenés",
+      "kényelmes, mindennapi viselet"
+    ],
+    "lashRecommended": [
+      "egyenes vagy lefelé növő pillák esetén",
+      "természetes hatás kedvelőinek",
+      "műszempilla helyett alternatívaként",
+      "ápolt megjelenéshez smink nélkül"
+    ],
+    "ctaTitle": "Kérdésed van?",
+    "ctaText": "Fordulj hozzám bizalommal."
+  },
+  "muszempillaPage": {
+    "pageTitle": "Műszempilla Vácon — 1D, 3D, 5D, 7D Volumen | Mona Studio",
+    "heading": "Műszempilla",
+    "intro": "A műszempilla kezelés kiemeli a tekintetet, dúsabb, hosszabb és látványosabb pillákat biztosít a mindennapokban. A különböző technikák lehetővé teszik, hogy a végeredmény a természetestől egészen a hangsúlyos, volume hatásig személyre szabható legyen.",
+    "techniquesLine": "Nálam elérhető műszempilla építés 1D, 3D, 5D és 7D volumen technikákkal – természetestől az extra dús hatásig.",
+    "topHeroImage": "images/muszempilla-hero.webp",
+    "features": [
+      "személyre szabott pillaív és dúsítás",
+      "természetes vagy hangsúlyos hatás",
+      "tartós, kényelmes viselet",
+      "mindennap ápolt megjelenés",
+      "kiemelt, ragyogó tekintet"
+    ],
+    "recommended": [
+      "természetes, mégis rendezett megjelenéshez",
+      "hangsúlyosabb tekintethez",
+      "smink nélküli, ápolt hatásért",
+      "alkalmi vagy mindennapi viseletre"
+    ]
+  },
+  "gyantazasPage": {
+    "pageTitle": "Gyantázás Vácon — Patronos és Wax Technika | Mona Studio",
+    "heading": "Gyantázás",
+    "intro": "A gyantázás gyors és hatékony megoldást nyújt a sima, ápolt bőr eléréséhez. A kezelés során patronos gyantával és wax technikával dolgozom, a kezelt területtől és a bőr érzékenységétől függően, így biztosítva a lehető legkíméletesebb és leghatékonyabb szőrtelenítést.",
+    "techniquesLine": "A bőr selymes tapintásúvá válik, az eredmény tartós, a szőrszálak pedig idővel gyengébbé válnak.",
+    "topHeroImage": "images/gyantazas-hero.webp",
+    "features": [
+      "patronos és wax technika kombinációja",
+      "gyors és hatékony szőrtelenítés",
+      "bőrtípushoz igazított kezelés",
+      "sima, puha bőr",
+      "tartós eredmény"
+    ],
+    "recommended": [
+      "rendszeres szőrtelenítéshez",
+      "érzékenyebb bőr esetén (wax)",
+      "nagyobb felületekhez (patronos gyanta)",
+      "ápolt, sima bőr eléréséhez"
+    ]
+  },
+  "szemoldokTetovalasPage": {
+    "pageTitle": "Szemöldök Tetoválás Vácon — Tartós Smink | Mona Studio",
+    "heading": "Szemöldök tetoválás",
+    "intro": "A szemöldöktetoválás modern, precíz technika, amely kiemeli az arc természetes szépségét és harmonikus megjelenést biztosít. A kezelés során személyre szabott formát és színt alakítok ki, figyelembe véve az arc karakterét és az egyéni igényeket.",
+    "topHeroImage": "images/szemoldok-tetovalas-hero.webp",
+    "technique1Title": "Szálazás",
+    "technique1Text": "Természetes, szőrszálakat imitáló technika, amely finoman dúsítja és formázza a szemöldököt. Ideális választás, ha visszafogott, természetes hatásra vágysz.",
+    "technique1Features": [
+      "természetes, szőrszál hatású",
+      "visszafogott megjelenés",
+      "finoman dúsít és formáz"
+    ],
+    "technique2Title": "Ombre",
+    "technique2Text": "Púderes, lágyan satírozott hatás, amely sminkelt megjelenést kölcsönöz. Tökéletes választás, ha hangsúlyosabb, rendezett szemöldököt szeretnél.",
+    "technique2Features": [
+      "hangsúlyos, sminkelt hatás",
+      "rendezett megjelenés",
+      "púderes, lágy satírozás"
+    ],
+    "features": [
+      "természetes hatású eredmény",
+      "személyre szabott forma és szín",
+      "tartós, mégis finom megjelenés",
+      "időt spórol a mindennapokban",
+      "magabiztos, ápolt külső"
+    ]
+  },
+  "hialuronKezelesPage": {
+    "pageTitle": "Nanopen Kezelés Vácon — Bőrfeltöltés | Mona Studio",
+    "heading": "Nanopen kezelés",
+    "intro": "A hialuron kezelés nanopennel intenzív hatóanyagbevitelt biztosít, amely során a London Beauty prémium hialuron pora és személyre szabott ampullák kerülnek a bőr mélyebb rétegeibe.",
+    "topHeroImage": "images/hialuron-kezeles-hero.webp",
+    "highlightTitle": "Miért különleges a hialuron por?",
+    "highlightText": "Frissen aktivált, magas koncentrációjú hatóanyag, amely mélyebb hidratálást és látványosabb eredményt biztosít, mint a hagyományos kezelések.",
+    "features": [
+      "intenzív hidratálás",
+      "teltebb, feszesebb bőr",
+      "személyre szabott kezelés",
+      "azonnali eredmény"
+    ],
+    "recommended": [
+      "vízhiányos, száraz bőrre",
+      "fakó, fáradt bőr esetén",
+      "ráncok megjelenésekor",
+      "bőrmegújításra és feltöltésre"
+    ]
+  },
+  "arckezelesPage": {
+    "pageTitle": "Arckezelések Vácon — Rejuven, Mesotica, Frissítő | Mona Studio",
+    "heading": "Arckezelések",
+    "subtitle": "Prémium bőrápolás · Személyre szabott kezelések",
+    "topHeroImage": "images/arckezeles-hero.webp",
+    "philosophyTitle": "Filozófiám",
+    "philosophyText": "A szépség a bőr egészségéből fakad. Minden arckezelésünket egyéni bőrtípushoz és igényekhez igazítjuk, prémium hatóanyagokkal és szakértő kézzel — hogy a bőröd valóban megújulhasson.",
+    "brand1Title": "Eclado · Rejuven",
+    "brand1Subtitle": "Mélyhidratálás & Revitalizálás",
+    "brand1Text": "Az Eclado prémium formulái — polyglutaminsav, EGF növekedési faktor és hidrolizált kollagén — intenzíven hidratálják és revitalizálják a bőrt. A polyglutaminsav akár a hialuronsavnál is erősebb nedvességmegkötő hatással rendelkezik, tartós és mély hidratálást biztosítva.",
+    "brand2Title": "Mesotica · Peptides",
+    "brand2Subtitle": "Peptid Komplex & Anti-Aging",
+    "brand2Text": "A Mesotica peptid technológia célzottan serkenti a kollagén- és elasztintermelést. A kezelés hatására a bőr visszanyeri rugalmasságát és fiatalos megjelenését — finom ráncok csökkennek, a bőr szerkezete és tónusa láthatóan javul.",
+    "treatmentsSectionTitle": "Kezelések",
+    "treatment1Title": "Rejuven arckezelés",
+    "treatment1Desc": "Az Eclado prémium formuláival mélyen hidratálja, revitalizálja és támogatja a bőr regenerációját — az arc és a dekoltázs visszanyeri természetes ragyogását.",
+    "treatment1Features": [
+      "Mélyhidratálás",
+      "Feszesebb, simább bőr",
+      "Ragyogóbb bőrkép",
+      "Prémium hatóanyagok"
+    ],
+    "treatment1Recommended": [
+      "Vízhiányos, száraz bőrre",
+      "Fakó, fáradt bőr esetén",
+      "Első ráncok megjelenésekor",
+      "Bőrfrissítésre és regenerálásra"
+    ],
+    "treatment2Title": "Mesotica peptides arckezelés",
+    "treatment2Desc": "Korszerű, intenzív bőrmegújító kezelés célzott peptidekkel — serkenti a kollagén- és elasztintermelést, a bőr simábbá, feszesebbé és élettel telibbé válik.",
+    "treatment2Features": [
+      "Célzott peptid hatóanyagok",
+      "Kollagéntermelés serkentése",
+      "Feszesebb, rugalmasabb bőr",
+      "Finom ráncok csökkenése",
+      "Bőrmegújító, revitalizáló hatás"
+    ],
+    "treatment2Recommended": [
+      "Megereszkedett bőr esetén",
+      "Ráncok megjelenésekor",
+      "Fakó, élettelen bőrre",
+      "Anti-aging kezelésként"
+    ],
+    "treatment3Title": "Savas hámlasztás — Hegkezelés",
+    "treatment3Desc": "Célzott savas hámlasztással eltávolítjuk az elhalt hámsejteket és serkentjük a bőr természetes megújulási folyamatát. Hegek, pigmentfoltok és egyenetlen bőrtónus ellen hatékony megoldás.",
+    "treatment3Features": [
+      "Mélyhámló, megújító hatás",
+      "Hegek és pigmentfoltok halványítása",
+      "Egyenletesebb bőrtónus",
+      "Serkenti a sejtmegújulást"
+    ],
+    "treatment3Recommended": [
+      "Hegek, pattanásnyomok esetén",
+      "Pigmentfoltokra",
+      "Egyenetlen bőrtónusnál",
+      "Megújulásra vágyó bőrre"
+    ],
+    "treatment4Title": "Tini arckezelés",
+    "treatment4Desc": "Kifejezetten a fiatal bőr igényeire kialakított kezelés. Segít a pattanásos bőr tisztításában, szabályozza a faggyútermelést és támogatja a bőr természetes egyensúlyát.",
+    "treatment4Features": [
+      "Mélytisztító hatás",
+      "Gyulladáscsökkentő ápolás",
+      "Faggyútermelés szabályozása",
+      "Tisztább, egységesebb bőrkép",
+      "Kíméletes, mégis hatékony"
+    ],
+    "treatment4Recommended": [
+      "Pattanásos, problémás bőrre",
+      "Mitesszeres bőr esetén",
+      "Zsíros, kombinált bőrre",
+      "Fiatal, érzékeny bőr ápolására"
+    ],
+    "treatment5Title": "Hidratáló arckezelés tisztítással",
+    "treatment5Desc": "Alapos tisztítást követően intenzív hidratáló hatóanyagokkal tölti fel a bőrt — eltávolítja az elhalt hámsejteket és visszaállítja a nedvességtartalmat. A bőr tisztábbá, frissebbé és üdébbé válik.",
+    "treatment5Features": [
+      "Alapos, mégis kíméletes tisztítás",
+      "Intenzív hidratálás",
+      "Frissebb, ragyogóbb bőr",
+      "Bőr egyensúlyának helyreállítása",
+      "Azonnali komfortérzet"
+    ],
+    "treatment5Recommended": [
+      "Vízhiányos bőrre",
+      "Fakó, fáradt bőr esetén",
+      "Első arckezelésként",
+      "Minden bőrtípusra"
+    ],
+    "treatment6Title": "Frissítő arckezelés",
+    "treatment6Desc": "Komplex bőrmegújító kezelés: letisztítás, tonizálás, peeling, relaxáló arc- és dekoltázsmasszázs, ultrahangos hatóanyagbevitel és tápláló pakolás — egyetlen kezelés alatt.",
+    "treatment6Features": [
+      "Alapos letisztítás és tonizálás",
+      "Peeling — bőrmegújítás",
+      "Relaxáló arc- és dekoltázsmasszázs",
+      "Ultrahangos hatóanyagbevitel",
+      "Tápláló pakolás"
+    ],
+    "treatment6Recommended": [
+      "Fakó, fáradt bőr esetén",
+      "Stresszes, igénybe vett bőrre",
+      "Gyors bőrfrissítésre",
+      "Alkalmak, események előtt"
+    ],
+    "treatment7Title": "Arc- és dekoltázsmasszázs",
+    "treatment7Desc": "Mélyen relaxáló, stresszoldó kezelés, amely finom ritmikus mozdulatokkal nyugtatja az idegrendszert, serkenti a vérkeringést és támogatja a bőr természetes megújulását.",
+    "treatment7Features": [
+      "Mély relaxáció és stresszoldás",
+      "Idegrendszert nyugtató hatás",
+      "Javuló vérkeringés",
+      "Feszesebb, frissebb bőr",
+      "Természetes ragyogás"
+    ],
+    "treatment7Recommended": [
+      "Stresszes, feszültséggel teli életmód esetén",
+      "Fáradt, fakó bőrre",
+      "Feltöltődésre és kikapcsolódásra",
+      "Relaxáló, kényeztető kezelésként"
+    ]
+  },
+  "szemoldokPage": {
+    "pageTitle": "Szemöldök Formázás, Festés és Szempilla Festés Vácon | Mona Studio",
+    "heading": "Szemöldök formázás és festés,\nszempilla festés",
+    "intro": "A szemöldök formázás és festés, valamint a szempilla festés természetes módon emeli ki a tekintetet. A szemöldök formájának precíz kialakítása és a megfelelő árnyalat kiválasztása harmonizálja az arcot, míg a szempilla festés mélyebb, hangsúlyosabb tekintetet biztosít.",
+    "techniquesLine": "A végeredmény ápolt, rendezett és kifejező megjelenés — akár smink nélkül is.",
+    "topHeroImage": "images/szemoldok-festes-hero.webp",
+    "features": [
+      "személyre szabott szemöldökforma",
+      "természetes hatású festés",
+      "hangsúlyosabb tekintet",
+      "rendezett, ápolt megjelenés",
+      "smink nélküli szépség"
+    ],
+    "recommended": [
+      "világos vagy ritkább szemöldök esetén",
+      "halvány szempillákra",
+      "természetes, mégis kiemelt megjelenéshez",
+      "mindennapi ápolt hatásért"
+    ]
+  },
+  "products": [
+    {
+      "name": "Cica Oxigenizáló 2 in 1 arclemosó",
+      "slug": "krx-cica-2in1-arclemoso",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "7.750 Ft",
+      "kiszereles": "50 ml",
+      "image": "images/products/krx-cica-2in1-arclemoso.webp",
+      "description": "Arctisztító gél oxigenizáló komplexszel és magas hatóanyag tartalmú természetes ázsiai növényi összetevőkkel.Eltávolítja a sminket és a napi szennyeződést a bőrről, különleges eljárásának köszönhetően pedig oxigenizálja és frissíti az érzékeny, irritált, gyulladásra hajlamos bőrt.",
+      "recommendation": "Napi ápolásra, az érzékeny, irritált, rosaceás, gyulladásra hajlamos aknés bőrre, a sérült barrier regenerálására. A gyulladáscsökkentő, sebgyógyító tulajdonsága miatt tökéletes választás az enyhén problémás, gyulladt bőrre, érzékeny, irritált bőrre, sérült bőrbarrier regenerálására.\nKönnyed textúrájú ápolást nyújt a Rosaceás bőröknek, enyhíti az ekcéma és a pikkelysömör bőrszárazsággal, viszketéssel járó tüneteit.",
+      "ingredients": "Fő összetevő:A Centella Asiatica, más néven CICA, tigrisfű kivonat vagy Ázsiai gázló egy a Koerai bőrápolásban közkedvelt hatóanyag. Nyugtató és hidratáló bőrápoló termék, amely helyreállítja az érzékeny bőr sérült védőrétegét."
+    },
+    {
+      "name": "Cica Tonik",
+      "slug": "krx-cica-tonik",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "7.050 Ft",
+      "kiszereles": "50 ml",
+      "image": "images/products/krx-cica-tonik.webp",
+      "description": "Kifejezetten bőrpír és kiszáradás kezelésére készült frissítő tonik antioxidánsokból(fügekaktusz kivonat, oliva kivonat) és fermentált( Lactobacillus ferment) összetevőkből álló gyógyító réteget ad a bőr mikrobiomjának védelmére. Hyaluronsavat, collagén peptideket tartalmaz amely hidratál, rugalmasan tartja a bőrt.",
+      "recommendation": "Napi ápolásra, az érzékeny, irritált, rosaceás, gyulladásra hajlamos aknés bőrre, a sérült barrier regenerálására. A gyulladáscsökkentő, sebgyógyító tulajdonsága miatt tökéletes választás az enyhén problémás, gyulladt bőrre, érzékeny, irritált bőrre, sérült bőrbarrier regenerálására.\nKönnyed textúrájú ápolást nyújt a Rosaceás bőröknek, enyhíti az ekcéma és a pikkelysömör bőrszárazsággal, viszketéssel járó tüneteit.",
+      "ingredients": "Water, Glycerin, Butylene Glycol, 1,2-Hexanediol, Betaine, Panthenol, Polyglyceryl-10 Laurate, Ethylhexylglycerin, Propanediol, Dipotassium Glycyrrhizate, Adenosine, Ammonium Acryloyldimethyltaurate/VP Copolymer, Fragrance, Sodium Hyaluronate, Tremella Fuciformis Polysaccharide, Centella Asiatica Extract, Limonene, Artemisia vulgaris extract, Houttuynia Cordata Extract, Hydrolyzed Hyaluronic Acid, Centella Asiatica Root Extract, Origanum Vulgare Leaf Extract, Centella Asiatica Leaf Extract, Chamaecyparis Obtusa Leaf Extract, Salix Alba (Willow) Bark Extract, Atelocollagen, Desamido Collagen, Cinnamomum Cassia Bark Extract, Hydrolyzed Pea Protein, Lactobacillus/Soybean Ferment Extract, Scutellaria Baicalensis Root Extract, Portulaca Oleracea Extract, Saccharide Hydrolysate, Maltodextrin, Phytosterols, Hydrolyzed Collagen, Olea Europaea (Olive) Fruit Oil, Lecithin, Squalane, Soluble Collagen, Sodium Acetylated Hyaluronate, Opuntia Ficus-Indica Fruit Extract, Collagen, Collagen Amino Acids, Ceramide NP, Butyrospermum Parkii (Shea) Butter, Palmitoyl Tripeptide-5, Procollagen, Madecassoside, Asiaticoside, Palmitoyl Tetrapeptide-7, Palmitoyl Tripeptide-1"
+    },
+    {
+      "name": "Cica Szérum",
+      "slug": "krx-cica-szerum",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "6.050 Ft",
+      "kiszereles": "15 ml",
+      "image": "images/products/krx-cica-szerum.webp",
+      "description": "Gyorsítja a bőr gyógyulását, nyugtató hatású szérum.Antioxidánsokban gazdag, amely növényi alapú összetevőkből áll.\nPeptidek és ceramidok erősítik a bőr védőrétegét és csökkentik a gyulladást.",
+      "recommendation": "Napi ápolásra, az érzékeny, irritált, rosaceás, gyulladásra hajlamos aknés bőrre, a sérült barrier regenerálására. A gyulladáscsökkentő, sebgyógyító tulajdonsága miatt tökéletes választás az enyhén problémás, gyulladt bőrre, érzékeny, irritált bőrre, sérült bőrbarrier regenerálására.\nKönnyed textúrájú ápolást nyújt a Rosaceás bőröknek, enyhíti az ekcéma és a pikkelysömör bőrszárazsággal, viszketéssel járó tüneteit.Használjuk a KRX Cica Toner után. 1-2 cseppnyi szérumot oszlassunk el az egész arc területén",
+      "ingredients": "Water, Butylene Glycol, Glycerin, 1,2-Hexanediol, Betaine, Polyglyceryl-10 Laurate, Squalane, Panthenol, Carbomer, Tromethamine, Xanthan Gum, Ethylhexylglycerin, Melia Azadirachta Leaf Extract, Disodium EDTA, Fragrance, Polyquaternium-51, Adenosine, Melia Azadirachta Flower Extract, Propanediol, Centella Asiatica Root Extract, Centella Asiatica Extract, Centella Asiatica Leaf Extract, Maltodextrin, Saccharide Hydrolysate, Limonene, Sodium Hyaluronate Crosspolymer, Houttuynia Cordata Extract, Hydrolyzed Glycosaminoglycans, Sodium Hyaluronate, Salix Alba (Willow) Bark Extract, Origanum Vulgare Leaf Extract, Chamaecyparis Obtusa Leaf Extract, Benzyl Glycol, Cinnamomum Cassia Bark Extract, Hydrolyzed Pea Protein, Lactobacillus/Soybean Ferment Extract, Scutellaria Baicalensis Root Extract, Portulaca Oleracea Extract, Phytosterols, Olea Europaea (Olive) Fruit Oil, Lecithin, Madecassoside, Asiaticoside, Hydrolyzed Hyaluronic Acid, Palmitoyl Tripeptide-5, Hydrolyzed Collagen, Opuntia Ficus-Indica Fruit Extract, Palmitoyl Tetrapeptide-7, Butyrospermum Parkii (Shea) Butter, Ceramide NP, Palmitoyl Tripeptide-1, Hyaluronic Acid, Raspberry Ketone"
+    },
+    {
+      "name": "Cica Nappali Krém",
+      "slug": "krx-cica-nappali-krem",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "7.050 Ft",
+      "kiszereles": "25 gr",
+      "image": "images/products/krx-cica-nappali-krem.webp",
+      "description": "Könnyű, anti-oxidánsokban gazdag krém, amely hidratálja, javítja a károsodott védőrétegeket, erősíti, megnyugtatja és helyreállítja a bőrt.",
+      "recommendation": "Napi ápolásra, az érzékeny, irritált, rosaceás, gyulladásra hajlamos aknés bőrre, a sérült barrier regenerálására. A gyulladáscsökkentő, sebgyógyító tulajdonsága miatt tökéletes választás az enyhén problémás, gyulladt bőrre, érzékeny, irritált bőrre, sérült bőrbarrier regenerálására.\nKönnyed textúrájú ápolást nyújt a Rosaceás bőröknek, enyhíti az ekcéma és a pikkelysömör bőrszárazsággal, viszketéssel járó tüneteit.Használjuk a KRX Cica Szérum után. Borsónyi mennyiséget oszlassunk el az egész arc területén.Ezután ajánlott a KRX Sunblocker SPF 50+.",
+      "ingredients": "Természetes összetevők: Ázsiai gázló kivonat (Tigrisfű),Kínai Cassia, Oliva kivonat, Fügekaktusz kivonat, Shea vaj, Hyaluronsav, Lactobacillus ferment, Collagen peptid"
+    },
+    {
+      "name": "Probiotikus habzó arclemosó",
+      "slug": "krx-probiotikus-arclemoso",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "10.200 Ft",
+      "kiszereles": "100 ml",
+      "image": "images/products/krx-probiotikus-arclemoso.webp",
+      "description": "Könnyed, habzó arctisztító a mindennapi arclemosáshoz. Hatékonyan távolítja el a napi szennyeződést és a felesleges faggyút a bőrről anélkül, hogy szárítaná. Használata után az arcbőr fellélegzik, előkészítve a tonizálásra.Bifida ferment\nProbiotikus baktérium fermentálásával nyert összetevő, amely segíti a bőr természetes microflórájának fenntartását, a bőr természetes védekezőképességének visszaállítását.",
+      "recommendation": "Minden bőrtípusra, de különösen ajánlott az érzékeny, sérült, dehidratált, rosaceás bőrre.1-2 pumpányi arclemosót habosítsunk fel, majd tisztítsuk meg az egész arc-nyak területét.",
+      "ingredients": "Water, Glycerin, Coco-Betaine, Sodium C14-16 Olefin Sulfonate, Cocamidopropyl Betaine, Sodium Chloride, Coco-Glucoside, 1,2-Hexanediol, Ethylhexylglycerin, Di- sodium EDTA, Lactococcus Ferment, Lacto- bacillus Ferment, Bifida Ferment Filtrate, Xylitol, Tocopherol, Inulin, Alpha-Glucan Oligosaccharide, Fructan"
+    },
+    {
+      "name": "Probiotikus tonik",
+      "slug": "krx-probiotic-tonik",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "10.200 Ft",
+      "kiszereles": "120 ml",
+      "image": "images/products/krx-probiotic-tonik.webp",
+      "description": "Alacsony Ph-jú tonik a bőr gyengéd tonizálására, a bőr biomjának védelmére és helyreállítására. Vitaminokban és aminosavakban gazdag tonik amely nedvességgel látja el a száraz, érzékeny, irritált bőrt. Intenzíven hidratálja és nyugtatja, előkészítve arra, hogy jobban felszívja a hidratáló krém hatóanyagait.",
+      "recommendation": "Minden bőrtípusra, de különösen ajánlott az érzékeny, sérült, dehidratált, rosaceás bőrre használjuk a KRX Probiotikumos arclemosó után. 1-2 pumpányi tonert masszírozzunk el az egész arc területén.",
+      "ingredients": "Water, Glycerin, Caprylic/Capric Triglyceride, 1,2-Hexanediol, Pol-ysorbate 60, Butylene Glycol, Be-taine, Polyglyceryl-10 Oleate, Pa-nthenol, Inulin, Steareth-21, Is-ohexadecane, Steareth-20, Pen-tylene Glycol, Carbomer, Arginine, Cetearyl Alcohol, Diglycerin, Palmitic Acid, Ethylhexylglycerin, PEG-30 Dipolyhydroxystearate,"
+    },
+    {
+      "name": "Probiotic nappali krém",
+      "slug": "krx-probiotic-nappali-krem",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "11.990 Ft",
+      "kiszereles": "50 g",
+      "image": "images/products/krx-probiotic-nappali-krem.webp",
+      "description": "Intenzív, légiesen könnyed hidratáló, nyugtató hatású nappali arckrém.  biotikus összetevői pedig segítenek helyreállítani és megerősíteni a bőrbarriert, visszaállítja a bőr normál pH egyensúlyát és támogatja a mikrobiomját.",
+      "recommendation": "Rendszeres használata hozzájárul a bőr rugalmasságának megőrzéséhez,  csökkenti a ráncok kialakulását, hatékony a száraz, húzódó dehidratált, rosaceás és ekcémás bőrökre is. Minden bőrtípusra, de különösen ajánlott a sérült, érzékeny, dehidratált, rosaceás bőrre.Alkalmazzon egy borsónyi mennyiséget a reggeli és esti arctisztítás után.",
+      "ingredients": "Water, Glycerin, Dicaprylyl Carbonate, Butylene Glycol, 1,2-Hexanediol, Cetyl Alcohol, 2,3- Butanediol, Inulin, Pentylene Glycol, Cetearyl Olivate, Hydrogenated Polydecene, Vinyl Dimethicone, Caprylyl Methicone, Panthenol, Glyceryl Stearate, Sorbitan Olivate, Cetearyl Alcohol, Stearyl Alcohol, Cetyl Palmitate, Methyl Gluceth-20, Alpha-Glucan Oligosaccharide, Trometh- amine, Sorbitan Palmitate, Carbomer, Myris-tyl Alcohol, Sorbitan Oleate, Ethylhexylgly- cerin, Xanthan Gum, Lauryl Alcohol, To-copherol, Disodium EDTA, Lactobacillus Ferment, Lactococcus Ferment, Fructan, Bifida Ferment Filtrate, Xylitol, Papain,"
+    },
+    {
+      "name": "Probiotic line utazó készlet",
+      "slug": "krx-probiotic-utazo-keszlet",
+      "stock": "orderable",
+      "brand": "KRX",
+      "price": "12.990 Ft",
+      "kiszereles": "KRX Probiotic habzó arclemosó 20 ml, Probiotic tonik 20ml, Probiotic nappali krém 20 ml,",
+      "image": "images/products/probiotic-karacsonyi-keszlet.webp",
+      "description": "A pre- és probiotikumokat tartalmazó termékek jól használhatóak bőrproblémáknál. Ilyen például a túlzott faggyútermelődés, gyulladtabb aknés bőr, a városi levegőnek, elektroszmognak kitett, vízhiányos bőrökre. Emellett az érzékeny és ekcémára hajlamos bőrre is ajánlott.",
+      "recommendation": "Napi ápolásra, az érzékeny, irritált, rosaceás, gyulladásra hajlamos aknés bőrre, a sérült barrier regenerálására. A gyulladáscsökkentő, sebgyógyító tulajdonsága miatt tökéletes választás az enyhén problémás, gyulladt bőrre, érzékeny, irritált bőrre, sérült bőrbarrier regenerálására.\nKönnyed textúrájú ápolást nyújt a Rosaceás bőröknek, enyhíti az ekcéma és a pikkelysömör bőrszárazsággal, viszketéssel járó tüneteit.",
+      "ingredients": ""
+    }
+  ],
+  "booking": {
+    "setmoreEmbedUrl": "https://kozmetika.setmore.com/",
+    "phone": "+36209130126",
+    "phoneDisplay": "06 20 913 0126",
+    "email": "mona@monastudio.hu"
+  },
+  "sections": {
+    "kiemelt": {
+      "title": "Szolgáltatások",
+      "text": "Minden bőr más – és minden kezelést úgy végzek, mintha a tiéd lenne az egyetlen. Természetes hatóanyagok, modern technológia, húsz év tapasztalat.",
+      "items": [
+        "Szemöldök tetoválás",
+        "Szemöldök laminálás",
+        "Hialuron kezelés",
+        "Arckezelés",
+        "Műszempilla",
+        "Gyantázás",
+        "Szemöldök formázás és festés, szempilla festés",
+        "Smink"
+      ]
+    },
+    "velemenyek": {
+      "title": "Vélemények",
+      "quote": "„Csodálatos hangulat és figyelmes szakemberek.” — vendégünk"
+    },
+    "dualLayer": {
+      "leftTitle": "Blog",
+      "rightTitle": "Galéria",
+      "leftIntro": "Húsz év tapasztalat, rengeteg vendég, és minden nap tanulok valamit újat. Amit fontosnak tartok, azt megosztom – őszintén, érthetően, szívből.",
+      "rightIntro": "Ezek az én munkáim – büszkén mutatom meg őket. Minden képen egy valódi vendég, egy valódi eredmény. Remélem, te is megtalálod köztük, amire vágysz.",
+      "bottomText": "",
+      "blogItems": [],
+      "galleryImages": [],
+      "blogCtaLabel": "Tovább a blogra",
+      "blogCtaHref": "blog.html",
+      "galleryCtaLabel": "Teljes galéria",
+      "galleryCtaHref": "galeria.html"
+    }
+  },
+  "footer": {
+    "brand": "Mona Studio",
+    "tagline": "A szépség benned van",
+    "copyright": "© Mona Studio. Minden jog fenntartva.",
+    "address": "2600 Vác, Zrínyi Miklós u. 3.",
+    "hoursTitle": "Nyitvatartás",
+    "hoursLines": [
+      "Hétfő: 13:00 – 19:00",
+      "Kedd: 08:00 – 14:00",
+      "Szerda: 13:00 – 19:00",
+      "Csütörtök: 13:00 – 19:00",
+      "Péntek: 08:00 – 14:00",
+      "Szombat: zárva",
+      "Vasárnap: zárva"
+    ]
+  },
+  "posts": [
+    {
+      "slug": "elso-talalkozo-a-kezeloagyon",
+      "stock": "orderable",
+      "title": "Az első találkozásunk: Mi vár rád nálam a kezelőágyon?",
+      "excerpt": "Sokan kérdezitek tőlem: »Mona, mire számítsak az első alkalommal?« Szeretném, ha már azelőtt pontosan látnád a folyamatot, mielőtt belépnél hozzám a szalonba.",
+      "tag": "Kezelések",
+      "date": "2026-04-02",
+      "readTime": "5",
+      "author": "Szabó Mónika",
+      "chatbot_context": {
+        "triggers": [
+          "első kezelés",
+          "mire számítsak",
+          "mit csináltok",
+          "anamnézis",
+          "diagnosztika",
+          "személyre szabott",
+          "otthoni rutin",
+          "kezelőágy"
+        ],
+        "related_service": "arckezeles",
+        "related_products": [],
+        "chatbot_summary": "Leírja az első kezelés menetét: anamnézis, bőrdiagnosztika, személyre szabott kezelés összeállítása és otthoni bőrápolási tanácsadás."
+      },
+      "content": [
+        {
+          "type": "lead",
+          "text": "Sokan kérdezitek tőlem üzenetben: »Mona, mire számítsak az első alkalommal? Kell készülnöm valamivel?« Tudom, hogy új szakemberhez menni mindig egyfajta bizalmi szavazat. Szeretném, ha már azelőtt pontosan látnád a folyamatot, mielőtt belépnél hozzám a szalonba. 48 évesen, több éves szakmai múlttal a hátam mögött hiszek abban, hogy a bőrápolás nem csak krémekről szól – ez egy közös út, ahol én vagyok az útmutatód."
+        },
+        {
+          "type": "heading",
+          "text": "1. A nagy kibeszélő (Anamnézis)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nálam nem a lemosóval kezdődik a találkozó, hanem egy kötetlen beszélgetéssel. Nem csak a krémeidre vagyok kíváncsi! Ahhoz, hogy valódi, tartós eredményt érjünk el, értenem kell a mindennapjaidat:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Milyen az életmódod? (Stressz, alvás, étkezés – mind látszik a bőrön!)",
+            "Mit használsz jelenleg? (Hozd el nyugodtan a listát!)",
+            "És a legfontosabb: te mivel lennél elégedett, ha a tükörbe nézel?"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "2. Diagnosztika: A tények talaján"
+        },
+        {
+          "type": "paragraph",
+          "text": "Itt jön a szakma izgalmas része. Alaposan átvizsgálom az arcodat (és ha szükséges, a dekoltázst vagy a hátat is). Nagyító alatt megnézzük a pórusok szerkezetét és a bőr textúráját, majd tapintásos vizsgálattal ellenőrzöm a bőröd rugalmasságát és hidratáltsági szintjét. 48 évesen én is pontosan tudom, milyen kihívásokkal küzd a bőrünk ebben a korban – de azt is látom, mikor van szükség egy kis extra tuningra vagy éppen egy alapos tisztításra."
+        },
+        {
+          "type": "heading",
+          "text": "3. Személyre szabott koktél – nincs két egyforma kezelés"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nincs sablonos kezelésem. Miután felállítottam a diagnózist, ott helyben állítom össze neked azt a hatóanyag-bombát, amire a bőrödnek aznap a legnagyobb szüksége van. Legyen szó mélyhidratálásról, anti-aging támogatásról vagy egy frissítő tisztításról, a célom az, hogy ragyogva távozz."
+        },
+        {
+          "type": "heading",
+          "text": "4. Az otthoni stratégia"
+        },
+        {
+          "type": "paragraph",
+          "text": "A közös munka nem ér véget a szalon ajtajában. A látványos eredményhez 80%-ban te kellesz és az otthoni rutinod. A végén segítek rendet tenni a fürdőszobapolcodon: megmondom, mi az, ami tényleg használ neked, és mi az, amit feleslegesen kensz magadra."
+        },
+        {
+          "type": "heading",
+          "text": "Miért válassz engem?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Mert nálam a szakértelem közvetlenséggel párosul. Nem csak egy vendég vagy a naptáramban: partnerként kezellek, és a célom, hogy a bőrödből kihozzuk a maximumot, kortól függetlenül."
+        },
+        {
+          "type": "tip",
+          "text": "Készen állsz a megújulásra? Várlak szeretettel!"
+        }
+      ]
+    },
+    {
+      "slug": "udvoezlok-mona-kozmetikaban",
+      "stock": "orderable",
+      "title": "Amikor valaki kozmetikust választ, nem csak egy kezelést választ – bizalmat is ad. Ezt soha nem felejtem el.",
+      "excerpt": "Húsz évvel ezelőtt nem egy fényes szalonban kezdtem. Akkor még azt sem tudtam pontosan, hogy a bőrápolás valójában mennyire mély szakma. Ma már tudom, hogy sokkal inkább szól az emberekről.",
+      "tag": "Bemutatkozás",
+      "date": "2026-04-01",
+      "readTime": "5",
+      "author": "Szabó Mónika",
+      "chatbot_context": {
+        "triggers": [
+          "ki vagy",
+          "bemutatkozás",
+          "mona studio",
+          "szabó mónika",
+          "tapasztalat",
+          "kozmetikus",
+          "hogyan kerültél ide",
+          "miért lettél kozmetikus"
+        ],
+        "related_service": null,
+        "related_products": [],
+        "chatbot_summary": "Bemutatkozó poszt – Szabó Mónika személyes gondolatai arról, hogyan került a kozmetikába, miben hisz, és mi teszi egyedivé a Mona Studiót."
+      },
+      "content": [
+        {
+          "type": "lead",
+          "text": "Amikor valaki kozmetikust választ, nem csak egy kezelést választ – bizalmat is ad. Ezt soha nem felejtem el."
+        },
+        {
+          "type": "heading",
+          "text": "Hogyan kerültem ide?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Húsz évvel ezelőtt nem egy fényes szalonban kezdtem. Akkor még azt sem tudtam pontosan, hogy a bőrápolás valójában mennyire mély szakma – azt hittem, krémekről és gépekről szól. Ma már tudom, hogy sokkal inkább szól az emberekről: azokról, akik bejönnek hozzám, leülnek a kezelőszékbe, és megbíznak bennem. Ez az, ami miatt húsz év után is ugyanolyan lelkesedéssel csinálom."
+        },
+        {
+          "type": "paragraph",
+          "text": "48 évesen én is pontosan tudom, milyen az, amikor a tükör nem azt mutatja, amit éreznénk magunkról. Ezért is lettem kozmetikus – nem csak azért, mert szeretem a szakmát, hanem mert hiszem, hogy a bőrünk állapota kihat arra, ahogy magunkra nézünk. És ez nem esztétikai kérdés. Ez önbizalom kérdése."
+        },
+        {
+          "type": "heading",
+          "text": "Miben hiszek?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Abban, hogy nincs két egyforma bőr – ezért nálam nincsenek sablonkezelések. Ezt nem marketingszövegként mondom: nálam tényleg minden látogatás egy új diagnózissal kezdődik. Megnézem, hogy aznap mi történik a bőröddel, mi változott az előző alkalom óta, és ehhez igazítom a kezelést. Ugyanazzal a vendéggel is más dolgot csinálok januárban és júliusban – mert a bőr nem statikus, és a kezelésnek sem szabad annak lennie."
+        },
+        {
+          "type": "paragraph",
+          "text": "Hiszek az őszinteségben is. Ha valami nem fog segíteni, megmondom. Ha egy krém, amit otthon használsz, inkább árt, mint használ – azt is megmondom. Nem azért, hogy kritizáljam a döntéseidet, hanem mert a célom nem egy egyszeri szép eredmény, hanem az, hogy hosszú távon is jól érezd magad a bőrödben."
+        },
+        {
+          "type": "heading",
+          "text": "Mi más a Mona Studioban?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nem futószalag-rendszerben dolgozom. Minden vendégnek van ideje – arra, hogy elmondjuk, mi zajlik az életében, mert a stressz, az alvás, az étkezés mind látszik a bőrön. Az anamnézissel kezdünk, nem a lemosóval. Ez elsőre furcsának tűnhet, de pontosan ez az, ami miatt a kezelések tényleg működnek."
+        },
+        {
+          "type": "paragraph",
+          "text": "A munkánk nem ér véget a szalon ajtajában sem. Amit otthon csinálsz, az legalább annyit számít, mint amit én csinálok a kezelőszékben – sőt, szerintem többet. Ezért mindig szánok időt arra, hogy a végén rendet tegyünk az otthoni rutinodban is: mi az, ami valóban kell neked, és mi az, amit feleslegesen kensz magadra."
+        },
+        {
+          "type": "heading",
+          "text": "Ha eljössz hozzám"
+        },
+        {
+          "type": "paragraph",
+          "text": "Egy kötetlen beszélgetéssel kezdünk. Kíváncsi vagyok rád – az életmódodra, a gondjaidra, arra, hogy te mivel lennél elégedett, ha a tükörbe nézel. Ezután alaposan megnézem a bőrödet, és ott helyben állítom össze azt a kezelést, amire aznap a legnagyobb szükséged van."
+        },
+        {
+          "type": "paragraph",
+          "text": "Ha szeretnél tudatosabban foglalkozni a bőröddel – vagy csak végre megérteni, mi is történik valójában az arcodon –, szeretettel várlak."
+        }
+      ]
+    },
+    {
+      "slug": "milyen-a-bortipusom",
+      "stock": "orderable",
+      "title": "Hogyan állapítsd meg a bőrtípusodat? — Egy kozmetikus szemével",
+      "excerpt": "Az egyik leggyakoribb kérdés: „Honnan tudom, milyen a bőrtípusom?” Megmutatom, hogyan derítsd ki otthon is – és miért fontos ez a megfelelő termékek választásához.",
+      "tag": "Bőrápolás",
+      "date": "2026-04-08",
+      "readTime": "5",
+      "author": "Szabó Mónika",
+      "chatbot_context": {
+        "triggers": [
+          "bőrtípus",
+          "száraz bőr",
+          "zsíros bőr",
+          "kombinált bőr",
+          "érzékeny bőr",
+          "milyen a bőröm",
+          "bőrdiagnosztika"
+        ],
+        "related_service": "arckezeles",
+        "related_products": [
+          "active-clean-gel"
+        ],
+        "chatbot_summary": "Segít azonosítani a bőrtípust – száraz, zsíros, kombinált vagy érzékeny. A bőrtípus alapján ajánlható kezelés és termék."
+      },
+      "content": [
+        {
+          "type": "lead",
+          "text": "Az egyik leggyakoribb kérdés: „Honnan tudom, milyen a bőrtípusom?” Megmutatom, hogyan derítsd ki otthon is."
+        },
+        {
+          "type": "heading",
+          "text": "A legegyszerűbb teszt — a „tiszta arc” módszer"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Mosd meg az arcod egy kíméletes, semleges tisztítóval.",
+            "Ne kenj rá semmit — sem hidratálót, sem tonert.",
+            "Várj pontosan egy órát.",
+            "Nézd meg a tükörben mit tapasztalsz."
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Mit láthatsz?"
+        },
+        {
+          "type": "skintypes",
+          "items": [
+            {
+              "name": "Normál bőr",
+              "desc": "A szerencsések típusa – sem zsíros, sem száraz, egész nap üde és ragyogó."
+            },
+            {
+              "name": "Száraz bőr",
+              "desc": "Reggel ébredés után az arcbőr húzódik, esetleg hámlik. Hidratáló nélkül egész nap feszül."
+            },
+            {
+              "name": "Zsíros bőr",
+              "desc": "Egy óra múlva már fénylik az arcbőr – főleg a homlokon, orron, állon. A pórusok tágak, reggel is zsíros a bőr."
+            },
+            {
+              "name": "Kombinált bőr",
+              "desc": "Az orcákon száraz vagy normál, de a homlok, orr, áll fénylik. Ez a leggyakoribb – sokan nem is tudják hogy ez van nekik."
+            }
+          ]
+        },
+        {
+          "type": "tip",
+          "text": "Az érzékeny bőr nem önálló bőrtípus — hanem egy tulajdonság, ami bármelyik típusnál megjelenhet."
+        },
+        {
+          "type": "heading",
+          "text": "Miért tévednek sokan?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rengeteg vendégem jön el azzal, hogy „zsíros a bőröm” — holott valójában dehidratált. A két típus nagyon hasonlóan viselkedhet, de teljesen más kezelést igényel."
+        },
+        {
+          "type": "heading",
+          "text": "Változhat a bőrtípus?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Igen — befolyásolja az életkor, a hormonstatus, az évszak és a stressz is. Amit 20 évesen használtál, 40 évesen már nem biztos hogy a legjobb választás."
+        }
+      ]
+    }
+  ]
+}

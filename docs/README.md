@@ -2,7 +2,7 @@
 
 Ez a mappa a projekt **teljes dokumentációját** tartalmazza: stratégiai tervek, architektúra leírások, API referencia, sprint napló és változásnapló.
 
-A fájlok **számozottak** (00–10), így a README index egyezik a fizikai sorrenddel. Cursor-ban hivatkozhatsz rájuk a `@docs/00-architektura.md` szintaxissal.
+A fájlok **számozottak** (00–09), így a README index egyezik a fizikai sorrenddel. Cursor-ban hivatkozhatsz rájuk a `@docs/00-architektura.md` szintaxissal.
 
 ---
 

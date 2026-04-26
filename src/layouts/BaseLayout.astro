@@ -23,6 +23,10 @@ interface Props {
   locale?: "hu" | "en";
   canonical?: string;
   hideNewsletter?: boolean;
+  /** Az oldal LCP képének URL-je (pl. hero kép). Ha megadva, preload-olódik. */
+  heroImage?: string;
+  /** A heroImage variánsai responsive preload-hoz (mobile + desktop) */
+  heroImageMobile?: string;
 }
 
 const {
@@ -32,6 +36,8 @@ const {
   noindex = false,
   locale = "hu",
   canonical,
+  heroImage,
+  heroImageMobile,
 } = Astro.props;
 
 const fullTitle = title.includes("Mona Studio") ? title : `${title} — Mona Studio`;
@@ -99,6 +105,28 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
         as="style">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&display=swap"
         rel="stylesheet">
+
+  {/* LCP optimalizáció — hero kép preload responsive media queries-vel */}
+  {heroImage && (
+    <>
+      {heroImageMobile && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroImageMobile}
+          media="(max-width: 768px)"
+          fetchpriority="high"
+        />
+      )}
+      <link
+        rel="preload"
+        as="image"
+        href={heroImage}
+        media={heroImageMobile ? "(min-width: 769px)" : "all"}
+        fetchpriority="high"
+      />
+    </>
+  )}
 
   <meta name="theme-color" content="#ebe5db">
 

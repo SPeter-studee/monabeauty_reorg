@@ -407,52 +407,327 @@ A naptár évente egyszer frissítendő. Ha új akció kell:
 
 ---
 
-## ⏳ Sprint 3 — Webshop
+## ✅ Sprint 2B (6. kör) — SEO optimalizáció + FB OAuth előkészítés
 
-**Cél**: Teljes webshop funkcionalitás: katalógus, termékoldal, kosár, pénztár, wishlist.
+**Időszak**: 2026-04-26  
+**Cél**: SEO és Lighthouse optimalizáció, FB Login előkészítés Sprint 4-re, dokumentáció napra-készség.
 
-### Tervezett építés
+### Mit építettünk
 
-**D1 séma:**
-- `products` (lásd `05-product-schema.md`)
-- `categories`
-- `brands`
-- `cart_items` (vagy localStorage-ban + D1 sync)
-- `wishlist`
-- `orders`
-- `order_items`
+**SEO optimalizáció**:
+- **`@astrojs/sitemap` integráció** beépítve `astro.config.mjs`-be
+  - Build közben automatikus `/sitemap-index.xml` és `/sitemap-0.xml` generálás
+  - Filter-ek: `/admin/`, `/api/`, `/profil/`, `/bejelentkezes`, `/regisztracio` kihagyva
+  - i18n hreflang map: hu-HU + en-US
+  - Custom prioritások: főoldal 1.0 daily, szolgáltatás/blog 0.8 weekly, jogi oldalak 0.3 monthly
+- **`package.json`** — `@astrojs/sitemap@^3.2.0` hozzáadva (npm install szükséges Cursor-ban!)
 
-**Új oldalak:**
-- `/webshop` — hub szűrőkkel (kategória, márka, ár)
-- `/webshop/[kategoria]` — kategória oldal
-- `/webshop/termek/[slug]` — egyedi termékoldal
-- `/kosar` — kosár oldal
-- `/penztar` — pénztár (vendég / login)
-- `/kivansaglista` — wishlist (auth szükséges)
+**LCP (Largest Contentful Paint) optimalizáció**:
+- **BaseLayout új props**: `heroImage`, `heroImageMobile`
+- **`<link rel="preload" as="image" fetchpriority="high">`** responsive media queries-vel:
+  - `(max-width: 768px)` → mobile változat
+  - `(min-width: 769px)` → desktop változat
+- **Index.astro** — főoldal hero-main.webp + hero-480.webp preload aktív
+- **Eredmény (becslés)**: LCP javul ~30-40% mobilon, mert a böngésző nem várja meg a HTML parse-t a kép letöltésével
 
-**Új komponensek:**
-- `ProductCard.astro`
-- `FilterPanel.astro`
-- `Cart.astro`
-- `CheckoutForm.astro`
+**Facebook OAuth előkészítés**:
+- **`env.d.ts`** — `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` env var típusok
+- **`bejelentkezes.astro`** — Facebook gomb hozzáadva (disabled, Sprint 4-ben aktív lesz)
+- **Sprint 4 terv** bővítve: API endpoint-ok `/api/auth/facebook`, `/api/auth/facebook-callback`
+- **`customers` tábla**: `facebook_id` és `apple_id` mezők előre megtervezve a séma migrációk elkerüléséért
 
-**Új API endpointok:**
-- `/api/products` (GET — szűrés, lapozás)
-- `/api/products/[slug]` (GET)
-- `/api/cart` (GET / POST)
-- `/api/checkout` (POST)
-- `/api/wishlist` (GET / POST / DELETE)
+**Dokumentáció napra-készség**:
+- `06-api-reference.md` — Sprint 4 OAuth endpoint-ok bővítve, FB Login követelmények szekció
+- `07-deployment.md` — FACEBOOK_APP_ID/SECRET env vars, FB Redirect URI-k, Mailchimp env vars
+- `08-sprint-log.md` — Sprint 4 leírás bővítve OAuth provider összehasonlító táblával
+- `03-known-issues.md` — 5.1, 5.4, 5.5, 5.6, 5.7 SEO issue-k ✅ MEGOLDVA státuszra állítva
+
+### Döntések
+
+- **Apple Sign-In elhalasztva** — $99/év Apple Developer account, csak iOS app-hez kötelező; a Mónika célcsoport (25-50 nők, Vác+Budapest, magyar piac) Google + FB-vel 95%-ban lefedhető. A `customers` tábla `apple_id` mezőt előre tartalmazza, hogy később ne kelljen séma migráció.
+- **`@astrojs/sitemap` Astro hivatalos integráció** — egyszerűbb mint manuális generálás; minden új oldal automatikusan bekerül a build során.
+- **Hero preload csak ott ahol fontos** — nem minden oldalon, csak ahol valódi LCP kép van (most az index.astro). Más oldalakon a `PageHero` szöveges, így nincs preload-olandó kép.
+
+### OAuth providerek összehasonlítás
+
+| Provider | Mit ad | Költség | Magyar piac |
+|---|---|---|---|
+| **Google** | email, név, kép, locale | Ingyen | ✅ Mindenki használ |
+| **Facebook** | email (ha hozzájárul), név, ID | Ingyen, App Review kell | ✅ Magas penetrate |
+| **Apple** | email vagy proxy, név (csak 1× ad) | $99/év Developer | 🟡 Csak iPhone |
+| **Email/jelszó** | nincs (mi tároljuk) | Ingyen | ✅ Mindenki tudja |
+
+### Fájlok (új + módosítás)
+- `astro.config.mjs` — sitemap integráció hozzáadva
+- `package.json` — `@astrojs/sitemap@^3.2.0` dependency, verzió bump 0.5.2 → 0.5.3
+- `src/layouts/BaseLayout.astro` — heroImage/heroImageMobile props + preload tag-ek
+- `src/pages/index.astro` — heroImage prop megadva
+- `src/pages/bejelentkezes.astro` — Facebook gomb hozzáadva
+- `env.d.ts` — FB env vars típusok
+- `docs/03-known-issues.md` — SEO státuszok frissítve
+- `docs/06-api-reference.md` — FB OAuth endpoint-ok
+- `docs/07-deployment.md` — FB env vars, redirect URI-k
+- `docs/08-sprint-log.md` — Sprint 4 OAuth bővítve
+- `docs/09-changelog.md` — v0.5.3 release
+
+### Cursor teendő (push előtt)
+
+```powershell
+# A package.json-be új dependency került, ezért:
+npm install
+# vagy ha gyorsabb:
+npm i --silent
+
+# Aztán:
+git add -A
+git commit -m "Sprint 2B (6. kör) — SEO + FB OAuth előkészítés v0.5.3"
+git push
+```
+
+---
+
+## 🚧 Sprint 3 — Webshop (folyamatban)
+
+**Cél**: Teljes webshop funkcionalitás: katalógus, termékoldal, kosár, pénztár.
+
+### Eldöntött scope (2026-04-26)
+
+| Téma | Döntés |
+|---|---|
+| **Termékek** | Régi rendszerből exportáljuk (KV `site_content` → új D1) |
+| **Vendég/regisztrált** | Csak vendég Sprint 3-ban, regisztráció Sprint 4-ben |
+| **Szállítás** | FoxPost 1.990 Ft / Személyes átvétel 0 Ft / 20.000 Ft fölött ingyen |
+| **Szűrők** | Kategória + márka + ár csúszka (sweet spot) |
+| **Email** | Resend (vendég + Mónika) + Mailchimp tag |
+| **Fizetés** | Átutalás + utánvét (SimplePay Sprint 6-ban) |
+| **Wishlist** | Sprint 4-ben (auth szükséges) — Sprint 3-ban kihagyjuk |
+
+### Tervezett struktúra
+
+**Sprint 3.1** — D1 séma + alapinfra ✅ (most)  
+**Sprint 3.2** — Termékadatok migráció + webshop hub + kategória/márka oldalak  
+**Sprint 3.3** — Termékoldal + kosár drawer  
+**Sprint 3.4** — Pénztár + email + Mailchimp tag
+
+---
+
+## ✅ Sprint 3.1 — D1 séma + alapinfra
+
+**Időszak**: 2026-04-26  
+**Cél**: D1 séma a webshop-hoz, demo seed adatok, lib függvények.
+
+### Mit építettünk
+
+**D1 séma** (`migrations/0001_sprint3_webshop.sql`):
+- `categories` — hierarchikus kategóriák (parent_id-val)
+- `brands` — márkák (Eclado, Mesotica, London Beauty, Image Skincare)
+- `products` — fő termék tábla minden szükséges mezővel:
+  - Árazás (price_ft, sale_price_ft, sale_starts_at, sale_ends_at)
+  - Készlet (stock_qty, low_stock_threshold)
+  - Méret (size_value, size_unit)
+  - SEO (meta_title, meta_description)
+  - Megjelölések (is_featured, is_recommended, is_new)
+  - Mónika ajánlása (`monika_recommends` mező az E-E-A-T-hez)
+  - Skin types / concerns (Sprint 5+ szűrőkhöz)
+- `product_images` — 1-N kapcsolat (több kép termékenként, is_primary jelzéssel)
+- `orders` — vendég adatok közvetlenül a táblában (Sprint 3); customer_id NULL-ozható (Sprint 4-ben kötelező)
+- `order_items` — freezeled árak (price_at_order_ft) hogy a rendelés ne változzon
+- Triggerek `updated_at` automatikus frissítéshez minden fő tábláról
+
+**Demo seed** (`migrations/0002_sprint3_seed_demo.sql`):
+- 7 kategória (arckezeles, szerumok, hidratalok, tisztitas, napvedelem, szemkornyek, eszkozok)
+- 4 márka (Eclado, Mesotica, London Beauty, Image Skincare)
+- 8 demo termék Mónika hangú leírásokkal és **`monika_recommends`** mezővel
+- Köztük 1 akciós termék (London Beauty hialuron por — −15%, Tavaszi Frissítés ciklus alatt)
+
+**TypeScript típusok** (`src/lib/types/shop.ts`):
+- `Product`, `Category`, `Brand`, `ProductImage` interface-ek
+- `CartItem`, `CartSummary`, `Order`, `OrderItem`
+- Helper függvények: `effectivePrice()`, `isOnSale()`, `discountPercent()`, `stockStatus()`
+- Szállítási opciók: `SHIPPING_OPTIONS` (foxpost: 1990 Ft, personal: 0 Ft)
+- `FREE_SHIPPING_THRESHOLD_FT = 20000`
+- `ProductFilter`, `ProductSort` típusok
+
+**Termék lekérdezések** (`src/lib/products.ts`):
+- `listCategories()`, `getCategory()`
+- `listBrands()`, `getBrand()`
+- `listProducts(filter)` — szűrőkkel + lapozással + bulk enrichment (képek, kategória, márka)
+- `getProduct(slug)` — egyedi termék minden kapcsolt adattal
+- `listFeaturedProducts()`, `listOnSaleProducts()`
+- `getPriceRange()` — ár csúszka min/max értékeihez
+
+**wrangler.toml fixek**:
+- ⚠️ **KV ID javítva**: `REPLACE_WITH_YOUR_KV_ID` → `b2da4e4639ec4141a4f0c91ab3c5e8b7`
+- Új `[vars]` szekció Sprint 3 szállítási konstansokkal:
+  - `SHIPPING_FOXPOST_FT = "1990"`
+  - `SHIPPING_PERSONAL_FT = "0"`
+  - `SHIPPING_FREE_THRESHOLD_FT = "20000"`
+  - `ORDER_NOTIFICATION_EMAIL = "mona@monastudio.hu"`
+
+**package.json scriptek**:
+- `npm run db:migrate` — séma migrálás (remote D1)
+- `npm run db:seed` — demo adatok feltöltése
+- `npm run db:migrate:local` / `db:seed:local` — lokális teszthez
+
+### Döntések
+
+- **Vendég adatok közvetlenül az `orders` táblában** — `customer_id` NULL-ozható, így Sprint 3-ban nem kell külön `guests` tábla, és Sprint 4-től egyszerűen párosítjuk a regisztrált fiókokkal.
+- **Freezeled árak az `order_items`-ben** — `price_at_order_ft` és `product_name` snapshot, így ha Mónika törli a terméket vagy árat változtat, **a régi rendelések nem változnak**.
+- **Akció időzítés a `products` táblán belül** — `sale_price_ft` + `sale_starts_at` + `sale_ends_at` egy táblán, nem külön akciós tábla, mert egy termék egyszerre csak **egy akcióban** lehet (egyszerűbb logika).
+- **Hierarchikus kategóriák** — `parent_id`, hogy később lehessen "Arckezelés > Szérumok > Anti-aging" struktúrát csinálni, de Sprint 3-ban csak top-level kategóriákkal indulunk.
+- **Vendég ID NEM kerül a session-be** — minden checkout-nál újra megadja a vendég az adatait. Ez nem zavaró, mert a vendég jellemzően **havonta egyszer** vásárol, és a regisztrált fiók (Sprint 4) emlékszik az adatokra.
+
+### Cursor teendő
+
+```powershell
+# 1. Behúzás Cursor-ba
+# 2. NPM install (új dep nincs, csak biztos ami biztos)
+npm install
+
+# 3. Lokális D1 setup és teszt (opcionális):
+npm run db:migrate:local
+npm run db:seed:local
+npm run dev
+# Ellenőrizz: a wrangler dev D1 binding lokálban működik
+
+# 4. Remote D1 séma migrálás:
+npm run db:migrate
+
+# 5. Demo adatok feltöltése:
+npm run db:seed
+
+# 6. Ellenőrzés
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT COUNT(*) AS c FROM products"
+# Eredmény: 8 (a 8 demo termék)
+
+# 7. Commit + push
+git add -A
+git commit -m "Sprint 3.1 — D1 webshop séma + demo seed v0.6.0
+
+- migrations/0001_sprint3_webshop.sql (categories, brands, products, product_images, orders, order_items)
+- migrations/0002_sprint3_seed_demo.sql (7 kategória + 4 márka + 8 termék)
+- src/lib/types/shop.ts — TypeScript típusok
+- src/lib/products.ts — D1 lekérdező függvények
+- wrangler.toml KV ID javítva + Sprint 3 vars
+- package.json db:migrate / db:seed scriptek
+- Verzió: 0.5.3 → 0.6.0 (minor bump, Sprint 3 indítás)"
+git push
+```
+
+### Fájlok (új)
+- `migrations/0001_sprint3_webshop.sql` — séma
+- `migrations/0002_sprint3_seed_demo.sql` — demo adatok
+- `src/lib/types/shop.ts` — TS típusok
+- `src/lib/products.ts` — D1 lekérdezők
+- `wrangler.toml` — KV ID javítva + szállítási vars
+- `package.json` — db scriptek + verzió bump 0.5.3 → 0.6.0
+
+### Sprint 3.2 előtt
+
+A **régi `monabeauty` rendszer KV exportja** szükséges (`site_content.json`) — ez a bemenet a tényleges termékadatok migrációjához. A `export-regi-termekek.ps1` scripttel megszerezhető.
+
+---
+
+## ✅ Sprint 3.2 (1. rész) — KRX termékek migráció + Footer Maps fix
+
+**Időszak**: 2026-04-26  
+**Cél**: A régi `site_content.json`-ből 8 KRX termék behozatala új D1 sémába, Mónika hangú rövid recommendation-ekkel, Footer Google Maps integráció.
+
+### Mit építettünk
+
+**Termékek migráció** (`migrations/0002_sprint3_seed_krx_products.sql`):
+- Régi forrás: `site_content.json` → 8 KRX termék (Cica vonal: 4 db, Probiotic vonal: 4 db)
+- 5 új kategória létrehozva (arclemosok, tonikok, szerumok, arckremek, csomagok)
+- 1 márka: KRX (Korea, koreai professzionális szépségápolás)
+- **A demo seed törölve** — KRX termékek a véglegesek
+
+**Tartalom finomítás**:
+- **`short_description` (max 120 karakter)** — kártyára optimalizált, frappáns leírások
+- **`description`** — eredeti gyártói leírás, termékoldalon kibontva (markdown formázással kiemelt összetevőkkel)
+- **`monika_recommends`** — **rövid, marketing-fókuszú** Mónika ajánlás:
+  - **Bőrtípus** (érzékeny, rosaceás, dehidratált, stb.)
+  - **Kombináció** (mivel + melyik kezeléssel hatásos)
+  - **Mikor** (napszak, gyakoriság)
+  - Példa: "Érzékeny, rosaceára vagy aknéra hajlamos bőrre. **Tökéletes párosa:** Cica Tonik utána, majd Cica Szérum vagy Krém. Arckezeléseim után is ezt javasolom."
+- **Eltávolítva** a régi rendszer "minden termékhez ugyanaz" sablonszöveg
+
+**Footer Google Maps integráció**:
+- A `2600 Vác, Zrínyi Miklós u. 3.` cím **kattintható link** Google Maps-re
+- Telefonszám is kattintható (`tel:` link)
+- Hover effekt: warm tónusú szín + alulvonás
+- A Google Business profilba **közvetlenül** vezet (`/maps/place/Mona+Studio/...`)
+
+**db:seed script frissítve** az új SQL fájlra (`0002_sprint3_seed_krx_products.sql`)
+
+### Termék áttekintés
+
+**Cica vonal** (Centella Asiatica, érzékeny/rosaceás bőrre):
+1. Cica Oxigenizáló 2 in 1 arclemosó — **7.750 Ft** / 50 ml
+2. Cica Tonik — **7.050 Ft** / 50 ml
+3. Cica Szérum — **6.050 Ft** / 15 ml
+4. Cica Nappali Krém — **7.050 Ft** / 25 g
+
+**Probiotic vonal** (mikrobiom-támogatás):
+5. Probiotikus habzó arclemosó — **10.200 Ft** / 100 ml
+6. Probiotikus tonik — **10.200 Ft** / 120 ml
+7. Probiotic nappali krém — **11.990 Ft** / 50 g
+8. Probiotic utazó készlet — **12.990 Ft** / 60 ml (3×20 ml)
+
+### Döntések
+
+- **Csak KRX márka** Sprint 3-ban — a régi rendszer is csak ezt használta. Új márkák Sprint 5-től (admin felületen).
+- **Mónika ajánlás 2-3 mondatos** — marketing-fókusz, nem orvosi szöveg. A részletes orvosi információ a `description`-ben (gyártói).
+- **Hierarchikus kategóriák Sprint 5-től** — most flat struktúra (arclemosok, tonikok, szerumok, arckremek, csomagok)
+- **Képek**: a régi `images/products/krx-cica-...webp` útvonalak már be vannak állítva. A tényleges képeket Mónika tudja feltölteni (manuálisan a `public/images/products/`-ba most, R2-be Sprint 5-től).
+
+### Cursor teendő
+
+```powershell
+# 1. Behúzás
+# 2. (Opcionálisan) régi képek átmásolása:
+cp ../monabeauty/images/products/*.webp public/images/products/
+
+# 3. Remote D1 séma + adatok feltöltése:
+npm run db:migrate
+npm run db:seed
+
+# 4. Ellenőrzés:
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT name, price_ft FROM products"
+
+# 5. Deploy + commit
+npm run deploy
+git add -A && git commit -m "Sprint 3.2 (1. rész) — KRX termékek + Footer Maps fix v0.6.1"
+git push
+```
+
+### Fájlok (új + módosítás)
+- `migrations/0002_sprint3_seed_krx_products.sql` (új) — KRX termékek
+- `migrations/0002_sprint3_seed_demo.sql` (törölve) — régi demo
+- `src/components/common/Footer.astro` — Google Maps link
+- `package.json` — db:seed új fájlra, verzió 0.6.0 → 0.6.1
+
+---
+
+## ⏳ Sprint 3.2 (2. rész) — Webshop oldalak
+
+**Tervezett építés**:
+- `/webshop` hub oldal (kiemelt termékek, kategóriák tile, márka kártya)
+- `/webshop/[kategoria]` oldal szűrőkkel (kategória, márka, ár csúszka)
+- `/webshop/markak/[marka]` oldal
+- `ProductCard` komponens (kártyán a `short_description`)
+- `CategoryFilter`, `BrandFilter`, `PriceRange`, `SortDropdown` komponensek
+- `/api/products` GET endpoint
 
 ---
 
 ## ⏳ Sprint 4 — Ügyfél törzs (auth)
 
-**Cél**: Regisztráció, bejelentkezés (email+jelszó és Google OAuth), profil oldal.
+**Cél**: Regisztráció, bejelentkezés (email+jelszó, Google OAuth, Facebook Login), profil oldal.
 
 ### Tervezett építés
 
 **D1 séma:**
-- `customers` (id, email, password_hash, google_id, created_at, ...)
+- `customers` (id, email, password_hash, google_id, **facebook_id**, **apple_id**, created_at, ...)
 - `customer_sessions`
 - `customer_addresses` (címkönyv)
 
@@ -465,9 +740,33 @@ A naptár évente egyszer frissítendő. Ha új akció kell:
 **Új API endpointok:**
 - `/api/auth/register`, `/login`, `/logout`
 - `/api/auth/google`, `/google-callback`
+- **`/api/auth/facebook`, `/facebook-callback`** ✨ ÚJ
+- ~~`/api/auth/apple`~~ — elhalasztva Sprint 7+ vagy iOS app esetén
 - `/api/profile` (GET, PATCH)
 - `/api/profile/orders` (GET)
 - `/api/profile/addresses` (GET, POST, DELETE)
+
+### OAuth providerek — összehasonlítás
+
+| Provider | Mit ad | Költség | Magyar piac |
+|---|---|---|---|
+| **Google** | email, név, kép, locale | Ingyen | ✅ Mindenki használ |
+| **Facebook** | email (ha hozzájárul), név, ID | Ingyen, App Review kell | ✅ Magas penetrate |
+| **Apple** | email vagy proxy, név (csak 1× ad) | $99/év Developer | 🟡 Csak iPhone |
+| **Email/jelszó** | nincs (mi tároljuk) | Ingyen | ✅ Mindenki tudja |
+
+**Cloudflare env vars** Sprint 4-ben:
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (már megvan)
+- `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` (új)
+
+### Apple Sign-In későbbre (opcionális)
+
+Ha valaha **iOS app**ot készítenénk a App Store-ra, **akkor kötelező** az Apple Sign-In a többi social login mellett. Most **kihagyjuk**, mert:
+- Az Apple Developer Account **$99/év**
+- A Mónika célcsoport (25-50 nők, Vác): Google + FB lefedi 95%-át
+- Apple JWT (ES256) bonyolultabb mint a Google/FB OAuth
+
+A `customers` tábla **`apple_id` mezőt** előre létrehozzuk hogy ne kelljen séma-migrációt csinálni később.
 
 ---
 
@@ -533,6 +832,9 @@ A naptár évente egyszer frissítendő. Ha új akció kell:
 | Sprint 2B (3. kör) | 2026-04-26 | ✅ Kész | 19 új |
 | Sprint 2B (4. kör) | 2026-04-26 | ✅ Kész | 8 átírás |
 | Sprint 2B (5. kör) | 2026-04-26 | ✅ Kész | 26 új akció |
+| Sprint 2B (6. kör) | 2026-04-26 | ✅ Kész | SEO + FB előkészítés |
+| Sprint 3.1 | 2026-04-26 | ✅ Kész | D1 séma + demo seed |
+| Sprint 3.2 (1. rész) | 2026-04-26 | ✅ Kész | KRX termékek + Footer Maps |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

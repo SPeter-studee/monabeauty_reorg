@@ -1,24 +1,31 @@
 {
   "name": "mona-studio",
-  "version": "0.5.2",
+  "version": "0.6.1",
   "type": "module",
   "scripts": {
+    "postinstall": "patch-package",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "wrangler pages dev ./dist",
     "deploy": "npm run build && wrangler pages deploy ./dist --project-name=monabeauty2",
     "astro": "astro",
-    "images:webp": "node scripts/generate-webp.mjs"
+    "images:webp": "node scripts/generate-webp.mjs",
+    "db:migrate": "npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0001_sprint3_webshop.sql",
+    "db:seed": "npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0002_sprint3_seed_krx_products.sql",
+    "db:migrate:local": "npx wrangler d1 execute monastudio-v2-db --local --file migrations/0001_sprint3_webshop.sql",
+    "db:seed:local": "npx wrangler d1 execute monastudio-v2-db --local --file migrations/0002_sprint3_seed_krx_products.sql"
   },
   "dependencies": {
-    "astro": "^4.16.0",
-    "@astrojs/cloudflare": "^11.2.0"
+    "@astrojs/cloudflare": "^11.2.0",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^4.16.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240925.0",
-    "wrangler": "^3.78.0",
+    "patch-package": "^8.0.1",
+    "sharp": "^0.33.5",
     "typescript": "^5.6.0",
-    "sharp": "^0.33.5"
+    "wrangler": "^3.78.0"
   }
 }

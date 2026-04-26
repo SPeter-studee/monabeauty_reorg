@@ -7,7 +7,116 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 3 — Webshop_
+- _Sprint 3.2 (2. rész) — Webshop oldalak_
+
+---
+
+## [0.6.1] — 2026-04-26 — Sprint 3.2 (1. rész) — KRX termékek migráció + Footer Maps
+
+### Hozzáadva
+- **`migrations/0002_sprint3_seed_krx_products.sql`** — 8 KRX termék migráció a régi `site_content.json`-ből:
+  - **Cica vonal** (Centella Asiatica, érzékeny/rosaceás bőrre): 4 termék
+  - **Probiotic vonal** (mikrobiom-támogatás): 4 termék
+  - 5 új kategória: arclemosok, tonikok, szerumok, arckremek, csomagok
+  - 1 márka: KRX (Korea)
+- **Mónika hangú rövid `monika_recommends`** minden termékhez:
+  - Bőrtípus + kombináció + mikor — marketing-fókuszú
+  - Példa: "Érzékeny, rosaceára vagy aknéra hajlamos bőrre. Tökéletes párosa: Cica Tonik utána, majd Cica Szérum vagy Krém."
+- **`short_description` (max 120 kar.)** kártyán optimalizált leírások
+- **Footer Google Maps link**:
+  - A `2600 Vác, Zrínyi Miklós u. 3.` cím **kattintható** Google Maps-re
+  - Telefonszám is kattintható (`tel:` link)
+  - Hover effekt: warm tónusú szín
+
+### Eltávolítva
+- `migrations/0002_sprint3_seed_demo.sql` (a régi 8 demo termék — Eclado/Mesotica/London Beauty/Image Skincare placeholder)
+
+### Változott
+- **`package.json`** — `db:seed` script az új SQL fájlra
+- **Verzió bump**: `0.6.0` → `0.6.1` (patch — tartalmi finomítás, séma változatlan)
+
+### Megjegyzés
+- A 8 KRX termék képei a `public/images/products/krx-...webp` útvonalon várhatók — Mónika feltöltheti, vagy átmásolhatóak a régi rendszer `images/products/` mappájából
+- A `description` mezőben **markdown formázás** működik (Astro built-in markdown), így a termékoldalon a kiemelések és listák szépen jelennek meg
+
+---
+
+## [0.6.0] — 2026-04-26 — Sprint 3.1 — Webshop D1 séma + demo
+
+### Hozzáadva
+- **D1 séma** (`migrations/0001_sprint3_webshop.sql`):
+  - `categories` (hierarchikus, parent_id-val)
+  - `brands` (Eclado, Mesotica, London Beauty, Image Skincare)
+  - `products` (28 mező: ár, akció, készlet, méret, SEO, megjelölések, Mónika ajánlása)
+  - `product_images` (1-N kapcsolat termékkel, is_primary jelzéssel)
+  - `orders` (vendég adatok közvetlenül a táblában, customer_id NULL Sprint 3-ban)
+  - `order_items` (freezeled árak: price_at_order_ft, product_name snapshot)
+  - Triggerek `updated_at` automatikus frissítéshez
+- **Demo seed** (`migrations/0002_sprint3_seed_demo.sql`):
+  - 7 kategória, 4 márka, 8 demo termék
+  - 1 akciós termék (London Beauty hialuron por -15%)
+- **TypeScript típusok** (`src/lib/types/shop.ts`):
+  - `Product`, `Category`, `Brand`, `ProductImage`, `Order`, `OrderItem`, `CartItem`, `CartSummary`
+  - Helper függvények: `effectivePrice`, `isOnSale`, `discountPercent`, `stockStatus`
+  - `SHIPPING_OPTIONS` konstans (foxpost: 1990 Ft, personal: 0 Ft)
+  - `FREE_SHIPPING_THRESHOLD_FT = 20000`
+  - `calculateShipping` függvény
+- **D1 lekérdezések** (`src/lib/products.ts`):
+  - `listProducts(filter)` — szűrés, lapozás, bulk enrichment
+  - `getProduct(slug)` — egyedi termék kapcsolt adatokkal
+  - `listCategories`, `listBrands`, `getCategory`, `getBrand`
+  - `listFeaturedProducts`, `listOnSaleProducts`, `getPriceRange`
+- **package.json scriptek**:
+  - `npm run db:migrate` — séma feltöltés (remote)
+  - `npm run db:seed` — demo adatok
+  - `npm run db:migrate:local` / `db:seed:local` — lokális teszt
+
+### Változott
+- **`wrangler.toml`** — ⚠️ KV ID javítva: `REPLACE_WITH_YOUR_KV_ID` → `b2da4e4639ec4141a4f0c91ab3c5e8b7` (a régi rendszer KV-jét használjuk a CONTENT binding-hez)
+- **`wrangler.toml`** — új `[vars]` szekció Sprint 3 szállítási konstansokkal
+- **Verzió bump**: `0.5.3` → `0.6.0` (minor — Sprint 3 indítás)
+
+### Megjegyzés
+- A demo termékek **a régi rendszer adatokkal felül lesznek írva** Sprint 3.2-ben (`export-regi-termekek.ps1` script futtatása után)
+- **`npm install` nem kötelező** új dep nincs, de a `db:migrate` parancsok a `wrangler` CLI-t használják ami már installálva van
+
+---
+
+## [0.5.3] — 2026-04-26 — Sprint 2B (6. kör) — SEO optimalizáció + FB OAuth előkészítés
+
+### Hozzáadva
+- **`@astrojs/sitemap` integráció** (`astro.config.mjs`):
+  - Build-time automatikus sitemap.xml generálás
+  - Filter: admin, api, profil, login/register oldalak kihagyva
+  - i18n hreflang map: hu-HU + en-US
+  - Custom prioritások: főoldal 1.0 (daily), szolgáltatások/blog 0.8 (weekly), jogi oldalak 0.3 (monthly)
+- **LCP optimalizáció — hero kép preload**:
+  - BaseLayout `heroImage` és `heroImageMobile` props
+  - `<link rel="preload" as="image" fetchpriority="high">` responsive media queries-vel
+  - Index.astro főoldal hero kép preload aktív (hero-main.webp + hero-480.webp)
+- **Facebook OAuth előkészítés (Sprint 4 előtt)**:
+  - `env.d.ts` — `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` env vars típusok
+  - `bejelentkezes.astro` — Facebook gomb hozzáadva (disabled, Sprint 4-ben aktiválódik)
+  - API endpoint terv: `/api/auth/facebook`, `/api/auth/facebook-callback`
+  - `customers` tábla `facebook_id` és `apple_id` mezők előre megtervezve
+
+### Változott
+- **`docs/06-api-reference.md`** — Sprint 4 endpoint-ok bővítve FB OAuth-tal, FB Login követelmények dokumentálva
+- **`docs/07-deployment.md`** — FACEBOOK_APP_ID/SECRET env vars, FB Redirect URI-k, Mailchimp env vars szekció bővítve, `.dev.vars` minta frissítve
+- **`docs/08-sprint-log.md`** — Sprint 4 leírás bővítve OAuth provider összehasonlító táblával (Google/FB/Apple)
+- **`docs/03-known-issues.md`** — SEO problémák státuszok frissítve:
+  - 5.1 Sitemap.xml ✅ MEGOLDVA
+  - 5.4 404 oldal ✅ MEGOLDVA
+  - 5.5 Open Graph ✅ MEGOLDVA
+  - 5.6 LCP optimalizáció ✅ MEGOLDVA (új issue)
+  - 5.7 Schema.org JSON-LD ✅ MEGOLDVA (új issue)
+
+### Brand alapelvek megerősítve
+- ✅ **Apple Sign-In elhalasztva** — drága ($99/év), csak iOS app esetén kötelező; a Mónika célcsoport (25-50 nők, magyar piac) Google + FB-vel 95%-ban lefedhető
+
+### Megjegyzés
+- Az `@astrojs/sitemap` package a `package.json`-ben hozzáadva, **`npm install` szükséges Cursor-ban** a deploy előtt!
+- A FB OAuth funkcionalitás Sprint 4-ben aktiválódik (a gomb most disabled placeholderrel)
 
 ---
 

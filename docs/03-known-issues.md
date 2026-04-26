@@ -251,20 +251,38 @@ input:user-valid {
 
 ## 5. SEO problémák
 
-### 5.1 ❌ Nincs sitemap.xml
-- Astro plugin: `@astrojs/sitemap` automatikus generálás
+### 5.1 ✅ Sitemap.xml — MEGOLDVA Sprint 2B 6. kör (v0.5.3)
+- `@astrojs/sitemap` integráció `astro.config.mjs`-ben
+- Build közben automatikus generálás: `/sitemap-index.xml`, `/sitemap-0.xml`
+- Filter: admin, api, profil, login/register oldalak kihagyva
+- i18n hreflang map: hu-HU + en-US
+- Custom prioritások: főoldal 1.0, szolgáltatások/blog 0.8, jogi oldalak 0.3
 
-### 5.2 ❌ Nincs robots.txt
-- `public/robots.txt` létrehozni
+### 5.2 ✅ robots.txt — MEGOLDVA Sprint 2A
+- `public/robots.txt` létrehozva
+- Sitemap hivatkozás a sitemap-re
 
-### 5.3 ❌ Hibás canonical URL-ek (szűrt nézeteken)
+### 5.3 ⏳ Hibás canonical URL-ek (szűrt nézeteken)
 - Webshop oldalon szűrt URL → canonical az alapra (`/webshop`)
+- Sprint 3-ban implementálandó
 
-### 5.4 ❌ 404 oldal nem custom
+### 5.4 ✅ 404 oldal — MEGOLDVA Sprint 2B 1. kör
 - `src/pages/404.astro` egyedi designnal
 
-### 5.5 ❌ Nincs Open Graph kép minden oldalon
-- Megvan a BaseLayout-ban (default), de oldalanként override
+### 5.5 ✅ Open Graph kép — MEGOLDVA
+- BaseLayout default + oldalanként override
+- Twitter Card is megvan
+
+### 5.6 ✅ LCP optimalizáció — MEGOLDVA Sprint 2B 6. kör (v0.5.3)
+- BaseLayout `heroImage` + `heroImageMobile` prop hozzáadva
+- `<link rel="preload" as="image" fetchpriority="high">` responsive media queries-vel
+- Az index.astro főoldal hero képét most preload-olja
+
+### 5.7 ✅ Schema.org JSON-LD — MEGOLDVA
+- BeautySalon (BaseLayout)
+- Person (rolam.astro — Mónika)
+- Article (blog/[slug].astro)
+- Service (szolgaltatasok/[slug].astro)
 
 ---
 

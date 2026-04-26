@@ -49,8 +49,25 @@ A Mona Studio V2 **Cloudflare Pages**-en fut. Ez a dokumentum lépésről lépé
 
 | Variable | Type | Forrás |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | Secret | Google Cloud Console |
+| `GOOGLE_CLIENT_ID` | Secret | Google Cloud Console — OAuth 2.0 credentials |
 | `GOOGLE_CLIENT_SECRET` | Secret | Google Cloud Console |
+| `FACEBOOK_APP_ID` | Secret | Facebook for Developers (App Settings → Basic) |
+| `FACEBOOK_APP_SECRET` | Secret | Facebook for Developers (App Settings → Basic) |
+
+**Google OAuth Redirect URI**:
+- `https://monastudio.hu/api/auth/google-callback`
+- `https://monabeauty2.pages.dev/api/auth/google-callback` (preview)
+
+**Facebook OAuth Valid Redirect URIs**:
+- `https://monastudio.hu/api/auth/facebook-callback`
+- `https://monabeauty2.pages.dev/api/auth/facebook-callback`
+
+**Mailchimp** (newsletter — Sprint 2A-tól, akár előbb is beállítható):
+| Variable | Type | Forrás |
+|---|---|---|
+| `MAILCHIMP_API_KEY` | Secret | Mailchimp Account → Extras → API keys |
+| `MAILCHIMP_AUDIENCE_ID` | Secret | Mailchimp Audience → Settings → Audience name and defaults |
+| `MAILCHIMP_SERVER` | Variable | Pl. "us12" — az API key utáni szám |
 
 ### Sprint 6-tól szükséges (integrációk)
 
@@ -200,12 +217,24 @@ Cutover után csak a `monastudio.hu`-t kell megtartani.
 A lokális env vars-okat a `.dev.vars` fájlba kell írni (mint `.env`, de Cloudflare-specifikus):
 
 ```bash
+# Sprint 4 — Auth
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
+FACEBOOK_APP_ID=...
+FACEBOOK_APP_SECRET=...
+
+# Sprint 2A — Email + newsletter
 RESEND_API_KEY=...
 MAILCHIMP_API_KEY=...
 MAILCHIMP_AUDIENCE_ID=...
 MAILCHIMP_SERVER=us21
+
+# Sprint 6 — Integrációk
+FOXPOST_USERNAME=...
+FOXPOST_PASSWORD=...
+SETMORE_REFRESH_TOKEN=...
+ANTHROPIC_API_KEY=...
+DEEPL_API_KEY=...
 ```
 
 ⚠️ **A `.dev.vars` SOSEM kerül commit-ba** (`.gitignore` kizárja).
