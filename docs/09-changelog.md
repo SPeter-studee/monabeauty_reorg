@@ -11,6 +11,71 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.10] — 2026-04-27 — Header bar B variáns + Google Maps integráció
+
+### Változott
+- **Header bar — mind az 5 elem egyenletesen szétosztva mobile-on** (B variáns):
+  ```
+  [Mona Studio]    [HU·EN]    [🛍️]    [👤]    [☰]
+  ```
+  - `.site-header__inner` mobile-on `display: flex` + `justify-content: space-between`
+  - `.site-header__actions` mobile-on `display: contents` → a 4 action elem 
+    **közvetlenül** a flex container gyermeke lesz, így mind az 5 (logo + 4 action) 
+    egyenletesen szétoszlik
+  - Desktop ≥1024px: visszaáll grid layout-ra (3 oszlop, középen a desktop nav)
+  - A `display: contents` modern, jól támogatott Safari 15+, Chrome 65+, Firefox 37+
+- **Google Maps — hivatalos Place URL bevezetése**:
+  - URL: `https://maps.app.goo.gl/NrsyJ4eyMPsZCkUn6`
+  - Ez a Google Maps **kanonikus rövid URL-je** a Mona Studio Place-re 
+    (Place ID: `0x47402bf72c322377:0x26c58358bc6b6059`, Google ID: `/g/11vd9s5l3c`)
+  - Robusztusabb mint a `?api=1&query=...` search URL: közvetlenül a Mona Studio 
+    listing-jére visz, nem a search találatok közé
+  - Mobile-on natívan a **Google Maps app-ot** nyitja meg (ha telepítve van)
+  - **5 helyen frissítve**:
+    - `BaseLayout.astro` — Schema.org `hasMap` mező (új)
+    - `BaseLayout.astro` — Schema.org `geo` koordináták finomítása  
+      (47.7821181 → 47.7820894, 19.1300852 → 19.1300106 — Google Place pontosabb értéke)
+    - `Footer.astro` — `site-footer__map-link`
+    - `Header.astro` — hamburger menu kapcsolat blokk
+    - `kapcsolat.astro` — cím link + új térkép szekció link
+- **`/kapcsolat` oldal — új "Hogyan találsz meg" térkép szekció** ⭐:
+  - 2 oszlopos layout (≥1024px): bal oldalon szöveg + CTA, jobb oldalon térkép vizuál
+  - **Privacy-friendly stilizált SVG térkép** (nem iframe embed, nem küld user adatot 
+    a Google-nek): Mona-branded bézs háttér, finom utak + Duna folyó + háztömbök, 
+    patina arany pin a stúdió helyén
+  - A térkép kép maga is **link** — kattintásra Google Maps app-ban nyílik
+  - Hover overlay "Térkép megnyitása →" felirat
+  - **Cookie consent függetlenség**: nincs harmadik fél tracking, akkor is működik 
+    ha a user elutasít minden marketing cookie-t
+
+### Schema.org finomítás
+A `BeautySalon` Schema.org most teljes Local SEO standardnak felel meg:
+- `name`, `image`, `telephone`, `email` ✅ (már megvolt)
+- `address` (PostalAddress) ✅ (már megvolt)
+- `geo` (GeoCoordinates) ✅ koordináták finomítva
+- `hasMap` ⭐ **új** — Google Maps kanonikus URL
+- `url`, `priceRange`, `founder`, `openingHoursSpecification`, `areaServed`, `sameAs` ✅
+
+A `hasMap` mező a Google-nek explicit jelzés, hogy a **weboldal és a GBP listing 
+ugyanaz a hely** — Local SEO szempontból fontos megerősítés.
+
+### Megjegyzés
+- A korábbi `?api=1&query=Mona+Studio+V%C3%A1c+Zr%C3%ADnyi+Mikl%C3%B3s+u.+3` 
+  URL formátum **felülírva** mindenhol — a kanonikus Place URL pontosabb (a Google 
+  saját maga adja a megosztáskor)
+- A Google Business Profile **claim-elése** Mónika feladata 
+  (https://business.google.com) — a Place már létezik a Google indexében
+  (`0x47402bf72c322377:0x26c58358bc6b6059`), csak az ownership beállítás hiányzik
+
+### Fájlok (4)
+- `package.json` — verzió `0.7.9` → `0.7.10`
+- `src/layouts/BaseLayout.astro` — Schema.org `hasMap` + koordináták
+- `src/components/common/Footer.astro` — Maps link rövid URL-re
+- `src/components/common/Header.astro` — hamburger contact rövid URL-re
+- `src/pages/kapcsolat.astro` — cím link + új térkép szekció (~100 sor új CSS)
+
+---
+
 ## [0.7.9] — 2026-04-27 — Astro scoped CSS bug fix ⭐ KRITIKUS
 
 > **Ez magyarázza miért tűntek hatástalannak a v0.7.3, v0.7.5, v0.7.8 CSS fix-ek 

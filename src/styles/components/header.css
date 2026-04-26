@@ -10,23 +10,30 @@
 }
 
 .site-header__inner {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* Mobile: az actions wrapper kibomlik (display: contents), így mind az 5 elem 
+     (logo + 4 action) közvetlenül a flex container gyermeke lesz, és a 
+     justify-content: space-between egyenletesen elosztja őket */
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
   padding-block: var(--space-3);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
+  /* Desktop: 3 oszlopos grid a középső navhoz */
   .site-header__inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     gap: var(--space-4);
-    padding-block: var(--space-4);
+    padding-block: var(--space-5);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023.98px) {
   .site-header__inner {
-    padding-block: var(--space-5);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
   }
 }
 
@@ -123,19 +130,17 @@
 /* ── Actions (kosár, profil, lang, hamburger) ─────────────────────────── */
 
 .site-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+  /* Mobile: contents — a benne lévő 4 elem közvetlenül a header inner flex 
+     container gyermeke lesz, és space-between egyenletesen elosztja az 5-öt 
+     (logo + HU/EN + 🛍️ + 👤 + ☰) */
+  display: contents;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 1024px) {
+  /* Desktop: visszaáll flex group-ként a jobb oldalon */
   .site-header__actions {
-    gap: var(--space-1);
-  }
-}
-
-@media (min-width: 768px) {
-  .site-header__actions {
+    display: flex;
+    align-items: center;
     gap: var(--space-3);
   }
 }

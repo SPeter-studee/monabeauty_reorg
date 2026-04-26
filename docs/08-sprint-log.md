@@ -1101,6 +1101,16 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
 - Most már minden ami a v0.7.5-ben íródott a CartDrawer / checkout summary 
   szempontjából **valódi hatást fejt ki**
 
+### v0.7.10 — Header bar B variáns + Google Business linkek
+- Header bar mobile-on: mind az 5 elem (logo + HU/EN + 🛍️ + 👤 + ☰) **egyenletesen 
+  szétosztva** `display: contents` trükkel
+- "Mona Studio · Vác" hero kicker → link Google Business search URL-re
+- Hamburger menü cím-link → Google Business
+- Footer cím-link URL frissítve (placeholder térkép URL → Business search URL)
+- TODO: Mónika Google Business Profile feldobása (értékelések, fényképek, óra) — 
+  amikor kész, a `?api=1&query=...` URL-ek lecserélhetők hivatalos `?cid=...` vagy
+  `?q=place_id:ChIJ...` formátumra
+
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
    észrevétlen bug-ot okozott hónapokon át
