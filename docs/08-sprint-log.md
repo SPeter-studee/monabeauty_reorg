@@ -1119,6 +1119,16 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
   a `/kosar` oldalon a qty button-okra
 - Termékoldal qty (48px magas) NEM érintett — nincs ütközés a touch target-tel
 
+### v0.7.12 — Quick-add gombok a termékkártyákon ⭐
+- **Konverzió-segítő minta**: a kártyákon mostantól **két** quick-add lehetőség:
+  - Ikon-gomb (kosár SVG, 38×38px kerek) a kép jobb felső sarkán
+  - "Kosárba" szöveges gomb a kártya legalján
+- **Csak készleten lévő termékeknél** látszik
+- **Stratégiai kompromisszum**: konzultatív brand vs. konverzió — Mónika ajánlása 
+  + összetevők + "Kinek ajánlom" továbbra is csak a termékoldalon
+- **Egész kártya kattintható** JS-ből (a `<a>` link kivéve) — Ctrl-klikk új fül-be
+- Pulse animáció a klikk feedback-hez + CartDrawer auto-megnyitás
+
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
    észrevétlen bug-ot okozott hónapokon át

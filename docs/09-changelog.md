@@ -11,6 +11,57 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.12] — 2026-04-27 — Quick-add gombok a termékkártyákon (konverzió-segítő)
+
+### Hozzáadva
+- **`ProductCard.astro` — Quick-add minta** ⭐ konverzió-segítő:
+  - **Ikon-gomb a kártya jobb felső sarkában** (kosár SVG, 38×38px, kerek):
+    - Mindig látszik (mobile + desktop)
+    - Hover: patina arany háttér + skálázás
+    - Active: kis zsugorodás
+  - **"Kosárba" szöveges gomb a kártya alján** (a body legalján, ár és készlet info után):
+    - 12px sans-serif uppercase letter-spacing
+    - Outline stílus alapból, fekete háttérre vált hover-en
+    - Csak akkor jelenik meg ha **készleten van** (`stockStatus !== "out_of_stock"`)
+  - **Klikk feedback animáció**: 400ms pulzálás (`@keyframes mona-card-pulse`) — 
+    a gomb skálázódik + arany színűre vált rövid időre
+  - **Sikeres kosárba tétel után**: CartDrawer automatikusan megnyílik (a vendég 
+    azonnal látja a kosár állapotát)
+- **Egész kártya kattintható** — JS-alapú navigáció:
+  - Az `<a>` link **eltávolítva** a kártyáról (HTML5 szempontból problémás volt 
+    a beágyazott button-okkal)
+  - Helyette: `data-product-card-url` attribute + JS `click` listener
+  - Ctrl/Cmd-klikk + középső gomb klikk → új fülben nyitás (megőrzött böngésző UX)
+  - A quick-add gombok `event.stopPropagation()` + `e.preventDefault()` — kattintásukkor 
+    nem navigál a termékoldalra
+
+### Stratégiai döntés
+A Mona Studio **konzultatív brand-vonal** vs. **konverzió-fókuszú UX** között 
+kompromisszum: a quick-add **mindenhol látszik** (készleten lévő termékeknél, kategória 
+oldalakon, főoldal kiemelteknél, akciósaknál), **DE** a Mónika ajánlása badge és 
+a részletes leírás (összetevők, "Kinek ajánlom") továbbra is **csak a termékoldalon** 
+található. A vendégek dönthetik el: gyors quick-add vagy mélyebb információ.
+
+### A `<style>` direktíva
+A `<style>` blokk **`<style is:global>`**-ra állítva — a v0.7.9 tanulság alapján: 
+ha JS-renderelt elemek lehetnek (pl. dinamikus listák), a scoped CSS nem matchol. 
+Itt ugyan jelenleg nincs JS-rendelt markup a kártyán belül (Astro server-side 
+renderel), **de** ha egy szülő komponens (pl. szűrő) JS-ből újrainjektálja a 
+ProductCard-okat, akkor az `is:global` megelőzi a regressziót.
+
+### Fájlok (2)
+- `package.json` — verzió `0.7.11` → `0.7.12`
+- `src/components/shop/ProductCard.astro` — quick-add gombok + JS click handler
+
+### Tervezett follow-up
+- A6) **Toast notification finomítása** — a `mona-cart-add` event-re a 
+  ToastContainer már reagál, de érdemes lenne **megnézni hogy a toast üzenet 
+  látszik-e** a CartDrawer megnyitása mellett (lehet hogy fedi)
+- A7) **Conversion analytics**: Google Analytics 4 `add_to_cart` event 
+  küldése a quick-add kattintáskor — Sprint 6 a teljes e-commerce tracking-gel
+
+---
+
 ## [0.7.11] — 2026-04-27 — Kosár qty kontrollok center alignment + min-height fix
 
 ### Javítva

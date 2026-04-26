@@ -4,6 +4,8 @@
 //
 // Használat:
 //   <ProductCard product={product} />
+//
+// v0.7.12: Quick-add gombok (ikon a sarokban + szöveges gomb az alján)
 
 import type { Product } from "@/lib/types/shop";
 import { effectivePrice, isOnSale, discountPercent, stockStatus } from "@/lib/types/shop";
@@ -20,6 +22,7 @@ const price = effectivePrice(product);
 const onSale = isOnSale(product);
 const discount = discountPercent(product);
 const stock = stockStatus(product);
+const inStock = stock !== "out_of_stock";
 
 const primaryImage = product.images?.find(img => img.isPrimary) ?? product.images?.[0];
 const imageUrl = primaryImage?.url;
@@ -33,10 +36,29 @@ const brandSlug = product.brand?.slug;
 const formatPrice = (ft: number) => `${ft.toLocaleString("hu-HU")} Ft`;
 
 const productUrl = `/webshop/termek/${product.slug}`;
+
+// Quick-add adatok JSON-ben — a JS event handler ezt olvassa be
+// Megjegyzés: az addToCart(product, qty) egy Product-szerű objektumot vár,
+// ezért a teljes szükséges termék-shape-et küldjük, nem a kész CartItem mezőit.
+const quickAddPayload = JSON.stringify({
+  id: product.id,
+  slug: product.slug,
+  name: product.name,
+  stockQty: product.stockQty ?? 99,
+  priceFt: product.priceFt,
+  salePriceFt: product.salePriceFt ?? null,
+  saleStartsAt: product.saleStartsAt ?? null,
+  saleEndsAt: product.saleEndsAt ?? null,
+  images: imageUrl ? [{ url: imageUrl, isPrimary: true }] : [],
+  brand: product.brand ? { name: product.brand.name } : null,
+});
 ---
 
-<article class:list={["product-card", { "product-card--featured": featured }]}>
-  <a href={productUrl} class="product-card__link" aria-label={`${product.name} — ${formatPrice(price)}`}>
+<article
+  class:list={["product-card", { "product-card--featured": featured }]}
+  data-product-card-url={productUrl}
+>
+  <div class="product-card__link" aria-hidden="true">
 
     {/* Kép szekció — badge-ekkel */}
     <div class="product-card__image-wrap">
@@ -133,12 +155,96 @@ const productUrl = `/webshop/termek/${product.slug}`;
           Jelenleg nincs készleten
         </p>
       )}
+
+      {/* Quick-add szöveges gomb — csak ha készleten van */}
+      {inStock && (
+        <button
+          type="button"
+          class="product-card__add-btn"
+          data-product-card-add
+          data-product-payload={quickAddPayload}
+          aria-label={`${product.name} kosárba`}
+        >
+          Kosárba
+        </button>
+      )}
     </div>
-  </a>
+  </div>
+
+  {/* Quick-add ikon-gomb — abszolút pozícionálva, mindig látszik */}
+  {inStock && (
+    <button
+      type="button"
+      class="product-card__quick-add"
+      data-product-card-add
+      data-product-payload={quickAddPayload}
+      aria-label={`${product.name} kosárba (gyors)`}
+      title="Kosárba"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
+        <path d="M16 10a4 4 0 0 1-8 0" stroke-linecap="round"/>
+      </svg>
+    </button>
+  )}
 </article>
 
-<style>
+<script>
+  import { addToCart, openCartDrawer } from "@/lib/cart";
+
+  // ── Termékkártya navigáció + quick-add ─────────────────────────
+  // A kártya egész területe kattintható (navigáció a termékoldalra),
+  // KIVÉVE a quick-add gomb(ok) — azok event.stopPropagation()-vel kosárba teszik a terméket.
+  document.querySelectorAll<HTMLElement>("[data-product-card-url]").forEach((card) => {
+    const url = card.dataset.productCardUrl;
+    if (!url) return;
+
+    // Egész kártya kattintható navigáció
+    card.addEventListener("click", (e) => {
+      // Ha a klikk a quick-add gombról jött, ne navigáljunk
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-product-card-add]")) return;
+
+      // Ctrl/Cmd-klikk vagy középső gomb — engedjük az új fülben nyitást
+      const ev = e as MouseEvent;
+      if (ev.ctrlKey || ev.metaKey || ev.button === 1) {
+        window.open(url, "_blank");
+        return;
+      }
+      window.location.href = url;
+    });
+
+    // Quick-add gombok — csak a kártyán belül
+    card.querySelectorAll<HTMLButtonElement>("[data-product-card-add]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const payloadStr = btn.dataset.productPayload;
+        if (!payloadStr) return;
+
+        try {
+          const product = JSON.parse(payloadStr);
+          addToCart(product, 1);
+
+          // Vizuális feedback — kis pulzálás a gombon
+          btn.classList.add("product-card__add-btn--pulse");
+          setTimeout(() => btn.classList.remove("product-card__add-btn--pulse"), 400);
+
+          // CartDrawer megnyitása
+          openCartDrawer();
+        } catch (err) {
+          console.error("[ProductCard] addToCart parse error:", err);
+        }
+      });
+    });
+  });
+</script>
+
+<style is:global>
 .product-card {
+  position: relative;
   background: var(--mona-elevated);
   border: 0.5px solid var(--mona-border);
   border-radius: 2px;
@@ -147,6 +253,7 @@ const productUrl = `/webshop/termek/${product.slug}`;
               transform var(--motion-base) var(--ease);
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 @media (hover: hover) {
@@ -324,5 +431,92 @@ const productUrl = `/webshop/termek/${product.slug}`;
 .product-card__stock--out {
   color: var(--mona-text-3);
   font-style: italic;
+}
+
+/* ─── Quick-add: ikon-gomb a kártya jobb felső sarkán ──────────────────────── */
+.product-card__quick-add {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  min-height: 0;
+  padding: 0;
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-elevated);
+  color: var(--mona-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease),
+              transform var(--motion-fast) var(--ease);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.06);
+}
+
+.product-card__quick-add svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .product-card__quick-add:hover {
+    background: var(--mona-warm);
+    border-color: var(--mona-warm);
+    color: var(--mona-elevated);
+    transform: scale(1.05);
+  }
+}
+
+.product-card__quick-add:active {
+  transform: scale(0.95);
+}
+
+/* ─── Quick-add: szöveges "Kosárba" gomb a kártya alján ─────────────────── */
+.product-card__add-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: 10px var(--space-4);
+  min-height: 0;
+  background: transparent;
+  border: 0.5px solid var(--mona-text);
+  color: var(--mona-text);
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .product-card__add-btn:hover {
+    background: var(--mona-text);
+    color: var(--mona-elevated);
+  }
+}
+
+.product-card__add-btn:active {
+  transform: scale(0.99);
+}
+
+/* Pulse animáció a sikeres kosárba tétel feedback-jéhez */
+.product-card__add-btn--pulse,
+.product-card__quick-add.product-card__add-btn--pulse {
+  animation: mona-card-pulse 400ms var(--ease);
+}
+
+@keyframes mona-card-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); background: var(--mona-warm); color: var(--mona-elevated); border-color: var(--mona-warm); }
+  100% { transform: scale(1); }
 }
 </style>
