@@ -8,8 +8,56 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ### Hozzáadás tervezett
 - _Sprint 4 — Ügyfél törzs (auth)_
-- _Sprint 5 — termékkártya finomítás (Mónika ajánlja badge prominentebb, "Bőrtípus választás" 
-  konzultatív flow, AI chatbot proaktív ajánlás, GA4 add_to_cart tracking)_
+- _Sprint 5 — Termékoldalon kötelező Bőrtípus választás, AI chatbot proaktív 
+  konzultáció, post-purchase email, GA4 add_to_cart event_
+
+---
+
+## [0.7.15] — 2026-04-27 — Mónika ajánlja → eyebrow-ként a tartalmi blokkban
+
+### Változott
+- **A v0.7.14 fix után még maradt egy gond**: a quick-add ikon-gomb (jobb felső 
+  sarok) **levágta a "MÓNIKA AJÁNLJA" badge szövegét** ("MÓNIKA AJÁ...") — még balra 
+  pozícionálva is, mert a hosszú szöveg + a 38px ikon-gomb együtt nem férnek el 
+  vízszintesen
+- **Új megoldás**: a "Mónika ajánlja" **kikerült a kép tetejéről** és **eyebrow-ként 
+  szerepel** a tartalmi blokk legtetején, közvetlenül a márka eyebrow felett
+- **Markup változás**: `<span class="product-card__badge--recommended">` → 
+  `<p class="product-card__recommended"><span class="product-card__recommended-mark">✦</span> Mónika ajánlja</p>`
+- **Vizuális stílus**: 11px sans-serif uppercase letter-spacing 0.12em + `--mona-warm` 
+  patina arany szín + diszkrét csillag (`✦`) prefix
+
+### Előnyök
+- **Mindig látszik** ha a termék ajánlott — nem rejtett a "ha nincs más badge" 
+  szabály mögött (a régi logika v0.7.0 óta korlátozta)
+- **Prominentebb** — közvetlenül a termék neve felett, eyebrow pozícióban
+- **Mónika brand-vonalához** illik (csendes, sok levegő, diszkrét csillag a felirat előtt)
+- **Nem ütközik** semmivel — a kép terület mostantól csak a fotó + akció/új badge bal 
+  felül + quick-add ikon-gomb jobb felül (egyértelmű elhelyezés)
+
+### Fájlok (1)
+- `package.json` — verzió `0.7.14` → `0.7.15`
+- `src/components/shop/ProductCard.astro` — markup + CSS
+
+---
+
+## [0.7.14] — 2026-04-27 — Termékkártya badge-ek balra (quick-add ikon nem fedi)
+
+### Javítva
+- **A v0.7.12 quick-add ikon-gomb (jobb felső sarok) lefedte a "Mónika ajánlja" 
+  + "Akció" + "Új" badge-eket** — mindketten `position: absolute; top: var(--space-3); 
+  right: var(--space-3)`-ra voltak állítva
+- **Fix**: `.product-card__badge` `right` → `left` — a badge-ek mostantól a kártya 
+  **bal felső sarkában**, a quick-add ikon-gomb a **jobb felső sarokban**
+- Plusz `z-index: 1` a badge-en (biztonsági kéreg)
+
+### Megjegyzés
+A "Mónika ajánlja" badge ezen a fix után **egyetlen sorban** ütközött a 
+quick-add ikon-gombbal — a v0.7.15 oldja meg végleg eyebrow-ra mozgatással.
+
+### Fájlok (1)
+- `package.json` — verzió `0.7.13` → `0.7.14`
+- `src/components/shop/ProductCard.astro` — badge `right` → `left`
 
 ---
 

@@ -1137,14 +1137,24 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
   termékoldalon
 - `/kosar` full page és `/penztar` checkout summary képek **változatlanok** (van hely)
 
-### Sprint 5-be áttéve (a Mónika brand-konzultatív vonal)
-- A v0.7.12 quick-add minta után felmerült mitigáció lehetőségek:
-  - **Termékoldalon kötelező Bőrtípus választás** mielőtt a "Kosárba" aktívvá válik
-  - **AI chatbot proaktív konzultációs ajánlás** a checkout előtt
-  - **Email a rendelés után**: "Pár tipp a használatához..." a bőrtípus alapján
-  - **GA4 `add_to_cart` event tracking** a quick-add kattintáskor (Sprint 6 része 
-    a teljes e-commerce tracking-gel)
-  - **Mónika ajánlja badge prominentebb megjelenítés** a kártyán
+### v0.7.14 — Termékkártya badge-ek balra
+- A v0.7.12 quick-add ikon-gomb (jobb felső) **lefedte** a "Mónika ajánlja" + 
+  "Akció" + "Új" badge-eket
+- Fix: badge-ek `right` → `left` pozícionálás
+- ⚠️ A "Mónika ajánlja" badge szövege még mindig levágódott a hosszú szöveg miatt — 
+  a v0.7.15 oldja meg végleg
+
+### v0.7.15 — Mónika ajánlja eyebrow ⭐
+- A "Mónika ajánlja" **kikerült a kép tetejéről** és eyebrow-ként szerepel a 
+  tartalmi blokk tetején (márka eyebrow felett)
+- Diszkrét csillag (`✦`) + uppercase letter-spacing patina arany színben
+- **Mindig látszik** ha a termék ajánlott (nem rejtett a "ha nincs más badge" 
+  szabály mögött, ami a v0.7.0 óta korlátozta)
+- Prominentebb pozíció — közvetlenül a termék neve felett
+
+### Sprint 5-be áttéve
+- **Mónika ajánlja badge prominentebb megjelenítés** a kártyán (vizuálisan kiemelve, 
+  pl. nagyobb, nyilvánvalóbb pozícióban)
 
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 

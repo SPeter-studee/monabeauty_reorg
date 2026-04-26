@@ -96,17 +96,18 @@ const quickAddPayload = JSON.stringify({
         </span>
       )}
 
-      {/* Mónika ajánlja badge — ha akció / új jelölés is van, csak akkor mutatjuk
-          ha nincs más badge (a vizuális zaj ellen) */}
-      {!onSale && !product.isNew && product.isRecommended && (
-        <span class="product-card__badge product-card__badge--recommended">
-          Mónika ajánlja
-        </span>
-      )}
     </div>
 
     {/* Tartalom */}
     <div class="product-card__content">
+      {/* Mónika ajánlja eyebrow — a brand eyebrow felett, prominentebb pozíció */}
+      {product.isRecommended && (
+        <p class="product-card__recommended">
+          <span class="product-card__recommended-mark" aria-hidden="true">✦</span>
+          Mónika ajánlja
+        </p>
+      )}
+
       {/* Márka eyebrow */}
       {product.brand && (
         <p class="product-card__brand">{product.brand.name}</p>
@@ -311,7 +312,7 @@ const quickAddPayload = JSON.stringify({
 .product-card__badge {
   position: absolute;
   top: var(--space-3);
-  right: var(--space-3);
+  left: var(--space-3);
   padding: 4px 10px;
   font-family: var(--mona-sans);
   font-size: 11px;
@@ -319,6 +320,7 @@ const quickAddPayload = JSON.stringify({
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 1px;
+  z-index: 1;
 }
 
 .product-card__badge--sale {
@@ -332,8 +334,27 @@ const quickAddPayload = JSON.stringify({
 }
 
 .product-card__badge--recommended {
-  background: var(--mona-warm);
-  color: var(--mona-elevated);
+  /* Már nem használt — a Mónika ajánlja eyebrow-ként szerepel a tartalmi blokkban */
+  display: none;
+}
+
+/* Mónika ajánlja eyebrow — a tartalmi blokk tetején, a márka eyebrow felett */
+.product-card__recommended {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mona-warm);
+  margin: 0 0 var(--space-1);
+  font-weight: 500;
+}
+
+.product-card__recommended-mark {
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* ─── Tartalom ───────────────────────────────────────────────────────────── */
@@ -341,8 +362,10 @@ const quickAddPayload = JSON.stringify({
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
   flex: 1;
+  text-align: left;
 }
 
 .product-card__brand {
@@ -352,6 +375,7 @@ const quickAddPayload = JSON.stringify({
   text-transform: uppercase;
   color: var(--mona-warm);
   margin: 0;
+  text-align: left;
 }
 
 .product-card__name {
@@ -361,6 +385,10 @@ const quickAddPayload = JSON.stringify({
   line-height: 1.25;
   color: var(--mona-text);
   margin: 0;
+  text-align: left;
+  /* Ha a quick-add ikon a jobb felső sarokban van (38+8+8 = 54px),
+     a hosszú nevek ne csússzanak alá vizuálisan */
+  padding-right: var(--space-2);
 }
 
 .product-card__description {
@@ -368,6 +396,7 @@ const quickAddPayload = JSON.stringify({
   line-height: 1.5;
   color: var(--mona-text-2);
   margin: 0;
+  text-align: left;
   /* max 3 sor a kártyán — ha hosszabb, three-dot */
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -381,8 +410,10 @@ const quickAddPayload = JSON.stringify({
   padding-top: var(--space-3);
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-3);
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .product-card__price-wrap {
@@ -422,6 +453,8 @@ const quickAddPayload = JSON.stringify({
   font-family: var(--mona-sans);
   font-size: 12px;
   margin: var(--space-2) 0 0;
+  text-align: left;
+  width: 100%;
 }
 
 .product-card__stock--low {
@@ -491,6 +524,7 @@ const quickAddPayload = JSON.stringify({
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-align: left;
   cursor: pointer;
   transition: background var(--motion-fast) var(--ease),
               color var(--motion-fast) var(--ease),
