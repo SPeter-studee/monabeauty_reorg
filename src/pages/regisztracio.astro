@@ -1,0 +1,223 @@
+---
+// src/pages/regisztracio.astro
+// Regisztráció form — Sprint 4-ben funkcionálissá
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="Regisztráció — Mona Studio"
+  description="Regisztrálj a Mona Studio webshopba — kosár, kívánságlista és gyorsabb pénztár a következő vásárlásnál."
+  noindex={true}
+>
+  <PageHero
+    title="Regisztráció"
+    description="Hozz létre fiókot a gyorsabb vásárláshoz és személyre szabott élményhez."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Regisztráció" }
+    ]}
+    variant="compact"
+  />
+
+  <section class="auth section">
+    <div class="container">
+      <div class="auth__card">
+
+        <div class="auth__placeholder">
+          <p>
+            <strong>Hamarosan érkezik!</strong>
+          </p>
+          <p>
+            A regisztráció funkció <strong>Sprint 4-ben</strong> kerül aktiválásra a webshop
+            indulásával együtt.
+          </p>
+        </div>
+
+        <form class="auth__form" data-register-form>
+
+          <div class="auth__row-2">
+            <div class="auth__field">
+              <label for="reg-firstname">Keresztnév</label>
+              <input
+                type="text"
+                id="reg-firstname"
+                name="firstname"
+                autocomplete="given-name"
+                required
+                disabled
+              >
+            </div>
+            <div class="auth__field">
+              <label for="reg-lastname">Vezetéknév</label>
+              <input
+                type="text"
+                id="reg-lastname"
+                name="lastname"
+                autocomplete="family-name"
+                required
+                disabled
+              >
+            </div>
+          </div>
+
+          <div class="auth__field">
+            <label for="reg-email">Email</label>
+            <input
+              type="email"
+              id="reg-email"
+              name="email"
+              autocomplete="email"
+              required
+              disabled
+            >
+          </div>
+
+          <div class="auth__field">
+            <label for="reg-password">Jelszó</label>
+            <input
+              type="password"
+              id="reg-password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              disabled
+            >
+            <p class="auth__hint">Legalább 8 karakter, ajánlott szám és betű kombináció.</p>
+          </div>
+
+          <label class="auth__checkbox">
+            <input type="checkbox" name="terms" required disabled>
+            <span>
+              Elfogadom az <a href="/aszf">ÁSZF</a>-et és az
+              <a href="/adatvedelem">Adatkezelési tájékoztatót</a>.
+            </span>
+          </label>
+
+          <label class="auth__checkbox">
+            <input type="checkbox" name="newsletter" disabled>
+            <span>Szeretnék hírlevelet kapni az újdonságokról és akciókról.</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary auth__submit" disabled>
+            Fiók létrehozása
+          </button>
+
+        </form>
+
+        <p class="auth__footer">
+          Már van fiókod?
+          <a href="/bejelentkezes">Bejelentkezés →</a>
+        </p>
+
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.auth__card {
+  max-width: 480px;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-6);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+}
+
+.auth__placeholder {
+  background: rgba(184, 90, 60, 0.05);
+  border-left: 2px solid var(--mona-sale);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-6);
+}
+
+.auth__placeholder p {
+  margin-bottom: var(--space-2);
+}
+
+.auth__placeholder p:last-child {
+  margin-bottom: 0;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth__row-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .auth__row-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth__hint {
+  font-size: 12px;
+  color: var(--mona-text-3);
+  margin: 0;
+}
+
+.auth__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--mona-text-2);
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.auth__checkbox input {
+  width: auto;
+  min-height: auto;
+  margin-top: 3px;
+  accent-color: var(--mona-nature);
+}
+
+.auth__checkbox a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth__submit {
+  margin-top: var(--space-2);
+}
+
+.auth__footer {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 0.5px solid var(--mona-border);
+  text-align: center;
+  font-size: 14px;
+  color: var(--mona-text-2);
+}
+
+.auth__footer a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-left: var(--space-2);
+}
+</style>

@@ -1,0 +1,82 @@
+---
+// src/components/home/AboutMonikaTeaser.astro
+// Rövid Mónika teaser — link a /rolam oldalra
+---
+
+<section class="about-monika section">
+  <div class="container container-prose">
+    <div class="about-monika__inner">
+
+      <p class="eyebrow about-monika__kicker">Rólam</p>
+      <h2 class="about-monika__title">Húsz év szakma, sok-sok bizalom.</h2>
+
+      <blockquote class="about-monika__quote">
+        Amikor valaki kozmetikust választ, nem csak egy kezelést választ – bizalmat is ad.
+        Ezt soha nem felejtem el.
+      </blockquote>
+
+      <p class="about-monika__signature">— Szabó Mónika</p>
+
+      <p class="about-monika__text">
+        48 évesen én is pontosan tudom, milyen az, amikor a tükör nem azt mutatja, amit éreznénk
+        magunkról. Ezért is lettem kozmetikus — mert hiszem, hogy a bőrünk állapota kihat arra,
+        ahogy magunkra nézünk. És ez nem esztétikai kérdés. Ez önbizalom kérdése.
+      </p>
+
+      <a href="/rolam" class="btn btn-secondary">Tovább a Rólam oldalra →</a>
+
+    </div>
+  </div>
+</section>
+
+<style>
+.about-monika {
+  background: var(--mona-elevated);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.about-monika__inner {
+  text-align: center;
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+.about-monika__kicker {
+  margin-bottom: var(--space-3);
+  color: var(--mona-warm);
+}
+
+.about-monika__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.75rem, 3vw + 1rem, 2.5rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-6);
+  color: var(--mona-text);
+}
+
+.about-monika__quote {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: clamp(1.25rem, 2vw + 0.75rem, 1.5rem);
+  line-height: 1.5;
+  color: var(--mona-text);
+  margin-bottom: var(--space-3);
+  padding-block: var(--space-4);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.about-monika__signature {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-6);
+}
+
+.about-monika__text {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-6);
+}
+</style>

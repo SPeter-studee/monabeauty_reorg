@@ -1,0 +1,211 @@
+---
+// src/pages/aszf.astro
+// Általános Szerződési Feltételek
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+const lastUpdated = "2026-04-26";
+---
+
+<BaseLayout
+  title="ÁSZF — Mona Studio"
+  description="Mona Studio Általános Szerződési Feltételek — vásárlási feltételek, fizetés, szállítás, elállási jog, panaszkezelés."
+>
+  <PageHero
+    title="Általános Szerződési Feltételek"
+    description={`Utolsó frissítés: ${lastUpdated}`}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "ÁSZF" }
+    ]}
+  />
+
+  <article class="legal section">
+    <div class="container container-prose">
+
+      <p class="legal__intro">
+        Jelen Általános Szerződési Feltételek (ÁSZF) tartalmazzák a Mona Studio által üzemeltetett
+        webshop (monastudio.hu) használatának feltételeit. Kérjük, vásárlás előtt figyelmesen
+        olvasd el. Megrendelés leadásával elfogadod jelen ÁSZF-et.
+      </p>
+
+      <h2>1. Szolgáltató adatai</h2>
+      <p>
+        <strong>Üzemeltető:</strong> Szabó Mónika e.v.<br>
+        <strong>Cím:</strong> 2600 Vác, Zrínyi Miklós u. 3.<br>
+        <strong>Email:</strong> mona@monastudio.hu<br>
+        <strong>Telefon:</strong> +36 20 913 0126
+      </p>
+      <p class="legal__placeholder">
+        <em>[Nyilvántartási szám, adószám, kamarai adatok, tárhelyszolgáltató — kitöltendő]</em>
+      </p>
+
+      <h2>2. A szerződés tárgya</h2>
+      <p>
+        A szolgáltató a webshopon kozmetikai termékeket árul magánszemélyek és cégek részére.
+        A szerződés a termék kosárba helyezésével és a megrendelés véglegesítésével jön létre.
+      </p>
+
+      <h2>3. Megrendelés és visszaigazolás</h2>
+      <p>
+        A megrendelés leadását követően a vásárló email-ben kap automatikus visszaigazolást.
+        Ez nem minősül a szerződés létrejöttének — a szolgáltató 48 órán belül külön
+        visszaigazolja a megrendelés elfogadását.
+      </p>
+
+      <h2>4. Árak</h2>
+      <p>
+        A webshopban feltüntetett árak bruttó (ÁFA-t tartalmazó) árak forintban (HUF).
+        Az árak a megrendelés időpontjában érvényesek. A szolgáltató fenntartja a jogot
+        az árak módosítására, de a már leadott megrendelésekre ez nem vonatkozik.
+      </p>
+
+      <h2>5. Fizetési módok</h2>
+      <ul>
+        <li>Bankkártyás fizetés (Stripe / SimplePay)</li>
+        <li>Banki átutalás</li>
+        <li>Utánvét (csak FoxPost csomagautomata esetén)</li>
+      </ul>
+      <p class="legal__placeholder">
+        <em>[A pontos fizetési módok és szolgáltatók a webshop élesítésekor frissítendők]</em>
+      </p>
+
+      <h2>6. Szállítási módok</h2>
+      <ul>
+        <li><strong>FoxPost csomagautomata</strong> — országos lefedettséggel</li>
+        <li><strong>GLS házhozszállítás</strong> — Magyarország területén</li>
+        <li><strong>Személyes átvétel</strong> — Vác, Zrínyi Miklós u. 3.</li>
+      </ul>
+      <p>
+        A szállítási díj a megrendelés végösszegétől és a választott szállítási módtól függ —
+        a kosárban és a pénztár oldalon pontos összeget látsz.
+      </p>
+
+      <h2>7. Elállási jog</h2>
+      <p>
+        A vásárló a 45/2014. (II. 26.) Korm. rendelet alapján <strong>14 napon belül indoklás
+        nélkül elállhat</strong> a szerződéstől. Az elállási nyilatkozatot írásban kell megküldeni
+        a mona@monastudio.hu címre.
+      </p>
+      <p>
+        Az elállási jog nem vonatkozik a felbontott, használt kozmetikai termékekre, illetve
+        higiéniai okokból visszaküldhetetlen termékekre.
+      </p>
+
+      <h2>8. Garancia és szavatosság</h2>
+      <p>
+        A webshopban értékesített termékekre a Polgári Törvénykönyvben meghatározott
+        szavatossági szabályok érvényesek. Hibás termék esetén a vásárló kérheti a
+        kicserélést, javítást, árengedményt vagy elállhat a szerződéstől.
+      </p>
+
+      <h2>9. Panaszkezelés</h2>
+      <p>
+        Panaszodat a mona@monastudio.hu email címre, vagy a +36 20 913 0126 telefonszámon
+        jelentheted be. A szolgáltató 30 napon belül érdemben válaszol.
+      </p>
+      <p>
+        Vita esetén a Pest Megyei Békéltető Testületet veheted igénybe:<br>
+        <strong>Cím:</strong> 1119 Budapest, Etele út 59-61. II. emelet 240.<br>
+        <strong>Web:</strong> <a href="https://www.panaszrendezes.hu">panaszrendezes.hu</a>
+      </p>
+
+      <h2>10. Adatvédelem</h2>
+      <p>
+        A vásárlók személyes adatainak kezelésére az <a href="/adatvedelem">Adatkezelési
+        tájékoztató</a> vonatkozik.
+      </p>
+
+      <h2>11. Záró rendelkezések</h2>
+      <p>
+        Jelen ÁSZF a magyar jog szerint értelmezendő. A szolgáltató fenntartja a jogot
+        az ÁSZF egyoldalú módosítására — a változások a webshopon való közzététellel lépnek
+        hatályba. A már leadott megrendelésekre a megrendeléskor érvényes ÁSZF vonatkozik.
+      </p>
+
+      <p class="legal__updated">
+        Utolsó frissítés: <strong>{lastUpdated}</strong>
+      </p>
+
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+.legal__intro {
+  font-style: italic;
+  color: var(--mona-text-2);
+  border-block: 0.5px solid var(--mona-border);
+  padding-block: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.legal h2 {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.25rem, 1.5vw + 0.75rem, 1.5rem);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+  color: var(--mona-text);
+}
+
+.legal p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+  margin-bottom: var(--space-4);
+}
+
+.legal ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-4);
+}
+
+.legal ul li {
+  position: relative;
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-2);
+  line-height: 1.6;
+}
+
+.legal ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 1px;
+  background: var(--mona-warm);
+}
+
+.legal a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal a:hover {
+  color: var(--mona-warm);
+}
+
+.legal__placeholder {
+  background: rgba(184, 90, 60, 0.05);
+  border-left: 2px solid var(--mona-sale);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin-block: var(--space-4);
+}
+
+.legal__updated {
+  margin-top: var(--space-10);
+  padding-top: var(--space-5);
+  border-top: 0.5px solid var(--mona-border);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  text-align: center;
+}
+</style>

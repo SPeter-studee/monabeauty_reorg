@@ -1,0 +1,148 @@
+---
+// src/components/home/ActivePromotion.astro
+// Aktuális akció — markdown promotions collection-ből
+// Csak akkor renderelődik, ha van aktív (mai dátum a startsAt és endsAt között) és showOnHomepage:true
+
+import { getCollection } from "astro:content";
+import SaleCountdown from "@/components/shop/SaleCountdown.astro";
+
+const now = new Date();
+const allPromos = await getCollection("promotions");
+const active = allPromos
+  .filter(p =>
+    p.data.showOnHomepage &&
+    p.data.startsAt <= now &&
+    p.data.endsAt >= now
+  )
+  .sort((a, b) => a.data.sortOrder - b.data.sortOrder)[0];
+---
+
+{active && (
+  <section class="active-promo section" aria-labelledby="active-promo-title">
+    <div class="container">
+      <div class="active-promo__card">
+
+        {active.data.heroImageUrl && (
+          <div class="active-promo__image-wrap">
+            <img
+              src={active.data.heroImageUrl}
+              alt={active.data.heroImageAlt ?? active.data.title}
+              class="active-promo__image"
+              loading="lazy"
+              decoding="async"
+            >
+            {active.data.badge && (
+              <span class="active-promo__badge">{active.data.badge}</span>
+            )}
+          </div>
+        )}
+
+        <div class="active-promo__content">
+          <p class="eyebrow active-promo__kicker">Aktuális akció</p>
+          <h2 id="active-promo-title" class="active-promo__title">
+            {active.data.title}
+          </h2>
+
+          <SaleCountdown endsAt={active.data.endsAt.toISOString()} variant="full" />
+
+          <p class="active-promo__description">{active.data.description}</p>
+
+          <a href={active.data.ctaUrl} class="btn btn-primary">
+            {active.data.ctaText}
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+.active-promo__card {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-warm);
+  max-width: var(--container-lg);
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .active-promo__card {
+    grid-template-columns: 1fr 1.1fr;
+  }
+}
+
+.active-promo__image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--mona-surface);
+}
+
+@media (min-width: 768px) {
+  .active-promo__image-wrap {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+}
+
+.active-promo__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.active-promo__badge {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  background: var(--mona-sale);
+  color: var(--mona-elevated);
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  text-transform: uppercase;
+}
+
+.active-promo__content {
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .active-promo__content {
+    padding: var(--space-8) var(--space-8);
+    gap: var(--space-4);
+    justify-content: center;
+  }
+}
+
+.active-promo__kicker {
+  color: var(--mona-warm);
+}
+
+.active-promo__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2.5vw + 0.75rem, 2.25rem);
+  line-height: 1.15;
+  color: var(--mona-text);
+  margin: 0;
+}
+
+.active-promo__description {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+}
+
+.active-promo .btn {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+</style>

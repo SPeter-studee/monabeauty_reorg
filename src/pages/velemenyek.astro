@@ -1,0 +1,77 @@
+---
+// src/pages/velemenyek.astro
+// Vélemények — Trustindex widget integráció (egész oldalas)
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+import TrustindexReviews from "@/components/home/TrustindexReviews.astro";
+
+// Trustindex widget URL — TODO: cseréld le az igazi loader URL-jére
+const TRUSTINDEX_WIDGET_URL = ""; // pl. "https://cdn.trustindex.io/loader.js?XXXXX"
+---
+
+<BaseLayout
+  title="Vélemények — Mona Studio"
+  description="Olvasd el mit gondolnak vendégeim a Mona Studio kezeléseiről. Több mint 20 év szakmai tapasztalat, személyre szabott bőrápolás."
+>
+  <PageHero
+    title="Vélemények"
+    description="Olvasd el mit gondolnak vendégeim a kezelésekről."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Vélemények" }
+    ]}
+  />
+
+  <TrustindexReviews widgetUrl={TRUSTINDEX_WIDGET_URL} />
+
+  <section class="reviews-cta section">
+    <div class="container container-prose text-center">
+      <h2 class="reviews-cta__title">Volt nálam? Mondd el!</h2>
+      <p class="reviews-cta__text">
+        A te véleményed sokat segít azoknak, akik még csak ismerkednek a szalonommal.
+        Hagyj nyugodtan értékelést a Google profilomon — köszönöm előre is!
+      </p>
+      <div class="reviews-cta__actions">
+        <a
+          href="https://www.google.com/maps/search/Mona+Studio+V%C3%A1c/@47.7821181,19.1300852,17z"
+          target="_blank"
+          rel="noopener"
+          class="btn btn-primary"
+        >
+          Értékelés Google-on →
+        </a>
+        <a href="/kapcsolat" class="btn btn-secondary">Inkább nekem írok</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.reviews-cta {
+  background: var(--mona-elevated);
+  border-top: 0.5px solid var(--mona-border);
+}
+
+.reviews-cta__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  margin-bottom: var(--space-4);
+}
+
+.reviews-cta__text {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-6);
+}
+
+.reviews-cta__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+</style>

@@ -1,0 +1,110 @@
+---
+// src/components/home/TrustindexReviews.astro
+// Trustindex.io review widget integráció
+//
+// Trustindex egy 3rd party review widget, ami Google / Facebook / saját véleményeket
+// jelenít meg embed-elt scripttel.
+//
+// Használat:
+//  1. trustindex.io regisztráció
+//  2. Widget létrehozása (style + Google connection)
+//  3. A kapott embed kódot beilleszteni vagy a widget URL-t a `widgetUrl` propba
+
+interface Props {
+  /** Trustindex widget URL — formátum: https://cdn.trustindex.io/loader.js?XXXXXXX */
+  widgetUrl?: string;
+  /** Ha nincs megadva, fallback üzenet jelenik meg (dev környezetben) */
+}
+
+const { widgetUrl } = Astro.props;
+---
+
+<section class="reviews section" aria-labelledby="reviews-title">
+  <div class="container">
+    <div class="reviews__intro">
+      <p class="eyebrow">Vélemények</p>
+      <h2 id="reviews-title" class="reviews__title">Vendégeim mondják</h2>
+      <p class="reviews__lead">
+        Olvasd el mit gondolnak a kezelésekről azok, akik már jártak nálam.
+      </p>
+    </div>
+
+    <div class="reviews__widget">
+      {widgetUrl ? (
+        <script type="text/javascript" src={widgetUrl} async></script>
+      ) : (
+        <div class="reviews__placeholder">
+          <p>
+            <strong>Trustindex widget integráció</strong>
+          </p>
+          <p>
+            A Trustindex widget URL-t a komponens <code>widgetUrl</code> prop-jában
+            kell megadni. Példa:
+          </p>
+          <pre><code>{`<TrustindexReviews widgetUrl="https://cdn.trustindex.io/loader.js?XXXXXXX" />`}</code></pre>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+.reviews {
+  background: var(--mona-surface);
+}
+
+.reviews__intro {
+  text-align: center;
+  max-width: 680px;
+  margin-inline: auto;
+  margin-bottom: var(--space-8);
+}
+
+.reviews__intro .eyebrow {
+  margin-bottom: var(--space-3);
+  color: var(--mona-warm);
+}
+
+.reviews__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.75rem, 3vw + 1rem, 2.5rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+  color: var(--mona-text);
+}
+
+.reviews__lead {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+}
+
+.reviews__widget {
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+.reviews__placeholder {
+  padding: var(--space-6);
+  background: var(--mona-elevated);
+  border: 0.5px dashed var(--mona-border);
+  text-align: center;
+  font-size: 14px;
+  color: var(--mona-text-2);
+  line-height: 1.6;
+}
+
+.reviews__placeholder pre {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--mona-surface);
+  font-family: var(--mona-mono);
+  font-size: 12px;
+  text-align: left;
+  overflow-x: auto;
+}
+
+.reviews__placeholder code {
+  font-family: var(--mona-mono);
+}
+</style>

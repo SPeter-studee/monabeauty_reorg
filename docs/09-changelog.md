@@ -6,8 +6,87 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Hozzáadás tervezett
+- _Sprint 3 — Webshop_
+
+---
+
+## [0.5.1] — 2026-04-26 — Sprint 2B (4. kör) — Tartalom finomítás Mónika hangján
+
+### Változott
+- **Mind a 8 szolgáltatás markdown újraírva** Mónika személyes hangján:
+  - Szemöldök tetoválás
+  - Szemöldök laminálás + szempilla lifting
+  - Nanopen kezelés
+  - Arckezelések (7 kezeléstípus, döntési útmutatóval)
+  - Műszempilla
+  - Gyantázás
+  - Szemöldök festés + szempilla festés
+  - Smink
+- **Új struktúra**: `Mitől különleges? / Kinek ajánlott?` (lista) → `Kinek ajánlom / Kinek nem ajánlom` (Mónika hangján, részletes magyarázattal)
+- **Részletes szolgáltatás oldal**: hero kép szekció levéve (`[slug].astro`)
+  - A kártyán már látta a vendég, duplikáció volt
+  - A `heroImageUrl` továbbra is használatos a kártyán + OG meta tag-ben
+  - A részletes oldal a **szövegre fókuszál**
+
+### SEO előny
+- Lényegesen több egyedi tartalom oldalanként (~3-4× hosszabb)
+- Természetes long-tail kulcsszavak ("ki ne csináltassa", "alkalmas-e", "fájdalmas-e")
+- Strukturált információ (kérdés-válasz alapú szekciók)
+
+### Brand alapelvek megerősítve
+- ✅ **Csendes** — kevesebb felkiáltó marketing-szöveg
+- ✅ **Személyes** — Mónika beszél első személyben
+- ✅ **Természetes** — élet- és bőrtípus szerinti tanácsok
+- ✅ **Szakmai** — őszinte ellenjavallatok minden kezelésnél
+
+---
+
+## [0.5.0] — 2026-04-26 — Sprint 2B (3. kör) — Főoldal + jogi oldalak
+
 ### Hozzáadva
-- _A következő statikus oldalak a Sprint 2B 3. körében (galéria, vélemények, jogi oldalak)_
+- **Új Astro Content Collection**: `src/content/promotions/`
+  - Schema: `badge`, `serviceSlug`, `discountPercent`, `startsAt`, `endsAt`, `showOnHomepage`, `ctaText`, `ctaUrl`
+  - Demó akció: `szemoldok-tetovalas-bevezeto.md` (−20% bevezető akció, 2026-04-01 → 2026-05-31)
+- **8 főoldal komponens** (`src/components/home/`):
+  - `HomeHero.astro` — Mónika portré responsive `<picture>` 480/900/main
+  - `BrandPillars.astro` — 4 alapelv (csendes / személyes / természetes / szakmai)
+  - `FeaturedTreatment.astro` — kiemelt szolgáltatás Mónika idézettel
+  - `ActivePromotion.astro` — aktív akció + `SaleCountdown`
+  - `ServicesPreview.astro` — featured szolgáltatások (max 4)
+  - `BlogPreview.astro` — 3 legutolsó cikk
+  - `AboutMonikaTeaser.astro` — Mónika rövid teaser
+  - `TrustindexReviews.astro` — Trustindex.io widget integráció
+- **Új főoldal** (`src/pages/index.astro`) — teljes szekció-sorrend: HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion → ServicesPreview → BlogPreview → AboutMonikaTeaser → TrustindexReviews → NewsletterForm
+- **Header mobile menu drawer kibővítve**:
+  - Foglalás CTA gomb
+  - HU/EN nyelv váltó
+  - Social linkek (Facebook + Instagram, frissített URL-ekkel: monastudiovac)
+  - Telefon, email, cím
+- **9 új statikus oldal**:
+  - `/galeria` — kezelési képek + Instagram CTA
+  - `/velemenyek` — Trustindex widget egész oldal + Google review CTA
+  - `/szalon` — Vác Local SEO oldal Google Maps embed-del
+  - `/aszf` — Általános Szerződési Feltételek
+  - `/adatvedelem` — GDPR Adatkezelési tájékoztató
+  - `/cookies` — Cookie tájékoztató (3 kategóriás magyarázat)
+  - `/szallitas` — FoxPost / GLS / személyes átvétel infó
+  - `/bejelentkezes` — login form (statikus, Sprint 4-ben funkcionálissá)
+  - `/regisztracio` — register form (statikus, Sprint 4-ben funkcionálissá)
+
+### Változott
+- **Content Collections schema** — `promotions` collection hozzáadva
+- **Header.astro mobile menu** drawer-be bekerült a foglalás gomb, lang switcher, social, kontakt
+- **header.css** mobile menu footer szekció CSS
+
+### Megjegyzések
+- A jogi oldalakon `placeholder` szakaszok jelölik a finalizálandó részeket (nyilvántartási szám, adószám, fizetési díjszabás stb.) — ezek a webshop élesítésekor frissítendők
+- A Trustindex widget URL `index.astro` és `velemenyek.astro` oldalakon `TRUSTINDEX_WIDGET_URL = ""` placeholder — cseréld le a Trustindex.io loader URL-jére
+- Login és register formok jelenleg disabled állapotban vannak placeholder üzenettel, Sprint 4-ben funkcionálissá válnak
+
+### Megoldott issue-k
+- ✅ 11. — Header tablet + landscape mobil (mobile menu drawer kibővítve)
+- ✅ 13. — Főoldal kiemelt szolgáltatás + akció szekciók implementálva
 
 ---
 

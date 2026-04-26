@@ -104,14 +104,59 @@ const isActive = (href: string) =>
         </svg>
       </button>
     </div>
+
     <nav class="mobile-menu__nav" aria-label="Mobil menü">
       {navItems.map(item => (
         <a href={item.href} aria-current={isActive(item.href) ? "page" : undefined}>
           {item.label}
         </a>
       ))}
-      <a href="/idopontfoglalas">{t.nav.book}</a>
     </nav>
+
+    <div class="mobile-menu__footer">
+      <a href="/idopontfoglalas" class="btn btn-primary mobile-menu__cta">
+        {t.nav.book}
+      </a>
+
+      <div class="mobile-menu__lang">
+        <a href="/" class={locale === "hu" ? "active" : ""}>HU</a>
+        <span aria-hidden="true">·</span>
+        <a href="/en/" class={locale === "en" ? "active" : ""}>EN</a>
+      </div>
+
+      <div class="mobile-menu__social">
+        <a
+          href="https://www.facebook.com/monastudiovac"
+          target="_blank"
+          rel="noopener"
+          aria-label="Facebook"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
+            <path d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396v8.01z"/>
+          </svg>
+          <span>Facebook</span>
+        </a>
+        <a
+          href="https://www.instagram.com/monastudiovac/"
+          target="_blank"
+          rel="noopener"
+          aria-label="Instagram"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" width="20" height="20">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+          <span>Instagram</span>
+        </a>
+      </div>
+
+      <div class="mobile-menu__contact">
+        <a href="tel:+36209130126">+36 20 913 0126</a>
+        <a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a>
+        <p>2600 Vác, Zrínyi Miklós u. 3.</p>
+      </div>
+    </div>
   </div>
 </header>
 

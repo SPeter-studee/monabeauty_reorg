@@ -1,0 +1,239 @@
+---
+// src/pages/adatvedelem.astro
+// GDPR Adatkezelési tájékoztató
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+const lastUpdated = "2026-04-26";
+---
+
+<BaseLayout
+  title="Adatkezelési tájékoztató — Mona Studio"
+  description="Mona Studio adatkezelési tájékoztató — milyen adatokat kezelünk, milyen célból, mennyi ideig, és milyen jogaid vannak."
+>
+  <PageHero
+    title="Adatkezelési tájékoztató"
+    description={`Utolsó frissítés: ${lastUpdated}`}
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Adatkezelés" }
+    ]}
+  />
+
+  <article class="legal section">
+    <div class="container container-prose">
+
+      <p class="legal__intro">
+        A Mona Studio (üzemeltető: Szabó Mónika e.v., 2600 Vác, Zrínyi Miklós u. 3.) elkötelezett
+        a vásárlók személyes adatainak védelme iránt. Jelen tájékoztató a GDPR (EU 2016/679) és
+        a magyar adatvédelmi jogszabályok alapján készült.
+      </p>
+
+      <h2>1. Adatkezelő adatai</h2>
+      <p>
+        <strong>Név:</strong> Szabó Mónika e.v.<br>
+        <strong>Cím:</strong> 2600 Vác, Zrínyi Miklós u. 3.<br>
+        <strong>Email:</strong> mona@monastudio.hu<br>
+        <strong>Telefon:</strong> +36 20 913 0126
+      </p>
+
+      <h2>2. Milyen adatokat kezelünk?</h2>
+
+      <h3>Webshop megrendelés</h3>
+      <ul>
+        <li>Név, email cím, telefonszám</li>
+        <li>Számlázási és szállítási cím</li>
+        <li>Megrendelés tartalma, fizetési mód</li>
+        <li>IP cím, böngésző adatok (biztonsági célból)</li>
+      </ul>
+
+      <h3>Hírlevél feliratkozás</h3>
+      <ul>
+        <li>Email cím</li>
+        <li>Feliratkozás időpontja, IP cím</li>
+      </ul>
+
+      <h3>Kapcsolat form</h3>
+      <ul>
+        <li>Név, email, telefon (opcionális)</li>
+        <li>Üzenet tartalma</li>
+      </ul>
+
+      <h3>Időpontfoglalás</h3>
+      <ul>
+        <li>Név, email, telefon</li>
+        <li>Választott szolgáltatás, időpont</li>
+        <li>Esetleges egészségügyi információk (allergia, érzékenység) — az adatkezelés
+          jogalapja: a vásárló kifejezett hozzájárulása</li>
+      </ul>
+
+      <h2>3. Milyen jogalappal kezeljük az adatokat?</h2>
+      <ul>
+        <li><strong>Szerződés teljesítése</strong> (GDPR 6. cikk (1) b): megrendelés feldolgozása,
+          szállítás, számlázás</li>
+        <li><strong>Jogi kötelezettség</strong> (GDPR 6. cikk (1) c): számviteli és adózási
+          kötelezettségek (8 év)</li>
+        <li><strong>Hozzájárulás</strong> (GDPR 6. cikk (1) a): hírlevél, marketing cookie-k,
+          egészségügyi adatok</li>
+        <li><strong>Jogos érdek</strong> (GDPR 6. cikk (1) f): csalás megelőzés, biztonság</li>
+      </ul>
+
+      <h2>4. Milyen sokáig tároljuk az adatokat?</h2>
+      <ul>
+        <li><strong>Megrendelési adatok:</strong> 8 év (számviteli törvény)</li>
+        <li><strong>Hírlevél:</strong> a leiratkozásig</li>
+        <li><strong>Kapcsolat form:</strong> 1 év</li>
+        <li><strong>Időpontfoglalás:</strong> 5 év</li>
+        <li><strong>Cookie-k:</strong> a beállításodban megadott időtartamig</li>
+      </ul>
+
+      <h2>5. Kinek adjuk át az adatokat?</h2>
+      <p>
+        Csak a szolgáltatás teljesítéséhez szükséges harmadik feleknek:
+      </p>
+      <ul>
+        <li><strong>Resend</strong> (email küldés) — Egyesült Államok, Standard Contractual Clauses</li>
+        <li><strong>Mailchimp</strong> (hírlevél) — Egyesült Államok, SCC</li>
+        <li><strong>Cloudflare</strong> (tárhely, CDN) — Egyesült Államok / EU régiók, SCC</li>
+        <li><strong>FoxPost / GLS</strong> (szállítás) — Magyarország</li>
+        <li><strong>Stripe / SimplePay</strong> (fizetés) — Európa</li>
+        <li><strong>Setmore</strong> (időpontfoglalás) — Egyesült Államok, SCC</li>
+        <li><strong>Google</strong> (Analytics, ha hozzájárulsz) — Egyesült Államok, SCC</li>
+      </ul>
+      <p class="legal__placeholder">
+        <em>[A pontos szolgáltatói lista a webshop élesítésekor frissítendő]</em>
+      </p>
+
+      <h2>6. Milyen jogaid vannak?</h2>
+      <ul>
+        <li><strong>Tájékoztatás joga</strong> — bármikor kérheted az adataidról szóló információt</li>
+        <li><strong>Helyesbítés joga</strong> — pontatlan adatok javítása</li>
+        <li><strong>Törlés joga</strong> ("elfeledtetéshez való jog")</li>
+        <li><strong>Adatkezelés korlátozása</strong></li>
+        <li><strong>Adathordozhatóság</strong> — adataid másik szolgáltatóhoz vihetők</li>
+        <li><strong>Tiltakozás</strong> — jogos érdeken alapuló adatkezelés ellen</li>
+        <li><strong>Hozzájárulás visszavonása</strong> — bármikor</li>
+      </ul>
+      <p>
+        Bármely jog gyakorlásához írj a <a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a>
+        címre. 30 napon belül érdemben válaszolok.
+      </p>
+
+      <h2>7. Cookie kezelés</h2>
+      <p>
+        A weboldal cookie-kat használ a működéshez (szükséges), forgalomelemzéshez (analytics)
+        és marketing célokra. A cookie-kat 3 kategóriába soroljuk, és a beállításaidat bármikor
+        módosíthatod a footerben található "Cookie beállítások" gombbal.
+      </p>
+      <p>
+        Részletes információ: <a href="/cookies">Cookie tájékoztató</a>
+      </p>
+
+      <h2>8. Panasz benyújtása</h2>
+      <p>
+        Adatvédelmi sérelem esetén a Nemzeti Adatvédelmi és Információszabadság Hatóságnál
+        (NAIH) tehetsz panaszt:
+      </p>
+      <p>
+        <strong>Cím:</strong> 1055 Budapest, Falk Miksa utca 9-11.<br>
+        <strong>Telefon:</strong> +36 1 391 1400<br>
+        <strong>Email:</strong> ugyfelszolgalat@naih.hu<br>
+        <strong>Web:</strong> <a href="https://naih.hu">naih.hu</a>
+      </p>
+
+      <h2>9. Biztonsági intézkedések</h2>
+      <p>
+        Adataidat HTTPS titkosítással védjük, jelszavakat sózott hash-eléssel tároljuk,
+        és csak az érintett személyek férnek hozzá. A szerverek Cloudflare biztonsági
+        szolgáltatásokkal védettek (DDoS protection, WAF).
+      </p>
+
+      <p class="legal__updated">
+        Utolsó frissítés: <strong>{lastUpdated}</strong>
+      </p>
+
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+/* Ugyanaz mint az aszf.astro-ban — a frontmatter import miatt nem közös */
+.legal__intro {
+  font-style: italic;
+  color: var(--mona-text-2);
+  border-block: 0.5px solid var(--mona-border);
+  padding-block: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.legal h2 {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.25rem, 1.5vw + 0.75rem, 1.5rem);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+.legal h3 {
+  font-family: var(--mona-serif);
+  font-size: 1.125rem;
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
+}
+
+.legal p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+  margin-bottom: var(--space-4);
+}
+
+.legal ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-4);
+}
+
+.legal ul li {
+  position: relative;
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-2);
+  line-height: 1.6;
+}
+
+.legal ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 1px;
+  background: var(--mona-warm);
+}
+
+.legal a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal__placeholder {
+  background: rgba(184, 90, 60, 0.05);
+  border-left: 2px solid var(--mona-sale);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  color: var(--mona-text-2);
+  margin-block: var(--space-4);
+}
+
+.legal__updated {
+  margin-top: var(--space-10);
+  padding-top: var(--space-5);
+  border-top: 0.5px solid var(--mona-border);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  text-align: center;
+}
+</style>

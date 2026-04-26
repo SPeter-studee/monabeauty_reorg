@@ -93,20 +93,6 @@ const ogImage = heroImageUrl
     align="left"
   />
 
-  {heroImageUrl && (
-    <div class="service-detail__hero">
-      <div class="container container-prose">
-        <img
-          src={heroImageUrl}
-          alt={heroImageAlt ?? title}
-          class="service-detail__hero-image"
-          loading="eager"
-          decoding="async"
-        >
-      </div>
-    </div>
-  )}
-
   <article class="service-detail section">
     <div class="container container-prose">
 
@@ -155,17 +141,6 @@ const ogImage = heroImageUrl
 </BaseLayout>
 
 <style>
-.service-detail__hero {
-  margin-block: var(--space-6) var(--space-8);
-}
-
-.service-detail__hero-image {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: var(--radius-none);
-}
-
 .service-detail__meta {
   display: flex;
   flex-wrap: wrap;

@@ -1,0 +1,164 @@
+---
+// src/components/home/FeaturedTreatment.astro
+// Kiemelt szolgáltatás (alapból: szemöldök tetoválás — Mónika legfontosabb)
+// A featuredSlug prop átadásával más szolgáltatás is kiemelhető
+
+import { getEntry } from "astro:content";
+
+interface Props {
+  featuredSlug?: string;
+}
+
+const { featuredSlug = "szemoldok-tetovalas" } = Astro.props;
+const treatment = await getEntry("services", featuredSlug);
+---
+
+{treatment && (
+  <section class="featured-treatment section" aria-labelledby="featured-treatment-title">
+    <div class="container">
+      <div class="featured-treatment__grid">
+
+        <figure class="featured-treatment__figure">
+          {treatment.data.heroImageUrl && (
+            <img
+              src={treatment.data.heroImageUrl}
+              alt={treatment.data.heroImageAlt ?? treatment.data.title}
+              class="featured-treatment__image"
+              loading="lazy"
+              decoding="async"
+            >
+          )}
+        </figure>
+
+        <div class="featured-treatment__content">
+          <p class="eyebrow featured-treatment__kicker">Mónika kiemelt szolgáltatása</p>
+          <h2 id="featured-treatment-title" class="featured-treatment__title">
+            {treatment.data.title}
+          </h2>
+          <p class="featured-treatment__quote">
+            „Az arcformához igazított, természetes szemöldök az egyik legfontosabb dolog
+            amit egy nőért tehetek. Egy jól megválasztott forma több mint smink — magabiztosság."
+          </p>
+          <p class="featured-treatment__signature">— Szabó Mónika</p>
+
+          <p class="featured-treatment__description">
+            {treatment.data.shortDescription}
+          </p>
+
+          <div class="featured-treatment__actions">
+            <a
+              href={`/szolgaltatasok/${treatment.slug}`}
+              class="btn btn-primary"
+            >
+              Részletek és időpont
+            </a>
+            <a href="/galeria" class="btn-link">Galéria megtekintése →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+.featured-treatment {
+  background: var(--mona-elevated);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.featured-treatment__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  align-items: center;
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .featured-treatment__grid {
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--space-12);
+  }
+}
+
+.featured-treatment__figure {
+  margin: 0;
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .featured-treatment__figure {
+    order: 0;
+  }
+}
+
+.featured-treatment__image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-treatment__kicker {
+  margin-bottom: var(--space-4);
+  color: var(--mona-warm);
+}
+
+.featured-treatment__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.75rem, 3.5vw + 1rem, 3rem);
+  line-height: 1.1;
+  color: var(--mona-text);
+  margin-bottom: var(--space-5);
+}
+
+.featured-treatment__quote {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: clamp(1.125rem, 1.5vw + 0.75rem, 1.375rem);
+  line-height: 1.5;
+  color: var(--mona-text);
+  border-left: 2px solid var(--mona-warm);
+  padding: var(--space-3) 0 var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.featured-treatment__signature {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-3);
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-6);
+  padding-left: var(--space-4);
+}
+
+.featured-treatment__description {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin-bottom: var(--space-6);
+}
+
+.featured-treatment__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.btn-link {
+  font-family: var(--mona-sans);
+  font-size: 14px;
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 0.5px;
+  transition: color var(--motion-fast) var(--ease);
+}
+
+.btn-link:hover {
+  color: var(--mona-warm);
+}
+</style>

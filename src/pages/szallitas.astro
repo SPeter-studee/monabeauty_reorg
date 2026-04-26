@@ -1,0 +1,217 @@
+---
+// src/pages/szallitas.astro
+// Szállítási információk
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="Szállítás — Mona Studio"
+  description="Mona Studio szállítási információk — FoxPost csomagautomata, GLS házhozszállítás, személyes átvétel Vácon."
+>
+  <PageHero
+    title="Szállítás"
+    description="Hogyan és mikor érkezik meg a megrendelés."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Szállítás" }
+    ]}
+  />
+
+  <section class="shipping section">
+    <div class="container container-prose">
+
+      <p class="shipping__intro">
+        A megrendelt termékeket gyorsan és biztonságosan juttatom el hozzád. Több
+        szállítási mód közül választhatsz a kosár véglegesítésekor.
+      </p>
+
+      <div class="shipping__option">
+        <div class="shipping__option-header">
+          <h2>FoxPost csomagautomata</h2>
+          <span class="badge badge-mona">Legnépszerűbb</span>
+        </div>
+        <p>
+          Több mint 1500 csomagautomata országszerte. A csomag 24-48 órán belül megérkezik
+          az általad választott automatába, és <strong>3 napig őrzik</strong>. Az automatát
+          a kosárban kiválaszthatod.
+        </p>
+        <ul>
+          <li><strong>Szállítási idő:</strong> 1-2 munkanap</li>
+          <li><strong>Csomag mérete:</strong> max. 60×35×35 cm</li>
+          <li><strong>Súlyhatár:</strong> 25 kg</li>
+          <li><strong>Utánvét lehetséges</strong></li>
+        </ul>
+      </div>
+
+      <div class="shipping__option">
+        <h2>GLS házhozszállítás</h2>
+        <p>
+          Magyarország területén bármely címre. A futár 1-2 munkanapon belül kézbesíti
+          a csomagot, jelzéssel az érkezés előtt SMS-ben.
+        </p>
+        <ul>
+          <li><strong>Szállítási idő:</strong> 1-2 munkanap</li>
+          <li><strong>Kézbesítés:</strong> munkanapokon 8:00 - 17:00</li>
+          <li><strong>SMS értesítés</strong> a futár érkezése előtt</li>
+        </ul>
+      </div>
+
+      <div class="shipping__option">
+        <h2>Személyes átvétel</h2>
+        <p>
+          Ha Vácon vagy a környékén vagy, személyesen is átveheted a megrendelést a
+          szalonban — <strong>ingyenesen</strong>.
+        </p>
+        <ul>
+          <li><strong>Cím:</strong> 2600 Vác, Zrínyi Miklós u. 3.</li>
+          <li><strong>Nyitvatartás:</strong> a <a href="/szalon">szalon oldalon</a> található</li>
+          <li><strong>Ingyenes</strong></li>
+        </ul>
+      </div>
+
+      <h2>Szállítási díjak</h2>
+      <p>
+        A pontos szállítási díj a megrendelés végösszegétől és a választott szállítási módtól
+        függ. A kosárban és a pénztár oldalon valós idejű számítást látsz.
+      </p>
+      <p class="shipping__placeholder">
+        <em>[A pontos díjszabás a webshop élesítésekor frissítendő]</em>
+      </p>
+
+      <h2>Mikor adom fel a csomagot?</h2>
+      <p>
+        Munkanapokon 14:00-ig leadott megrendelést <strong>aznap feladom</strong>.
+        Hétvégi vagy ünnepi rendelést a következő munkanapon dolgozom fel.
+      </p>
+
+      <h2>Csomagkövetés</h2>
+      <p>
+        Amint feladtam a csomagot, email-ben kapsz egy követési számot. Ezzel a FoxPost
+        vagy GLS oldalán nyomon követheted hol jár a küldemény.
+      </p>
+
+      <h2>Mi van ha nem kapom meg?</h2>
+      <p>
+        Ha 3 munkanap után sem érkezett meg a csomag, írj egy emailt nekem
+        (<a href="mailto:mona@monastudio.hu">mona@monastudio.hu</a>) vagy hívj
+        (<a href="tel:+36209130126">+36 20 913 0126</a>). Megnézem mi történt és segítek.
+      </p>
+
+      <h2>Külföldre szállítás</h2>
+      <p>
+        Jelenleg <strong>csak Magyarország területén belül</strong> szállítok. Ha külföldre
+        szeretnél rendelni, írj nekem előzetesen egyedi megoldásért.
+      </p>
+
+      <div class="shipping__cta">
+        <a href="/webshop" class="btn btn-primary">Vissza a webshopra</a>
+        <a href="/kapcsolat" class="btn btn-secondary">Kérdésem van</a>
+      </div>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.shipping__intro {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--mona-text);
+  text-align: center;
+  margin-bottom: var(--space-10);
+  padding-block: var(--space-6);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.shipping__option {
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+}
+
+.shipping__option-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.shipping__option h2 {
+  font-family: var(--mona-serif);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.shipping h2 {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  margin-top: var(--space-10);
+  margin-bottom: var(--space-4);
+}
+
+.shipping p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+  margin-bottom: var(--space-4);
+}
+
+.shipping ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-4);
+}
+
+.shipping ul li {
+  position: relative;
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-2);
+  line-height: 1.6;
+}
+
+.shipping ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 1px;
+  background: var(--mona-warm);
+}
+
+.shipping a {
+  color: var(--mona-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.shipping a:hover {
+  color: var(--mona-warm);
+}
+
+.shipping__placeholder {
+  background: rgba(184, 90, 60, 0.05);
+  border-left: 2px solid var(--mona-sale);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  color: var(--mona-text-2);
+}
+
+.shipping__cta {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: 0.5px solid var(--mona-border);
+}
+</style>

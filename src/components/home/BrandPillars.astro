@@ -1,0 +1,132 @@
+---
+// src/components/home/BrandPillars.astro
+// 4 brand alapelv — Mona Studio filozófia
+
+const pillars = [
+  {
+    title: "Csendes",
+    description: "Kevés szín, sok levegő. Nálam nincs futószalag — minden vendégnek van ideje.",
+  },
+  {
+    title: "Személyes",
+    description: "Anamnézissel kezdünk, nem a lemosóval. Nincs két egyforma bőr — nincs sablonkezelés.",
+  },
+  {
+    title: "Természetes",
+    description: "Földszínek, prémium hatóanyagok, Eclado és Mesotica formulák — bőrtípushoz igazítva.",
+  },
+  {
+    title: "Szakmai",
+    description: "20+ év tapasztalat, részletes diagnosztika, őszinte tanácsadás a hosszú távú eredményért.",
+  },
+];
+---
+
+<section class="brand-pillars section">
+  <div class="container">
+    <div class="brand-pillars__intro">
+      <p class="eyebrow">Filozófiám</p>
+      <h2 class="brand-pillars__title">A szépség a bőr egészségéből fakad.</h2>
+      <p class="brand-pillars__lead">
+        Négy alapelv, amik mentén dolgozom — Vácon, a Zrínyi Miklós utcai szalonomban.
+      </p>
+    </div>
+
+    <div class="brand-pillars__grid">
+      {pillars.map((pillar, i) => (
+        <article class="brand-pillars__card">
+          <span class="brand-pillars__number">0{i + 1}</span>
+          <h3 class="brand-pillars__card-title">{pillar.title}</h3>
+          <p class="brand-pillars__card-text">{pillar.description}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+.brand-pillars__intro {
+  text-align: center;
+  max-width: 680px;
+  margin-inline: auto;
+  margin-bottom: var(--space-10);
+}
+
+.brand-pillars__intro .eyebrow {
+  margin-bottom: var(--space-3);
+  color: var(--mona-warm);
+}
+
+.brand-pillars__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.75rem, 3vw + 1rem, 2.5rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+  color: var(--mona-text);
+}
+
+.brand-pillars__lead {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+}
+
+.brand-pillars__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .brand-pillars__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .brand-pillars__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.brand-pillars__card {
+  padding: var(--space-6) var(--space-5);
+  background: var(--mona-elevated);
+  border: 0.5px solid var(--mona-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .brand-pillars__card:hover {
+    border-color: var(--mona-text);
+  }
+}
+
+.brand-pillars__number {
+  font-family: var(--mona-serif);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--mona-warm);
+  letter-spacing: 0.1em;
+}
+
+.brand-pillars__card-title {
+  font-family: var(--mona-serif);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--mona-text);
+  margin: 0;
+}
+
+.brand-pillars__card-text {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  margin: 0;
+}
+</style>

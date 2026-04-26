@@ -1,0 +1,175 @@
+---
+// src/pages/galeria.astro
+// Galéria — kezelési előtte/utána fotók
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+
+// Galéria képek — a /public/images/services és /public/images/sections-ből
+// Mónika ahogy bővít a fotókkal, ide új bejegyzéseket adunk
+const galleryImages = [
+  {
+    src: "/images/services/szemoldok-tetovalas-hero.webp",
+    alt: "Szemöldök tetoválás kezelés",
+    category: "Szemöldök tetoválás"
+  },
+  {
+    src: "/images/services/szemoldok-laminalas-szempilla-lifting-hero.webp",
+    alt: "Szemöldök laminálás és szempilla lifting",
+    category: "Szemöldök laminálás"
+  },
+  {
+    src: "/images/services/hialuron-kezeles-hero.webp",
+    alt: "Nanopen kezelés",
+    category: "Nanopen"
+  },
+  {
+    src: "/images/services/arckezeles-hero.webp",
+    alt: "Arckezelés",
+    category: "Arckezelés"
+  },
+  {
+    src: "/images/services/arckezeles.webp",
+    alt: "Arckezelés masszázs",
+    category: "Arckezelés"
+  },
+  {
+    src: "/images/services/muszempilla-hero.webp",
+    alt: "Műszempilla építés",
+    category: "Műszempilla"
+  },
+  {
+    src: "/images/services/szemoldok-festes-hero.webp",
+    alt: "Szemöldök festés",
+    category: "Szemöldök festés"
+  },
+  {
+    src: "/images/services/gyantazas-hero.webp",
+    alt: "Gyantázás",
+    category: "Gyantázás"
+  },
+  {
+    src: "/images/services/smink-hero.webp",
+    alt: "Esküvői smink",
+    category: "Smink"
+  },
+  {
+    src: "/images/services/smink-hero2.webp",
+    alt: "Smink alkalmi",
+    category: "Smink"
+  },
+];
+---
+
+<BaseLayout
+  title="Galéria — Mona Studio"
+  description="Kezelési eredmények, szalon és Mónika munkáinak képei. Szemöldök tetoválás, arckezelés, smink — Mona Studio, Vác."
+  image="https://monastudio.hu/images/sections/galeria-hero.webp"
+>
+  <PageHero
+    title="Galéria"
+    description="Kezelési eredmények, szalon hangulat és Mónika munkáinak képei."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "Galéria" }
+    ]}
+  />
+
+  <section class="gallery section">
+    <div class="container">
+      <div class="gallery__grid">
+        {galleryImages.map(img => (
+          <figure class="gallery__item">
+            <img
+              src={img.src}
+              alt={img.alt}
+              class="gallery__image"
+              loading="lazy"
+              decoding="async"
+            >
+            <figcaption class="gallery__caption">{img.category}</figcaption>
+          </figure>
+        ))}
+      </div>
+
+      <div class="gallery__cta">
+        <p class="text-secondary">További képek hamarosan — kövesd Instagram oldalamat:</p>
+        <a
+          href="https://www.instagram.com/monastudiovac/"
+          target="_blank"
+          rel="noopener"
+          class="btn btn-secondary"
+        >
+          @monastudiovac →
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.gallery__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .gallery__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+  }
+}
+
+.gallery__item {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: var(--mona-surface);
+  aspect-ratio: 4 / 3;
+}
+
+.gallery__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--motion-base) var(--ease);
+}
+
+@media (hover: hover) {
+  .gallery__item:hover .gallery__image {
+    transform: scale(1.04);
+  }
+}
+
+.gallery__caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(to top, rgba(44, 41, 38, 0.85), transparent);
+  color: var(--mona-elevated);
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gallery__cta {
+  margin-top: var(--space-12);
+  text-align: center;
+}
+
+.gallery__cta p {
+  margin-bottom: var(--space-4);
+}
+</style>

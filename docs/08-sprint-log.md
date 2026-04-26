@@ -197,30 +197,111 @@ A Mona Studio V2 projekt sprint naplója — minden sprint mit tartalmazott, mib
 
 ---
 
-## ⏳ Sprint 2B (3. kör) — Maradék statikus oldalak
+## ✅ Sprint 2B (3. kör) — Főoldal + jogi oldalak + responsive fix
 
-**Cél**: Vélemények, galéria, jogi oldalak, főoldal bővítés.
+**Időszak**: 2026-04-26  
+**Cél**: Vélemények, galéria, jogi oldalak, főoldal teljes bővítés akcióval, responsive header fix.
 
-### Mit fogunk építeni
+### Mit építettünk
 
-- `/galeria` — fotó gallery (Mónika fotói, kezelési előtt-utáni)
-- `/velemenyek` — vendég vélemények (statikus markdown vagy D1-ben — eldöntendő)
-- `/szalon` — Vác Local SEO oldal
-- `/aszf` — Általános Szerződési Feltételek
-- `/adatvedelem` — GDPR / privacy policy
-- `/cookies` — Cookie tájékoztató
-- `/szallitas` — FoxPost / GLS infó
-- `/bejelentkezes`, `/regisztracio` — login form (Sprint 4-ben funkcionálissá)
-- `/500` — egyedi 500 hibaoldal
+**Új Astro Content Collection**:
+- `src/content/promotions/` — markdown akciónaptár schema-val (`badge`, `serviceSlug`, `discountPercent`, `startsAt`, `endsAt`, `showOnHomepage`, `ctaText`, `ctaUrl`)
+- Demó akció: `szemoldok-tetovalas-bevezeto.md` (−20% bevezető, 2026-04-01 → 2026-05-31)
 
-**Főoldal bővítés:**
-- `HomeHero.astro` — Mónika + CTA
-- `BrandPillars.astro` — 4 alapelv (csendes/személyes/természetes/szakmai)
-- `ServicesPreview.astro` — 3-4 kiemelt szolgáltatás
-- `ShopPreview.astro` — Mónika ajánlja termékek (Sprint 3 után élő adat)
-- `BlogPreview.astro` — legutolsó 3 cikk
-- `Breadcrumb.astro`
-- `SocialBar.astro`
+
+**Új főoldal komponensek** (`src/components/home/`):
+- `HomeHero.astro` — Mónika portré responsive `<picture>` 480/900/main + signature
+- `BrandPillars.astro` — 4 alapelv kártya (csendes/személyes/természetes/szakmai)
+- `FeaturedTreatment.astro` — kiemelt szolgáltatás Mónika idézettel (szemöldök tetoválás default)
+- `ActivePromotion.astro` — aktuális akció + `SaleCountdown` integráció (csak ha aktív)
+- `ServicesPreview.astro` — featured szolgáltatások (max 4)
+- `BlogPreview.astro` — 3 legutolsó cikk
+- `AboutMonikaTeaser.astro` — Mónika rövid teaser link a /rolam oldalra
+- `TrustindexReviews.astro` — Trustindex.io widget integráció (widgetUrl prop)
+
+**Új főoldal** (`src/pages/index.astro`) szekció-sorrend:
+```
+HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion
+→ ServicesPreview → BlogPreview → AboutMonikaTeaser
+→ TrustindexReviews → NewsletterForm
+```
+
+**Header responsive fix** (TODO 11. issue):
+- Mobile menu drawer bővítve: foglalás CTA gomb, HU/EN switcher, social linkek (FB+IG), telefon, email, cím
+- Mobile menu footer szekció CSS-sel a `header.css`-ben
+- A jelenlegi 1024px breakpoint megfelelő (tablet portrait + mobil → hamburger, desktop → teljes nav)
+
+**Maradék statikus oldalak**:
+- `/galeria` — kezelési képek galéria + Instagram link
+- `/velemenyek` — Trustindex widget egész oldal + Google review CTA
+- `/szalon` — Vác Local SEO oldal Google Maps embed-del + nyitvatartással + környékbeli települések
+- `/aszf` — Általános Szerződési Feltételek (11 szakasz, placeholder szakaszokkal a finalizáláshoz)
+- `/adatvedelem` — GDPR Adatkezelési tájékoztató (9 szakasz)
+- `/cookies` — Cookie tájékoztató (3 kategóriás magyarázat)
+- `/szallitas` — FoxPost / GLS / személyes átvétel infó
+- `/bejelentkezes` — login form (statikus, Sprint 4-ben funkcionálissá)
+- `/regisztracio` — register form (statikus, Sprint 4-ben funkcionálissá)
+
+### Döntések
+
+- **Akciók markdown alapon** (most), Sprint 5-ben admin felület migrálhatja D1-be
+- **Trustindex widget** vendég véleményekhez — 3rd party, embed scripttel; widgetUrl prop a komponensben (placeholder ha üres)
+- **Login/register oldalak már most** — statikus formok placeholder-rel, hogy a UX teljes legyen, Sprint 4-ben kapnak funkciót
+- **Jogi oldalak placeholder-ekkel** — nyilvántartási szám, adószám, fizetési szolgáltatók, díjszabás → finalizálandó éles indulás előtt
+- **Mobile menu drawer kiterjesztve** — foglalás gomb + nyelv váltó + social + kapcsolat egy helyen
+- **Galéria most a meglévő szolgáltatás képeket használja** — később kezelési előtte/utána fotók is bekerülnek
+
+### Fájlok (új + módosítás)
+
+- 1 új Content Collection (promotions)
+- 1 demó markdown akció
+- 8 új főoldal komponens
+- 1 új főoldal (index.astro újraírva)
+- 9 új statikus oldal (galéria, vélemények, szalon, aszf, adatvedelem, cookies, szallitas, bejelentkezes, regisztracio)
+- Header.astro mobile menu drawer bővítve
+- header.css mobile menu footer szekció hozzáadva
+- src/content/config.ts — promotions schema
+
+---
+
+## ✅ Sprint 2B (4. kör) — Tartalom finomítás Mónika hangján
+
+**Időszak**: 2026-04-26  
+**Cél**: A 8 szolgáltatás oldal szövegeinek átírása Mónika személyes hangján, "Kinek ajánlom / Kinek nem ajánlom" struktúrára.
+
+### Mit építettünk
+
+**Mind a 8 szolgáltatás oldal markdown újraírva**:
+- `szemoldok-tetovalas.md` — szálazás vs ombre Mónika tapasztalatával + 5/6 javallat-ellenjavallat
+- `szemoldok-laminalas-szempilla-lifting.md` — összevonva, kombinált kezelésként
+- `nanopen-kezeles.md` — szakmai magyarázat miért hatékonyabb (London Beauty por aktiválás)
+- `arckezelesek.md` — 7 kezelés egyenként Mónika hangján, döntési útmutatóval a végén
+- `muszempilla.md` — őszinte (nem mindenkinek való), 1D/3D/5D/7D életstílus szerint
+- `gyantazas.md` — patron vs wax választás bőrtípus szerint, mire figyelek
+- `szemoldok-szempilla-festes.md` — pozícionálva mint "belépő szint" a szemöldök-világba
+- `smink.md` — nem fed, hanem kiemel; egyedi árazás indoklással
+
+**Részletes szolgáltatás oldal struktúra változás** (`[slug].astro`):
+- **Hero kép levétel** — a kártyán már látta a vendég, itt felesleges duplikáció
+- A `heroImageUrl` mező marad a frontmatter-ben (kártya + OG meta tag használja)
+- A részletes oldal a **szövegre fókuszál**
+
+### Döntések
+
+- **Mónika E-E-A-T hang** — első személyű, személyes, szakmai őszinteséggel
+- **"Kinek nem ajánlom" szekció kötelező** — Mónika filozófiájának része ("ha nem fog segíteni, megmondom")
+- **Concrete tippek és figyelmeztetések** — terhesség, gyógyszerek, érzékenység rögzítve
+- **Folyamat leírása** — vendégeknek jó tudni mit várhatnak (időtartam, fájdalom, utógondozás)
+- **Hero kép a részletes oldalról levéve** — letisztultabb, szöveg-fókuszú UX
+
+### SEO előny
+- Lényegesen több egyedi tartalom oldalanként (~3-4× hosszabb)
+- Természetes long-tail kulcsszavak ("ki ne csináltassa", "alkalmas-e", "fájdalmas-e")
+- Strukturált information (kérdés-válasz alapú szekciók)
+
+### Fájlok (módosítás)
+- 8 markdown újraírva (`src/content/services/*.md`)
+- `src/pages/szolgaltatasok/[slug].astro` — hero kép szekció + CSS levéve
 
 ---
 
@@ -347,7 +428,8 @@ A Mona Studio V2 projekt sprint naplója — minden sprint mit tartalmazott, mib
 | Sprint 2A | 2026-04-25 | ✅ Kész | 8 új + 5 módosítás |
 | Sprint 2B (1. kör) | 2026-04-26 | ✅ Kész | 13 új + 3 módosítás |
 | Sprint 2B (2. kör) | 2026-04-26 | ✅ Kész | 11 új |
-| Sprint 2B (3. kör) | TBD | ⏳ | 10+ |
+| Sprint 2B (3. kör) | 2026-04-26 | ✅ Kész | 19 új |
+| Sprint 2B (4. kör) | 2026-04-26 | ✅ Kész | 8 átírás |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

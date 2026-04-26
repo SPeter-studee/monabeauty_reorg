@@ -1,85 +1,42 @@
 ---
 // src/pages/index.astro
+// Mona Studio főoldal
 
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import { getTranslations } from "@/i18n/utils";
+import HomeHero from "@/components/home/HomeHero.astro";
+import BrandPillars from "@/components/home/BrandPillars.astro";
+import FeaturedTreatment from "@/components/home/FeaturedTreatment.astro";
+import ActivePromotion from "@/components/home/ActivePromotion.astro";
+import ServicesPreview from "@/components/home/ServicesPreview.astro";
+import BlogPreview from "@/components/home/BlogPreview.astro";
+import AboutMonikaTeaser from "@/components/home/AboutMonikaTeaser.astro";
+import TrustindexReviews from "@/components/home/TrustindexReviews.astro";
+import NewsletterForm from "@/components/common/NewsletterForm.astro";
 
-const t = getTranslations("hu");
+// Trustindex widget URL — ha üres, placeholder jelenik meg (dev jelzés)
+// TODO: cseréld le az igazi Trustindex loader URL-jére (lásd trustindex.io)
+const TRUSTINDEX_WIDGET_URL = ""; // pl. "https://cdn.trustindex.io/loader.js?XXXXX"
 ---
 
 <BaseLayout
   title="Mona Studio — A szépség benned van"
-  description="Szabó Mónika kozmetikus webshopja és szalonja Vácon. Prémium kozmetikumok személyes ajánlással."
+  description="Prémium kozmetikai kezelések Vácon — Szabó Mónika 20+ év szakmai tapasztalattal. Szemöldök tetoválás, arckezelés, nanopen, gyantázás és további szolgáltatások."
 >
+  <HomeHero />
 
-  <!-- Hero szekció -->
-  <section class="hero section">
-    <div class="container hero__inner">
-      <p class="eyebrow hero__kicker">{t.home.hero_kicker}</p>
-      <h1 class="hero__title">{t.home.hero_title}</h1>
-      <p class="hero__blurb">{t.home.hero_blurb}</p>
-      <div class="hero__actions">
-        <a href="/idopontfoglalas" class="btn btn-primary">{t.home.hero_cta_book}</a>
-        <a href="/webshop" class="btn btn-secondary">{t.home.hero_cta_shop}</a>
-      </div>
-    </div>
-  </section>
+  <BrandPillars />
 
-  <!-- Példa: Mónika ajánlása -->
-  <section class="section">
-    <div class="container container-text">
-      <p class="eyebrow text-center mb-4">Mónika ajánlása</p>
-      <h2 class="text-center mb-6">A hónap kiemelt termékei</h2>
-      <p class="text-center text-secondary mb-8">
-        Több mint 20 év tapasztalat alatt megtanultam, mely márkák és termékek
-        adnak valódi eredményt. Az alábbi válogatás személyes ajánlásom alapján készült.
-      </p>
-    </div>
-  </section>
+  <FeaturedTreatment featuredSlug="szemoldok-tetovalas" />
 
+  <ActivePromotion />
+
+  <ServicesPreview />
+
+  <BlogPreview />
+
+  <AboutMonikaTeaser />
+
+  <TrustindexReviews widgetUrl={TRUSTINDEX_WIDGET_URL} />
+
+  <NewsletterForm />
 </BaseLayout>
-
-<style>
-.hero {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  background: linear-gradient(180deg, var(--mona-bg) 0%, var(--mona-surface) 100%);
-}
-
-.hero__inner {
-  max-width: var(--container-text);
-  text-align: center;
-}
-
-.hero__kicker {
-  margin-bottom: var(--space-4);
-  color: var(--mona-text-3);
-}
-
-.hero__title {
-  font-family: var(--mona-serif);
-  font-size: clamp(2.5rem, 8vw + 1rem, 4.5rem);
-  line-height: 1.05;
-  margin-bottom: var(--space-5);
-}
-
-.hero__blurb {
-  font-size: 1.0625rem;
-  line-height: 1.7;
-  color: var(--mona-text-2);
-  max-width: 560px;
-  margin: 0 auto var(--space-8);
-}
-
-.hero__actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-@media (min-width: 1024px) {
-  .hero { min-height: 80vh; }
-}
-</style>

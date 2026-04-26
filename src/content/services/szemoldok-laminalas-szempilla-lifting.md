@@ -4,51 +4,42 @@ description: "Természetes, mégis látványos eredmény — dúsabb szemöldök
 shortDescription: "Tartós formázás és ívelés a saját szálakkal — természetes, mégis hangsúlyos."
 icon: "sparkles"
 heroImageUrl: "/images/services/szemoldok-laminalas-szempilla-lifting-hero.webp"
-heroImageAlt: "Szemöldök laminálás és szempilla lifting eredménye — előtte és utána"
+heroImageAlt: "Szemöldök laminálás és szempilla lifting eredménye"
 sortOrder: 20
 featured: true
 ---
 
-Természetes, mégis látványos eredmény — dúsabb szemöldök és szempilla, vegyszerek nélkül. A kezelések tartósan emelik, formázzák és rendezik a szálakat.
+Sok vendégem szeretne dúsabb szemöldököt vagy ívesebb szempillát, de **nem akar tetoválást vagy műszempillát**. Nekik ez a két kezelés tökéletes — a saját szálaikat hozzuk a legjobb formába, vegyszer nélkül, fájdalmatlanul.
 
-## Szemöldök laminálás
+A laminálást és a liftinget gyakran egyszerre csinálom — egy alkalom alatt mindkettő végezhető. Ez a leggyakoribb választás, mert egységesen rendezi a tekintetet.
 
-A szemöldök laminálás egy modern, látványos kezelés, amely rendezi és formázza a szemöldök szálait, így dúsabb, strukturáltabb és ápolt megjelenést biztosít. A szálak egy irányba kerülnek, ezáltal a szemöldök teltebbnek és karakteresebbnek hat.
+## Mi történik a kezelés alatt
 
-A kezelés eredménye természetes, mégis hangsúlyos — a szemöldök formája kiemeli az arcot és nyitottabbá teszi a tekintetet.
+### Szemöldök laminálás
+A szálakat egy lágy formuláva a számodra ideális irányba "fésülöm" és rögzítem. Ez azt jelenti, hogy az "összevissza" növő szálak rendezetten egy irányba fognak feküdni, így a szemöldököd **dúsabbnak és szabályosabbnak** tűnik. Ha festést is kérsz, ezt a formula behatása után végzem el.
 
-### Mitől különleges?
+### Szempilla lifting
+A saját pilláidat egy szilikon "betétre" rögzítem és felfelé ívelem. A végeredmény: hosszabbnak ható, ívelt pillák — **mintha mascara lenne rajtad, csak nincs**. Festéssel kombinálva sötétebb is lesz.
 
-- dúsabb, rendezettebb szemöldök
-- természetes, mégis formázott hatás
-- tartós, több hétig látható eredmény
-- könnyen kezelhető szemöldök a mindennapokban
-- ápolt, esztétikus megjelenés
+Mindkét kezelés **5-6 hétig** tart, attól függően milyen gyorsan nő a szőrzeted.
 
-### Kinek ajánlott?
+## Kinek ajánlom
 
-- rendezetlen, lefelé növő szálak esetén
-- ritkább szemöldöknél
-- természetes, mégis hangsúlyos hatásra
-- smink nélküli, ápolt megjelenéshez
+- **Ha lefelé nőnek a szempilláid** és nem szereted a hajsütővasat vagy a kuncsaftot.
+- **Ha rendetlen a szemöldököd** és minden reggel valami zselével vagy szappannal próbálod rendbe tenni.
+- **Ha allergiás vagy a műszempilla ragasztóra** vagy nem akarod vállalni az utántöltést.
+- **Ha most ismerkedsz az ápolt szemöldök gondolatával** — ez egy biztonságos, kockázatmentes belépő.
+- **Ha alkalomra készülsz** (esküvő, fotózás, nyaralás) és szeretnéd ha 4-6 hétig nem kellene foglalkozni vele.
 
-## Szempilla lifting
+## Kinek nem ajánlom
 
-A szempilla lifting egy természetes hatású kezelés, amely megemeli és íveli a saját pillákat, így a tekintet nyitottabbá és ragyogóbbá válik. A kezelés során a pillák tartós ívet kapnak, amely kiemeli a szemeket anélkül, hogy műszempillára lenne szükség.
+- **Ha érzékeny a szemkörnyéked** és minden krémtől viszketni kezd — ilyenkor előbb foltteszttel meggyőződünk hogy nincs reakció.
+- **Ha nemrég sminktetoválást kaptál** — várjunk meg amíg az gyógyul (4-6 hét).
+- **Ha túl rövidek vagy túl törékenyek a szempilláid** — a szempilla lifting nem tudja mit megívelni. Ilyenkor inkább szérummal erősítjük őket előbb.
+- **Ha kemoterápián vagy más gyógyszeres kezelésen vagy** — ami befolyásolhatja a haj- vagy körömnövekedést, beszéljük meg az orvosoddal.
 
-A végeredmény ívelt, hosszabbnak ható pillák és ápolt, nőies megjelenés — akár smink nélkül is.
+## Mit kapsz tőlem
 
-### Mitől különleges?
+A laminálás és a lifting külön-külön 45-60 perces kezelés, együtt kb. 90 perc. **A folyamat alatt csukva van a szemed és kényelmesen pihensz** — sokan elalszanak.
 
-- természetes hatás a saját pillákkal
-- ívelt, nyitott tekintet
-- tartós, több hétig látható eredmény
-- smink nélküli, ápolt megjelenés
-- kényelmes, mindennapi viselet
-
-### Kinek ajánlott?
-
-- egyenes vagy lefelé növő pillák esetén
-- természetes hatás kedvelőinek
-- műszempilla helyett alternatívaként
-- ápolt megjelenéshez smink nélkül
+Ha most jössz először és nem tudod melyik kell — megnézzük együtt és én ajánlok.

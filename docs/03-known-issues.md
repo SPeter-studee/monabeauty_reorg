@@ -551,3 +551,89 @@ src/
 ```
 
 Várom a választ a 10-es kérdésekre, és onnan indul a 2A sprint kódja.
+
+---
+
+## Sprint 2B / 3 közben felmerült problémák (2026-04-26)
+
+### 11. Header responsive — tablet és landscape mobil (TODO Sprint 2B 3. kör)
+
+**Tünet:** A jelenlegi Header csak `768px` breakpointot használ (`hide-mobile` osztály). Ez nem kezeli megfelelően a tablet portrait (768-1023px) és landscape mobil (667-915px) eseteket.
+
+**Megoldási javaslat:**
+- Új breakpoint: `1024px` (tablet portrait → hamburger, desktop → teljes nav)
+- Mobil landscape (768px alatt) → hamburger menü
+- Tablet portrait (768-1023px) → hamburger menü vagy kompakt nav (eldöntendő)
+- Asztali (≥1024px) → teljes nav
+
+**Érintett fájlok:**
+- `src/components/common/Header.astro`
+- `src/styles/components/header.css`
+
+### 12. Social bar — jelenlegi állapot
+
+**Megfontolt döntés:** prémium brand-eknél (Kiehl's, La Mer) a social link diszkrét — csak Footer-ben + Kapcsolat oldalon. Ezért **most ne tegyünk Header-be vagy floating social bar-t**.
+
+**Helyek ahol látszanak / látszani fognak:**
+- ✅ Footer (jelenleg ott van, FB + IG ikonokkal)
+- ✅ `/kapcsolat` oldal (Sprint 2B 1. körben dedikált szekció)
+- 🟡 Mobile menu drawer (TODO Sprint 2B 3. kör — érdemes lenne hozzáadni)
+
+**Aktualizált social URL-ek (2026-04-26):**
+- Facebook: `https://www.facebook.com/monastudiovac`
+- Instagram: `https://www.instagram.com/monastudiovac/`
+
+### 13. Főoldal — kiemelt kezelés és akció szekciók (TODO Sprint 2B 3. kör)
+
+**Cél:** A főoldalon legyen egy **kiemelt kezelés** szekció (pl. Mónika legfontosabb szolgáltatása: szemöldök tetoválás), és egy **aktuális akció** szekció `SaleCountdown` időzítővel.
+
+**Adatforrás stratégia:**
+
+**A) Markdown alapú akciónaptár (most javasolt):**
+```
+src/content/promotions/
+└── tavaszi-arckezeles.md
+    ---
+    title: "Tavaszi arckezelés akció"
+    service: "arckezelesek"
+    discount: 20
+    startsAt: 2026-04-01
+    endsAt: 2026-05-15
+    showOnHomepage: true
+    ---
+```
+A főoldal lekéri a most aktívat (mai dátum a `startsAt` és `endsAt` között) → `SaleCountdown` mutatja.
+
+**B) D1 alapú akciókezelés (Sprint 5):**
+Az admin felületen Mónika hozhat létre akciókat kattintással. Most még overkill.
+
+**Javaslat:** A) most, és Sprint 5-ben átalakítjuk B-re vagy hibridre.
+
+**Tervezett főoldali szekció-sorrend:**
+```
+HERO (Mónika portré)
+↓
+BRAND PILLARS (4 alapelv)
+↓
+⭐ KIEMELT KEZELÉS (Szemöldök tetoválás — Mónika legfontosabb)
+↓
+🎯 AKTUÁLIS AKCIÓ (markdown-ból + countdown)
+↓
+SERVICES PREVIEW (3-4 kártya)
+↓
+SHOP PREVIEW (Sprint 3 után élő adat)
+↓
+BLOG PREVIEW (3 cikk)
+↓
+ABOUT MONIKA (rövid + link a /rolam-ra)
+↓
+NEWSLETTER
+```
+
+**Új komponensek (Sprint 2B 3. körben):**
+- `FeaturedTreatment.astro` — kiemelt kezelés Mónika hangján
+- `ActivePromotion.astro` — aktuális akció + SaleCountdown integráció
+- `PromotionCollection` — Astro Content Collection schema
+
+**Új mappa:**
+- `src/content/promotions/` — markdown akciók

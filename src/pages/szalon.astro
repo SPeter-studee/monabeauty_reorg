@@ -1,0 +1,184 @@
+---
+// src/pages/szalon.astro
+// Szalon oldal — Vác Local SEO
+
+export const prerender = true;
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHero from "@/components/common/PageHero.astro";
+---
+
+<BaseLayout
+  title="A szalon — Mona Studio Vác"
+  description="Mona Studio kozmetikai szalon Vácon, a Zrínyi Miklós utcában. Modern berendezés, prémium hatóanyagok, csendes és nyugodt környezet."
+>
+  <PageHero
+    title="A szalon"
+    description="Csendes, nyugodt környezet — Vác szívében, a Zrínyi Miklós utcában."
+    breadcrumbs={[
+      { label: "Főoldal", href: "/" },
+      { label: "A szalon" }
+    ]}
+  />
+
+  <section class="salon section">
+    <div class="container container-prose">
+
+      <div class="salon__intro">
+        <p>
+          A Mona Studio Vácon, a Zrínyi Miklós utca 3. szám alatt található — könnyen
+          megközelíthető helyen, csendes, nyugodt környezetben. A szalon kifejezetten arra
+          lett kialakítva, hogy a vendégek minden alkalommal teljesen kikapcsolódhassanak
+          a hétköznapok zaja alól.
+        </p>
+      </div>
+
+      <h2>Hogyan találsz meg?</h2>
+      <p>
+        <strong>Cím:</strong> 2600 Vác, Zrínyi Miklós u. 3.
+      </p>
+      <p>
+        Vác központjában találsz, könnyen elérhető tömegközlekedéssel és autóval is.
+        Parkolás a környékben utcán biztosított.
+      </p>
+
+      <div class="salon__map">
+        <iframe
+          src="https://www.google.com/maps?q=Mona+Studio+V%C3%A1c+Zr%C3%ADnyi+Mikl%C3%B3s+u.+3&output=embed"
+          width="100%"
+          height="400"
+          style="border:0;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Mona Studio Vác — Google Maps"
+        ></iframe>
+      </div>
+
+      <h2>Nyitvatartás</h2>
+      <ul class="salon__hours">
+        <li><span>Hétfő</span><span>13:00 – 19:00</span></li>
+        <li><span>Kedd</span><span>08:00 – 14:00</span></li>
+        <li><span>Szerda</span><span>13:00 – 19:00</span></li>
+        <li><span>Csütörtök</span><span>13:00 – 19:00</span></li>
+        <li><span>Péntek</span><span>08:00 – 14:00</span></li>
+        <li><span>Szombat</span><span class="text-secondary">zárva</span></li>
+        <li><span>Vasárnap</span><span class="text-secondary">zárva</span></li>
+      </ul>
+
+      <h2>Kit szolgálunk ki?</h2>
+      <p>
+        Vác mellett <strong>Budapestről</strong>, valamint a környékbeli településekről
+        (Verőce, Sződ, Dunakeszi, Göd, Vácrátót) is rendszeresen érkeznek vendégek.
+        A szalon helyi lokáció, de a hangsúly mindig a kezelésen és vendég komfortján van.
+      </p>
+
+      <h2>Mi különbözteti meg a Mona Studio-t?</h2>
+      <ul>
+        <li><strong>Nincs futószalag rendszer</strong> — minden vendégnek megvan a maga ideje.</li>
+        <li><strong>Anamnézissel kezdünk</strong>, nem a lemosóval.</li>
+        <li><strong>Prémium hatóanyagok</strong> (Eclado, Mesotica, London Beauty).</li>
+        <li><strong>Személyre szabott bőrápolási rutin</strong> — otthoni támogatással.</li>
+        <li><strong>20+ év szakmai tapasztalat</strong>.</li>
+      </ul>
+
+      <div class="salon__cta">
+        <a href="/idopontfoglalas" class="btn btn-primary btn-lg">Időpontfoglalás</a>
+        <a href="/kapcsolat" class="btn btn-secondary">Kapcsolat</a>
+      </div>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.salon__intro {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--mona-text);
+  text-align: center;
+  margin-bottom: var(--space-10);
+  padding-block: var(--space-6);
+  border-block: 0.5px solid var(--mona-border);
+}
+
+.salon h2 {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  margin-top: var(--space-10);
+  margin-bottom: var(--space-4);
+}
+
+.salon p {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--mona-text);
+  margin-bottom: var(--space-4);
+}
+
+.salon strong {
+  font-weight: 500;
+}
+
+.salon ul:not(.salon__hours) {
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-6);
+}
+
+.salon ul:not(.salon__hours) li {
+  position: relative;
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-3);
+  line-height: 1.6;
+}
+
+.salon ul:not(.salon__hours) li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 1px;
+  background: var(--mona-warm);
+}
+
+.salon__map {
+  margin-block: var(--space-6);
+  border: 0.5px solid var(--mona-border);
+}
+
+.salon__map iframe {
+  display: block;
+}
+
+.salon__hours {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-6);
+  background: var(--mona-elevated);
+  padding: var(--space-5);
+  border: 0.5px solid var(--mona-border);
+}
+
+.salon__hours li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--mona-text);
+  padding-block: 4px;
+}
+
+.salon__cta {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-10);
+  padding-top: var(--space-8);
+  border-top: 0.5px solid var(--mona-border);
+}
+</style>

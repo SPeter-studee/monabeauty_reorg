@@ -1,0 +1,83 @@
+---
+// src/components/home/BlogPreview.astro
+// Főoldali blog preview — 3 legutolsó cikk
+
+import { getCollection } from "astro:content";
+import BlogCard from "@/components/blog/BlogCard.astro";
+
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const recent = allPosts
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  .slice(0, 3);
+---
+
+{recent.length > 0 && (
+  <section class="blog-preview section">
+    <div class="container">
+      <div class="blog-preview__intro">
+        <p class="eyebrow">Blog</p>
+        <h2 class="blog-preview__title">Legújabb gondolataim</h2>
+        <p class="blog-preview__lead">
+          Bőrápolási tippek, kezelési útmutatók és szakmai gondolatok.
+        </p>
+      </div>
+
+      <div class="blog-preview__grid">
+        {recent.map(post => <BlogCard post={post} />)}
+      </div>
+
+      <div class="blog-preview__cta">
+        <a href="/blog" class="btn btn-secondary">
+          Az összes cikk →
+        </a>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+.blog-preview__intro {
+  text-align: center;
+  max-width: 680px;
+  margin-inline: auto;
+  margin-bottom: var(--space-10);
+}
+
+.blog-preview__intro .eyebrow {
+  margin-bottom: var(--space-3);
+  color: var(--mona-warm);
+}
+
+.blog-preview__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(1.75rem, 3vw + 1rem, 2.5rem);
+  line-height: 1.15;
+  margin-bottom: var(--space-4);
+}
+
+.blog-preview__lead {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--mona-text-2);
+}
+
+.blog-preview__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .blog-preview__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.blog-preview__cta {
+  text-align: center;
+  margin-top: var(--space-10);
+}
+</style>

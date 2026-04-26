@@ -1,0 +1,155 @@
+---
+// src/components/home/HomeHero.astro
+// Főoldal hero — Mónika portré responsive WebP-vel
+---
+
+<section class="home-hero">
+  <div class="container">
+    <div class="home-hero__grid">
+
+      <div class="home-hero__content">
+        <p class="eyebrow home-hero__kicker">Mona Studio · Vác</p>
+        <h1 class="home-hero__title">A szépség benned van.</h1>
+        <p class="home-hero__subtitle">
+          Húsz év szakmai tapasztalat, személyre szabott bőrápolás és prémium kozmetikai
+          kezelések — egy helyen, ahol Te vagy a fókusz.
+        </p>
+
+        <div class="home-hero__actions">
+          <a href="/idopontfoglalas" class="btn btn-primary btn-lg">Időpontfoglalás</a>
+          <a href="/szolgaltatasok" class="btn btn-secondary">Szolgáltatások</a>
+        </div>
+
+        <div class="home-hero__signature">
+          <span class="home-hero__signature-name">Szabó Mónika</span>
+          <span class="home-hero__signature-role">Kozmetikus</span>
+        </div>
+      </div>
+
+      <figure class="home-hero__figure">
+        <picture>
+          <source
+            media="(max-width: 480px)"
+            srcset="/images/sections/hero-480.webp"
+            type="image/webp"
+          >
+          <source
+            media="(max-width: 900px)"
+            srcset="/images/sections/hero-900.webp"
+            type="image/webp"
+          >
+          <img
+            src="/images/sections/hero-main.webp"
+            alt="Szabó Mónika — Mona Studio kozmetikus, Vác"
+            class="home-hero__image"
+            width="900"
+            height="600"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          >
+        </picture>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+<style>
+.home-hero {
+  padding-block: var(--space-8) var(--space-10);
+  background: linear-gradient(180deg, var(--mona-bg) 0%, var(--mona-surface) 100%);
+}
+
+@media (min-width: 768px) {
+  .home-hero {
+    padding-block: var(--space-12) var(--space-12);
+  }
+}
+
+.home-hero__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  align-items: center;
+  max-width: var(--container-xl);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .home-hero__grid {
+    grid-template-columns: 1fr 1.1fr;
+    gap: var(--space-12);
+  }
+}
+
+.home-hero__kicker {
+  margin-bottom: var(--space-4);
+  color: var(--mona-warm);
+}
+
+.home-hero__title {
+  font-family: var(--mona-serif);
+  font-size: clamp(2.5rem, 6vw + 1rem, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-5);
+  color: var(--mona-text);
+}
+
+.home-hero__subtitle {
+  font-size: clamp(1rem, 1.5vw + 0.5rem, 1.125rem);
+  line-height: 1.65;
+  color: var(--mona-text-2);
+  max-width: 520px;
+  margin-bottom: var(--space-6);
+}
+
+.home-hero__actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-8);
+}
+
+.home-hero__signature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: var(--space-4);
+  border-top: 0.5px solid var(--mona-border);
+  max-width: 240px;
+}
+
+.home-hero__signature-name {
+  font-family: var(--mona-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  color: var(--mona-text);
+}
+
+.home-hero__signature-role {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+}
+
+.home-hero__figure {
+  margin: 0;
+}
+
+.home-hero__image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .home-hero__image {
+    aspect-ratio: 4 / 3;
+  }
+}
+</style>
