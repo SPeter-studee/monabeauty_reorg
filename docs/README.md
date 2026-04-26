@@ -2,7 +2,7 @@
 
 Ez a mappa a projekt **teljes dokumentációját** tartalmazza: stratégiai tervek, architektúra leírások, API referencia, sprint napló és változásnapló.
 
-A fájlok **számozottak** (00–09), így a README index egyezik a fizikai sorrenddel. Cursor-ban hivatkozhatsz rájuk a `@docs/00-architektura.md` szintaxissal.
+A fájlok **számozottak** (00–10), így a README index egyezik a fizikai sorrenddel. Cursor-ban hivatkozhatsz rájuk a `@docs/00-architektura.md` szintaxissal.
 
 ---
 
@@ -27,6 +27,7 @@ A fájlok **számozottak** (00–09), így a README index egyezik a fizikai sorr
 | [07-deployment.md](./07-deployment.md) | Cloudflare setup, bindings, env vars, custom domain, troubleshooting |
 | [08-sprint-log.md](./08-sprint-log.md) | Sprint napló — mit építettünk, miben döntöttünk |
 | [09-changelog.md](./09-changelog.md) | Verziónapló (gépi olvashatóan, semver) |
+| [10-versioning.md](./10-versioning.md) | Verziózási konvenció — semver, bump folyamat, hol látszik a verzió |
 
 ---
 

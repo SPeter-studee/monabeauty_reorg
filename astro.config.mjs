@@ -1,6 +1,15 @@
 // astro.config.mjs
 import { defineConfig } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+// Verzió kiolvasása package.json-ból build-időben
+const pkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL("./package.json", import.meta.url)), "utf-8")
+);
+const APP_VERSION = pkg.version ?? "0.0.0";
+const BUILD_DATE = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
 export default defineConfig({
   site: "https://monastudio.hu",
@@ -33,4 +42,13 @@ export default defineConfig({
   // ── HTML compress + scoped CSS ─────────────────────────────────────────────
   compressHTML: true,
   scopedStyleStrategy: "where",
+
+  // ── Vite — build-time konstansok ────────────────────────────────────────────
+  // Az APP_VERSION és BUILD_DATE futás közben elérhető import.meta.env-en keresztül
+  vite: {
+    define: {
+      "import.meta.env.PUBLIC_APP_VERSION": JSON.stringify(APP_VERSION),
+      "import.meta.env.PUBLIC_BUILD_DATE": JSON.stringify(BUILD_DATE),
+    },
+  },
 });

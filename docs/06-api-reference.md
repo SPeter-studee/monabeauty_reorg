@@ -16,6 +16,37 @@ A Mona Studio V2 backend végpontjai. Minden endpoint **Cloudflare Pages Functio
 
 ## Endpointok
 
+### 🏷️ `GET /api/version`
+
+Alkalmazás verzió + build dátum JSON formátumban. Build-időben beégetett értékek a `package.json`-ből.
+
+**Sprint**: 2B 4. kör  
+**Auth**: nem szükséges  
+**Cache**: 60 másodperc public
+
+#### Request
+```bash
+curl https://monastudio.hu/api/version
+```
+
+#### Response — 200 OK
+```json
+{
+  "name": "Mona Studio",
+  "version": "0.5.1",
+  "buildDate": "2026-04-26",
+  "runtime": "cloudflare-pages",
+  "framework": "astro"
+}
+```
+
+#### Felhasználási területek
+- **Deploy verifikáció**: gyorsan ellenőrizni hogy a legújabb verzió van élesben
+- **Monitoring**: külső monitoring eszközök (UptimeRobot stb.) tudják figyelni
+- **CI/CD**: smoke teszt deploy után — a verzió megegyezik-e a vártval
+
+---
+
 ### 📧 `POST /api/newsletter/subscribe`
 
 Hírlevél feliratkozás Mailchimp double opt-in-nel.

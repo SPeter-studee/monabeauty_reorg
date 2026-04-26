@@ -11,7 +11,41 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.5.1] — 2026-04-26 — Sprint 2B (4. kör) — Tartalom finomítás Mónika hangján
+## [0.5.2] — 2026-04-26 — Sprint 2B (5. kör) — 26 akciónaptár
+
+### Hozzáadva
+- **26 új akció markdown** (`src/content/promotions/`):
+  - Forrás: `MonaStudio_Marketing_Kampanynaptar.xlsx` (5 munkalap)
+  - Mind a 26 ciklus Mónika hangján — "Kinek ajánlom" struktúrával
+  - Tartalom 800-1500 karakter ciklusonként
+  - Frontmatter: badge, serviceSlug, discountPercent, startsAt, endsAt, showOnHomepage, heroImageUrl, ctaText, ctaUrl, sortOrder
+- **Aktuális akció (2026-04-26)**: #1 Tavaszi Frissítés (Arckezelés −15% csomag, ápr 21 - máj 4)
+- **Következő**: #2 Anyák Napja (máj 5 - máj 18)
+
+### Akcióstruktúra
+- **2 hetes ciklusok** — szépségiparban természetes ritmus
+- **Szezonalitás**: PMU főleg ősszel + tél, gyantázás nyár előtt + húsvét, smink alkalmakkor
+- **Bevételi potenciál cimkék**: Magas, Nagyon magas, Közepes
+- **Service slug mapping**: minden akció kötődik egy szolgáltatáshoz (kivéve "Komplex" csomagok)
+
+### Eltávolítva
+- `szemoldok-tetovalas-bevezeto.md` (a régi demó akció) — felülírva az Excel-alapú aktuális #25 Tavaszi PMU-val
+
+### Megjegyzés
+A naptár 2026.04 → 2027.04-ig fedi le az évet. Az `ActivePromotion` komponens automatikusan a most aktívat mutatja a főoldalon (`showOnHomepage: true` + dátumok).
+
+---
+
+## [0.5.1] — 2026-04-26 — Sprint 2B (4. kör) — Tartalom finomítás + verziózás
+
+### Hozzáadva
+- **Verziózás bevezetése a UI-ban**:
+  - `package.json` `version` mező → build-időben beégetve a HTML-be
+  - `astro.config.mjs` Vite `define` plugin: `import.meta.env.PUBLIC_APP_VERSION`, `import.meta.env.PUBLIC_BUILD_DATE`
+  - **Footer verziósor**: `v0.5.1 · SP Design` diszkrét, hover-re kicsit erősebb, tooltip-ben build dátum
+  - **HTML meta tag**: `<meta name="app-version">` és `<meta name="build-date">`
+  - **`GET /api/version`** endpoint — JSON: name, version, buildDate, runtime, framework
+- **Új doksi**: `docs/10-versioning.md` — verziózási konvenció, bump folyamat, hol látszik
 
 ### Változott
 - **Mind a 8 szolgáltatás markdown újraírva** Mónika személyes hangján:
@@ -27,7 +61,8 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 - **Részletes szolgáltatás oldal**: hero kép szekció levéve (`[slug].astro`)
   - A kártyán már látta a vendég, duplikáció volt
   - A `heroImageUrl` továbbra is használatos a kártyán + OG meta tag-ben
-  - A részletes oldal a **szövegre fókuszál**
+- **package.json** verzió: `1.0.0` → `0.5.1` (a tényleges projekt fázis szerint)
+- **package.json** deploy parancs: `monabeauty` → `monabeauty2`
 
 ### SEO előny
 - Lényegesen több egyedi tartalom oldalanként (~3-4× hosszabb)

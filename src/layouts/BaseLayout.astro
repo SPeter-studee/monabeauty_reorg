@@ -45,6 +45,10 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="generator" content={Astro.generator}>
 
+  <!-- Mona Studio app verzió + build dátum (build-időben beégetve) -->
+  <meta name="app-version" content={import.meta.env.PUBLIC_APP_VERSION ?? "0.0.0"}>
+  <meta name="build-date" content={import.meta.env.PUBLIC_BUILD_DATE ?? ""}>
+
   <title>{fullTitle}</title>
   <meta name="description" content={description}>
   {noindex && <meta name="robots" content="noindex, nofollow">}

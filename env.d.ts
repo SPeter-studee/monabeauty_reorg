@@ -3,6 +3,17 @@
 
 type Runtime = import("@astrojs/cloudflare").Runtime<Env>;
 
+// ── Build-time env változók (Vite define) ─────────────────────────────────────
+interface ImportMetaEnv {
+  readonly PUBLIC_APP_VERSION: string;  // pl. "0.5.1"
+  readonly PUBLIC_BUILD_DATE: string;   // pl. "2026-04-26"
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+// ── Cloudflare bindings + env vars (runtime) ──────────────────────────────────
 interface Env {
   // Bindings
   DB: D1Database;
@@ -13,6 +24,9 @@ interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   RESEND_API_KEY: string;
+  MAILCHIMP_API_KEY: string;
+  MAILCHIMP_AUDIENCE_ID: string;
+  MAILCHIMP_SERVER: string;
   FOXPOST_USERNAME: string;
   FOXPOST_PASSWORD: string;
   FOXPOST_API_KEY: string;

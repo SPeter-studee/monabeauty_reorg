@@ -264,10 +264,10 @@ HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion
 
 ---
 
-## ✅ Sprint 2B (4. kör) — Tartalom finomítás Mónika hangján
+## ✅ Sprint 2B (4. kör) — Tartalom finomítás + verziózás
 
 **Időszak**: 2026-04-26  
-**Cél**: A 8 szolgáltatás oldal szövegeinek átírása Mónika személyes hangján, "Kinek ajánlom / Kinek nem ajánlom" struktúrára.
+**Cél**: A 8 szolgáltatás oldal szövegeinek átírása Mónika személyes hangján, és verziózás bevezetése a UI-ban.
 
 ### Mit építettünk
 
@@ -286,6 +286,16 @@ HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion
 - A `heroImageUrl` mező marad a frontmatter-ben (kártya + OG meta tag használja)
 - A részletes oldal a **szövegre fókuszál**
 
+**Verziózás bevezetése**:
+- `package.json` verzió: `1.0.0` → `0.5.1` (tényleges projektfázis)
+- `package.json` deploy parancs: `monabeauty` → `monabeauty2`
+- `astro.config.mjs` — Vite `define` plugin a verzió + build dátum beégetéséhez
+- `env.d.ts` — `ImportMetaEnv` típus a `PUBLIC_APP_VERSION` és `PUBLIC_BUILD_DATE`-hez
+- **Footer verziósor**: `v0.5.1 · SP Design` (diszkrét, jobb oldalt, hover-re kicsit erősebb)
+- **HTML meta tag-ek**: `<meta name="app-version">`, `<meta name="build-date">`
+- **`GET /api/version`** endpoint — JSON: name, version, buildDate, runtime, framework
+- **Új doksi**: `docs/10-versioning.md` — semver konvenció, bump folyamat
+
 ### Döntések
 
 - **Mónika E-E-A-T hang** — első személyű, személyes, szakmai őszinteséggel
@@ -293,15 +303,107 @@ HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion
 - **Concrete tippek és figyelmeztetések** — terhesség, gyógyszerek, érzékenység rögzítve
 - **Folyamat leírása** — vendégeknek jó tudni mit várhatnak (időtartam, fájdalom, utógondozás)
 - **Hero kép a részletes oldalról levéve** — letisztultabb, szöveg-fókuszú UX
+- **Verzió build-időben beégetve** — automatikus, nem kézi karbantartás
+- **Verzió diszkrét megjelenítés** — alacsony opacity, hover-re erősebb (nem zavaró, de a szakmaiság jele)
 
 ### SEO előny
 - Lényegesen több egyedi tartalom oldalanként (~3-4× hosszabb)
 - Természetes long-tail kulcsszavak ("ki ne csináltassa", "alkalmas-e", "fájdalmas-e")
 - Strukturált information (kérdés-válasz alapú szekciók)
 
-### Fájlok (módosítás)
+### Fájlok (új + módosítás)
 - 8 markdown újraírva (`src/content/services/*.md`)
 - `src/pages/szolgaltatasok/[slug].astro` — hero kép szekció + CSS levéve
+- `package.json` — verzió + deploy név javítva
+- `astro.config.mjs` — Vite define hozzáadva
+- `env.d.ts` — ImportMetaEnv típusok
+- `src/components/common/Footer.astro` — verzió szekció hozzáadva
+- `src/layouts/BaseLayout.astro` — meta tag-ek hozzáadva
+- `src/pages/api/version.ts` — új endpoint
+- `docs/10-versioning.md` — új dokumentum
+- `docs/06-api-reference.md` — `/api/version` hozzáadva
+- `docs/README.md` — 10-es indexben
+
+---
+
+## ✅ Sprint 2B (5. kör) — 26 akciónaptár
+
+**Időszak**: 2026-04-26  
+**Cél**: A teljes éves marketing kampánynaptár (26 db kéthetes ciklus) markdown formában a `src/content/promotions/`-ban, hogy az `ActivePromotion` komponens automatikusan az aktuálisan futó akciót mutassa a főoldalon.
+
+### Mit építettünk
+
+**Forrás**: `MonaStudio_Marketing_Kampanynaptar.xlsx` (5 munkalap, 26 ciklus)
+
+**26 markdown akció** generálva Mónika hangján — egyenként:
+- Frontmatter: `title`, `description`, `badge`, `serviceSlug`, `discountPercent`, `startsAt`, `endsAt`, `showOnHomepage`, `heroImageUrl`, `ctaText`, `ctaUrl`, `sortOrder`
+- Body: 800-1500 karakter Mónika hangján — leírás, "Kinek ajánlom", konkrét utógondozás, időzítés
+
+### Akciók szezonális megoszlás
+
+| Hónap | Ciklus | Cím | Kategória | Akció |
+|---|---|---|---|---|
+| ápr 21 - máj 4 | #01 | Tavaszi Frissítés | Arckezelés | −15% csomag |
+| máj 5 - máj 18 | #02 | Anyák Napja | Komplex | Ajándékkártya −10% |
+| máj 19 - jún 1 | #03 | Esküvői Szezon | Smink | −10% + ingyenes próba |
+| jún 2 - jún 15 | #04 | Nyárra Készülünk | Gyantázás | 2 az 1-ért |
+| jún 16 - jún 29 | #05 | Permanens Nyár | PMU | −5% + konzultáció |
+| jún 30 - júl 13 | #06 | Nyári Szempilla | Műszempilla | −2.000 Ft |
+| júl 14 - júl 27 | #07 | Uborkaszezon | Arckezelés | −20% hétköznap |
+| júl 28 - aug 10 | #08 | Back to Beauty | Szemöldök | −1.500 Ft csomag |
+| aug 11 - aug 24 | #09 | Szeptemberi Hangolás | Komplex | 2 kezelés csomag |
+| aug 25 - szept 7 | #10 | Őszi PMU | PMU | Ingyenes konzultáció |
+| szept 8 - 21 | #11 | Szempilla Ősz | Műszempilla | Refill −1.500 Ft |
+| szept 22 - okt 5 | #12 | Őszi Mélyápolás | Arckezelés | −10% peptid csomag |
+| okt 6 - okt 19 | #13 | Halloween Glamour | Smink | Csomag |
+| okt 20 - nov 2 | #14 | November Frissítés | Gyantázás | 3. alkalom −50% |
+| nov 3 - nov 16 | #15 | Karácsonyi PMU I. | PMU | −5% (utolsó esély) |
+| nov 17 - nov 30 | #16 | Black Friday | Komplex | Ajándékkártya +10% |
+| dec 1 - dec 14 | #17 | Karácsonyi Ragyogás | Smink | Csomag |
+| dec 15 - dec 22 | #18 | Utolsó Helyek | Komplex | Express időpontok |
+| jan 5 - jan 18 | #19 | Január Megújulás | Arckezelés | Ingyenes diagnózis |
+| jan 19 - febr 1 | #20 | Valentin Ajándék | Komplex | Páros kártya −8% |
+| febr 2 - febr 15 | #21 | Tavaszvárás | Szemöldök | Laminálás −10% |
+| febr 16 - márc 2 | #22 | Farsang & Smink | Smink | Ingyenes konzultáció |
+| márc 3 - márc 16 | #23 | Nőnapi Special | Komplex | 3 kezelés −12% |
+| márc 17 - márc 30 | #24 | Húsvét Frissítés | Gyantázás | 2 zóna −10% |
+| márc 31 - ápr 13 | #25 | Tavaszi PMU | PMU | −5% + konzultáció |
+| ápr 14 - ápr 20 | #26 | Évforduló | Komplex | Törzsvendég −15% |
+
+### Hogyan működik
+
+Az `ActivePromotion.astro` komponens minden főoldal-megjelenéskor:
+1. Lekéri az összes promotion markdown-t (`getCollection("promotions")`)
+2. Szűr azokra ahol `showOnHomepage: true` ÉS `startsAt <= ma <= endsAt`
+3. Sortolja `sortOrder` szerint, és **az első aktívat** mutatja
+4. Ha nincs aktív akció, a komponens **nem renderelődik** (üres szekció helyett semmi)
+
+### Technikai jellemzők
+
+- **Service slug mapping** — minden akció kötődik egy szolgáltatás slug-hoz (kivéve "Komplex"), ezért a hero kép automatikus
+- **Badge automatikus** — az `akcio_tipus` szövegéből parse-olódik ("−15%", "INGYEN", "AJÁNDÉK", "EXPRESS", "2 az 1-ért")
+- **CTA URL mapping** — Időpontfoglalás → /idopontfoglalas, Ajándékkártya vásárlás → /ajandekkartya
+- **Hero kép kategóriák** — Arckezelés, Smink, Gyantázás, PMU, Műszempilla, Szemöldök festés mind külön hero
+- **Sortérend** — sortOrder mező a ciklus száma, így a #1 prioritás a #2 előtt (ha mindkettő aktív lenne)
+
+### Brand alapelvek a tartalomban
+
+- ✅ **Csendes** — nincs felkiáltó marketing, "nyugodt" hangú szövegek
+- ✅ **Személyes** — Mónika első személyben, "én ajánlom", "nálam"
+- ✅ **Természetes** — szezonális logika (őszi PMU, nyári lifting, téli mélyápolás)
+- ✅ **Szakmai** — minden akciónál "Kinek ajánlom" / "Kinek nem ajánlom" szekciók
+
+### Fájlok (új)
+- 26 új markdown (`src/content/promotions/01-...` → `26-...`)
+- A demo `szemoldok-tetovalas-bevezeto.md` törölve (helyét átveszi az #5 Permanens Nyár)
+
+### Karbantartás
+
+A naptár évente egyszer frissítendő. Ha új akció kell:
+1. Új markdown a `src/content/promotions/`-ban
+2. `startsAt` / `endsAt` dátumok megfelelően
+3. `showOnHomepage: true` ha főoldalon mutatandó
+4. Commit + push, és a Cloudflare auto-deploy után elérhető
 
 ---
 
@@ -430,6 +532,7 @@ HomeHero → BrandPillars → FeaturedTreatment → ActivePromotion
 | Sprint 2B (2. kör) | 2026-04-26 | ✅ Kész | 11 új |
 | Sprint 2B (3. kör) | 2026-04-26 | ✅ Kész | 19 új |
 | Sprint 2B (4. kör) | 2026-04-26 | ✅ Kész | 8 átírás |
+| Sprint 2B (5. kör) | 2026-04-26 | ✅ Kész | 26 új akció |
 | Sprint 3 | TBD | ⏳ | 25+ |
 | Sprint 4 | TBD | ⏳ | 15+ |
 | Sprint 5 | TBD | ⏳ | 30+ |

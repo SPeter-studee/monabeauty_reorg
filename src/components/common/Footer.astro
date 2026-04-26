@@ -1,6 +1,7 @@
 ---
-// src/components/common/Footer.astro — UPDATED v1.1
+// src/components/common/Footer.astro — UPDATED v1.2
 // Sprint 2A: Cookie beállítás link integrálva
+// Sprint 2B 4. kör: verzió jelölés a copyright sorban
 
 import { getTranslations } from "@/i18n/utils";
 
@@ -12,6 +13,10 @@ const { locale = "hu" } = Astro.props;
 const t = getTranslations(locale);
 
 const year = new Date().getFullYear();
+
+// Verzió + build dátum (build-időben az astro.config.mjs Vite define-ból)
+const appVersion = import.meta.env.PUBLIC_APP_VERSION ?? "0.0.0";
+const buildDate = import.meta.env.PUBLIC_BUILD_DATE ?? "";
 ---
 
 <footer class="site-footer">
@@ -88,6 +93,12 @@ const year = new Date().getFullYear();
       </div>
     </div>
 
+    <div class="site-footer__version">
+      <span title={`Build dátum: ${buildDate}`}>v{appVersion}</span>
+      <span aria-hidden="true">·</span>
+      <span class="site-footer__version-builder">SP Design</span>
+    </div>
+
   </div>
 </footer>
 
@@ -106,6 +117,31 @@ const year = new Date().getFullYear();
   }
   .site-footer__cookie-btn:hover {
     opacity: 1;
+  }
+
+  /* Verzió szekció — diszkrét, jobb oldalt vagy középen, kis betűmérettel */
+  .site-footer__version {
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 0.5px solid rgba(235, 229, 219, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--mona-mono, var(--mona-sans));
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--mona-bg);
+    opacity: 0.35;
+    transition: opacity var(--motion-fast) var(--ease);
+  }
+
+  .site-footer__version:hover {
+    opacity: 0.6;
+  }
+
+  .site-footer__version-builder {
+    font-style: italic;
   }
 </style>
 
