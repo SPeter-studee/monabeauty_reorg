@@ -39,8 +39,8 @@ import PageHero from "@/components/common/PageHero.astro";
         <form class="checkout__form" data-checkout-form>
 
           {/* Vendég adatok */}
-          <fieldset class="checkout-section">
-            <legend class="checkout-section__title">Vásárlói adatok</legend>
+          <div class="checkout-section">
+            <h3 class="checkout-section__title">Vásárlói adatok</h3>
 
             <div class="form-row">
               <label class="form-field">
@@ -64,11 +64,11 @@ import PageHero from "@/components/common/PageHero.astro";
               <strong>Miért kell a telefonszám?</strong> A FoxPost SMS-ben értesít a csomag érkezéséről.
               Személyes átvételnél Mónika telefonon hív, mikor jöhetsz érte.
             </p>
-          </fieldset>
+          </div>
 
           {/* Szállítási mód */}
-          <fieldset class="checkout-section">
-            <legend class="checkout-section__title">Szállítási mód</legend>
+          <div class="checkout-section">
+            <h3 class="checkout-section__title">Szállítási mód</h3>
 
             <div class="shipping-options">
               <label class="shipping-option">
@@ -97,11 +97,11 @@ import PageHero from "@/components/common/PageHero.astro";
                 </div>
               </label>
             </div>
-          </fieldset>
+          </div>
 
           {/* Szállítási cím (csak FoxPost-nál) */}
-          <fieldset class="checkout-section" data-shipping-address-section>
-            <legend class="checkout-section__title">Szállítási cím</legend>
+          <div class="checkout-section" data-shipping-address-section>
+            <h3 class="checkout-section__title">Szállítási cím</h3>
 
             <div class="form-row">
               <label class="form-field">
@@ -125,11 +125,11 @@ import PageHero from "@/components/common/PageHero.astro";
               <strong>FoxPost címválasztás</strong>: a rendelés feldolgozása után
               elküldjük a linket, ahol a hozzád legközelebbi automatát választhatod ki.
             </p>
-          </fieldset>
+          </div>
 
           {/* Fizetési mód */}
-          <fieldset class="checkout-section">
-            <legend class="checkout-section__title">Fizetési mód</legend>
+          <div class="checkout-section">
+            <h3 class="checkout-section__title">Fizetési mód</h3>
 
             <div class="payment-options">
               <label class="payment-option">
@@ -158,19 +158,19 @@ import PageHero from "@/components/common/PageHero.astro";
             <p class="form-hint">
               Bankkártyás fizetés (SimplePay) <strong>hamarosan</strong> elérhető lesz.
             </p>
-          </fieldset>
+          </div>
 
           {/* Megjegyzés */}
-          <fieldset class="checkout-section">
-            <legend class="checkout-section__title">Megjegyzés <em>(opcionális)</em></legend>
+          <div class="checkout-section">
+            <h3 class="checkout-section__title">Megjegyzés <em>(opcionális)</em></h3>
 
             <label class="form-field">
               <textarea name="customerNote" rows="3" placeholder="Bármilyen kérés vagy kérdés..."></textarea>
             </label>
-          </fieldset>
+          </div>
 
           {/* GDPR */}
-          <fieldset class="checkout-section">
+          <div class="checkout-section">
             <label class="form-checkbox">
               <input type="checkbox" name="gdpr" required />
               <span>
@@ -178,7 +178,7 @@ import PageHero from "@/components/common/PageHero.astro";
                 <a href="/adatvedelem" target="_blank">Adatvédelmi tájékoztató</a> tartalmát. <span class="required">*</span>
               </span>
             </label>
-          </fieldset>
+          </div>
 
           <button
             type="submit"
@@ -258,15 +258,16 @@ import PageHero from "@/components/common/PageHero.astro";
         summary.items.forEach(item => {
           const li = document.createElement("li");
           li.className = "checkout-item";
+          li.style.cssText = "display: grid; grid-template-columns: 60px 1fr; gap: var(--space-3); align-items: center;";
           li.innerHTML = `
-            <div class="checkout-item__image-wrap">
+            <div class="checkout-item__image-wrap" style="position: relative; width: 60px; max-width: 60px; aspect-ratio: 4 / 5; background: var(--mona-bg); border: 0.5px solid var(--mona-border); flex-shrink: 0;">
               ${item.imageUrl
-                ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="checkout-item__image">`
-                : `<div class="checkout-item__image-placeholder"></div>`
+                ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="checkout-item__image" style="width: 100%; height: 100%; max-width: 60px; object-fit: contain; padding: 4px; display: block;">`
+                : `<div class="checkout-item__image-placeholder" style="width: 100%; height: 100%;"></div>`
               }
               <span class="checkout-item__qty">${item.qty}</span>
             </div>
-            <div class="checkout-item__details">
+            <div class="checkout-item__details" style="min-width: 0;">
               <p class="checkout-item__name">${escapeHtml(item.name)}</p>
               <p class="checkout-item__price">${formatPrice(item.priceAtAddFt * item.qty)}</p>
             </div>
@@ -653,23 +654,32 @@ import PageHero from "@/components/common/PageHero.astro";
   grid-template-columns: 60px 1fr;
   gap: var(--space-3);
   align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .checkout-item__image-wrap {
   position: relative;
   width: 60px;
+  max-width: 60px;
   aspect-ratio: 4 / 5;
   background: var(--mona-bg);
   border: 0.5px solid var(--mona-border);
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .checkout-item__image,
 .checkout-item__image-placeholder {
   width: 100%;
   height: 100%;
+  max-width: 60px;
   object-fit: contain;
   padding: 4px;
+  display: block;
+}
+
+.checkout-item__details {
+  min-width: 0;
 }
 
 .checkout-item__qty {

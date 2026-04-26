@@ -21,6 +21,61 @@ import { toastCartAdd } from "./toast";
 
 const STORAGE_KEY = "mona_cart_v2";          // v2 — séma változás miatt új kulcs
 const SHIPPING_KEY = "mona_cart_shipping";
+const LEGACY_KEYS = ["mona_cart"];           // régi kulcsok — törlésre
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTO MIGRÁCIÓ — a régi v1 kulcsokat töröljük, és érvénytelen v2 adatot is
+// ─────────────────────────────────────────────────────────────────────────────
+
+let migrationDone = false;
+
+function runMigrationOnce(): void {
+  if (migrationDone || typeof localStorage === "undefined") return;
+  migrationDone = true;
+
+  // 1. Régi (v1) kulcsok törlése
+  for (const key of LEGACY_KEYS) {
+    if (localStorage.getItem(key) !== null) {
+      localStorage.removeItem(key);
+      console.log(`[cart] Legacy key removed: ${key}`);
+    }
+  }
+
+  // 2. Érvénytelen v2 adatok cleanup (pl. ha valamilyen oknál fogva korrupt)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        // Nem tömb — törlés
+        localStorage.removeItem(STORAGE_KEY);
+        console.log(`[cart] Invalid v2 cart data removed (not an array)`);
+        return;
+      }
+      // Minden item-et validálunk
+      const validItems = parsed.filter(
+        (i: any) =>
+          typeof i?.productId === "number" &&
+          typeof i?.slug === "string" &&
+          typeof i?.qty === "number" &&
+          i.qty > 0
+      );
+      if (validItems.length !== parsed.length) {
+        // Volt invalid item — átírjuk a tisztított listát
+        if (validItems.length === 0) {
+          localStorage.removeItem(STORAGE_KEY);
+        } else {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(validItems));
+        }
+        console.log(`[cart] Invalid items removed (kept ${validItems.length} of ${parsed.length})`);
+      }
+    }
+  } catch {
+    // Parse error → töröljük a korrupt adatot
+    localStorage.removeItem(STORAGE_KEY);
+    console.log(`[cart] Corrupt v2 data removed (JSON parse error)`);
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LEKÉRÉS
@@ -28,6 +83,7 @@ const SHIPPING_KEY = "mona_cart_shipping";
 
 export function getCart(): CartItem[] {
   if (typeof localStorage === "undefined") return [];
+  runMigrationOnce();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
