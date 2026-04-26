@@ -1087,9 +1087,19 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
 - HU/EN visszahozva a mobile bar-ra (5 elemes A variáns elrendezés)
 - Hamburger ↔ X ikon animált váltás
 - Action ikonok kompaktabbak keskeny mobile-on (36×36px)
-- Pénztár GDPR checkbox `text-transform: none` + `letter-spacing: normal` 
-  (a globális `label` szabály felülírása)
-- `/kosar` full page termékkép `max-width/max-height` korlát (a v0.7.5-ből kimaradt)
+- Pénztár GDPR checkbox `text-transform: none` + `letter-spacing: normal`
+- `/kosar` full page termékkép `max-width/max-height` korlát
+- ⚠️ **Ezek a CSS fix-ek scoped módban voltak — a v0.7.9 hozza meg a tényleges hatást**
+
+### v0.7.9 — Astro scoped CSS bug fix ⭐
+- `<style>` → `<style is:global>` mind a 3 érintett fájlban: kosar.astro, 
+  penztar/index.astro, CartDrawer.astro
+- **Ez magyarázza miért tűntek hatástalannak a v0.7.3, v0.7.5, v0.7.8 fix-ek** —
+  Astro scoped CSS-t generál (`:where(.astro-XXXXXXX)`), de a JS-ben dinamikusan 
+  létrehozott elemeken (kosár tételek, checkout summary) nincs rajta az `astro-XXXX` 
+  osztály → a CSS NEM matchol
+- Most már minden ami a v0.7.5-ben íródott a CartDrawer / checkout summary 
+  szempontjából **valódi hatást fejt ki**
 
 ### Tanulságok
 1. **Globális reset.css** (Sprint 1) hiányos volt — `overflow-x: hidden` hiánya 
@@ -1110,6 +1120,12 @@ A session során bumpolt verzió konkrét tartalom nélkül; a v0.7.8 a hiányt 
 7. **`display: revert` jobb mint `display: initial`** — a `revert` visszaállítja a 
    user-agent stylesheet alapértelmezést (pl. `<a>`-nak `inline`, `<div>`-nek `block`), 
    az `initial` mindig `inline`-ra megy ami flex container-eket törhet
+8. **Astro scoped CSS + JS-renderelt tartalom = csapda** ⭐ — Astro a `<style>` 
+   blokkokat alapértelmezetten scope-olja (`:where(.astro-XXXXXXX)`), de a JS-ben 
+   dinamikusan létrehozott elemeken nincs rajta az `astro-XXXXXXX` osztály, ezért 
+   a CSS **NEM matchol**. Ha a komponens client-side state-et renderel (pl. kosár), 
+   a `<style>` taget `<style is:global>`-ra kell cserélni. Ez a v0.7.3 óta meglévő 
+   "fantom CSS" magyarázata.
 
 ### Mi maradt (Sprint 5+ -be)
 - Termékoldal galéria swipe gesture mobile-on

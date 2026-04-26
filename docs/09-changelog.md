@@ -11,6 +11,80 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.7.9] — 2026-04-27 — Astro scoped CSS bug fix ⭐ KRITIKUS
+
+> **Ez magyarázza miért tűntek hatástalannak a v0.7.3, v0.7.5, v0.7.8 CSS fix-ek 
+> a kosár / pénztár oldalakon** — a CSS megvolt, csak nem hatott.
+
+### A bug
+A `kosar.astro`, `penztar/index.astro` és `CartDrawer.astro` mind `<style>` blokkot 
+használt (Astro alapértelmezett **scoped** mód). Astro a buildelés során minden 
+`.astro` fájl HTML elemeire automatikusan rárakja az `astro-XXXXXXX` osztályt, és 
+a CSS szabályokat `:where(.astro-XXXXXXX)` selectorral kvalifikálja:
+
+```css
+/* Build előtt (forrás): */
+.cart-page-item { display: grid; ... }
+
+/* Build után (Astro generált): */
+.cart-page-item:where(.astro-mc6eoue2) { display: grid; ... }
+```
+
+**A probléma**: a kosár tételek és checkout summary tételek **JS-ben dinamikusan** 
+generálódnak (`document.createElement("li")` + `innerHTML`). A JS-ben létrehozott 
+elemekre Astro **NEM** rakja rá az `astro-XXXXXXX` osztályt → **a CSS NEM matchol** 
+a JS-renderelt markup-ra.
+
+### Tünet
+Az érintett oldalakon (mind a Sprint 3 kezdete óta!):
+- A kép méret korlátok (`width: 80px`, `width: 100px`, `width: 60px`) **nem hatottak** 
+  → a globális `img { max-width: 100% }` a parent szélességre kifújta a képet
+- A `<li class="cart-page-item">` `display: grid` **nem hatott** → a `<li>` 
+  `display: list-item` maradt, és a tartalom egymás alá folyt
+- A checkout summary qty badge `position: absolute` **nem hatott** → a `<span>` 
+  inline default-on maradt, az `1` qty érték a kép alatt lógott
+
+### Fix
+Mind a 3 fájlban a `<style>` taget kicseréltük `<style is:global>`-re. Ezzel a CSS 
+szabályok az egész oldalra érvényesek lesznek (nem scoped) — és **most már matcholnak** 
+a JS-renderelt elemekre is.
+
+### Mellékhatás
+A CSS nem scoped többé az érintett 3 fájlban — más oldalakra is "kiszivárog". 
+**Ez biztonságos**, mert az osztálynevek (`.cart-page-item__*`, `.checkout-item__*`, 
+`.cart-item__*`) **uniqueek a projektben**, nincs kollízió más oldalakkal.
+
+### Mit oldott meg utólag (v0.7.3-v0.7.8 mind)
+- `.cart-shipping__option input { width: 18px }` — radio gomb méret (v0.7.3)
+- `[hidden] { display: none !important }` — fantom kosár fix (v0.7.3)
+- `.cart-shipping__option-name { flex: 1; min-width: 0 }` — sortörés fix (v0.7.3)
+- `.cart-item__image-link { width: 80px; max-width: 80px }` — CartDrawer kép (v0.7.5)
+- `.checkout-item__image-wrap { width: 60px }` — checkout summary kép (v0.7.5)
+- `.checkout-item__qty { position: absolute; top: -6px }` — qty badge (v0.7.5)
+- `.cart-page-item { display: grid; grid-template-columns: 100px 1fr }` — /kosar layout (v0.7.5)
+- `.cart-page-item__image-link { width: 100px; max-width: 100px }` — /kosar kép (v0.7.8)
+- `.cart-page-item__image { max-width: 100px; max-height: 125px }` — /kosar kép (v0.7.8)
+- `.checkout-section { border, padding, etc }` — pénztár szekciók (v0.7.5)
+
+### Tanulság
+Astro scoped CSS + JS-renderelt dinamikus tartalom **nem fér össze**. Vagy 
+`<style is:global>`, vagy `:global(.osztály)` selector, vagy SSR-ben renderelni 
+a tartalmat (ami a Sprint 3 kosár logika alapfilozófiájával ellentétes — a kosár 
+client-side state).
+
+### Fájlok (4)
+- `package.json` — verzió `0.7.8` → `0.7.9`
+- `src/pages/kosar.astro` — `<style>` → `<style is:global>`
+- `src/pages/penztar/index.astro` — `<style>` → `<style is:global>`
+- `src/components/shop/CartDrawer.astro` — `<style>` → `<style is:global>`
+
+### Audit kérdés (utólag)
+**Más Astro fájlok** is renderelnek dinamikusan elemeket JS-ből? Ha igen, ott is 
+ugyanez a bug él. Erre később egy globális audit kell — különösen a Sprint 5 
+(admin felület) építésekor figyelembe venni.
+
+---
+
 ## [0.7.8] — 2026-04-27 — Pénztár + kosár + header mobile redesign
 
 > **Folytatása a v0.7.3–v0.7.6 UI csiszolási hullámnak** (lásd a verziókat alább).
