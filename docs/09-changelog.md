@@ -14,7 +14,52 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.8] — 2026-04-27 — Sprint 4.3 — Google OAuth integráció ⭐
+## [0.8.9] — 2026-04-27 — Sprint 4 finomhangolás — Header avatar logged-in indicator
+
+### Hozzáadva — Vizuális visszajelzés a login állapotra
+
+A header 👤 ikon eddig **vizuálisan azonos** volt logged-in és anonymous állapotban
+— csak az `aria-label` változott (screen reader-eknek). Most a **logged-in 
+állapotban** egy patina arany pötty jelenik meg az ikon jobb alsó sarkán.
+
+### Implementáció
+
+- **`src/components/common/Header.astro`** — JS:
+  - `subscribeAuthState` callback-ben:
+    - logged-in → `authTrigger.setAttribute("data-authenticated", "true")`
+    - anonymous → `authTrigger.removeAttribute("data-authenticated")`
+- **`src/styles/components/header.css`** — CSS:
+  - `.site-header__action[data-authenticated="true"]::after` pseudo-element:
+    - 8×8 px (desktop) / 9×9 px (≥768px) patina arany kör
+    - 1.5px `var(--mona-bg)` border (kiemeli a háttérről)
+    - Position: jobb alsó sarok, 6-7px offset
+    - Subtle 1.6s pulse animation csak az első renderkor
+    - `prefers-reduced-motion` user preference esetén nincs animation
+
+### Vizuális jellemzők
+
+- **Brand-konzisztens**: patina arany (`var(--mona-warm)`) — illeszkedik a többi 
+  arany akcentushoz a UI-on
+- **Diszkrét**: 8 px-es pötty nem zaklatott, csak finom jelzés
+- **Pillanatos azonosítás**: pillantásra látszik a login állapot
+- **Animation egyszer**: a pulse csak az első renderkor (tabváltáskor / login-kor) 
+  fut le — page reload-on **nincs** ismétlés (mert a CSS `1` iteration count 
+  azonnal befejeződik)
+
+### Mit NEM csinál
+
+- ❌ Welcome email regisztrációkor — Sprint 4.5 (a szándékos döntés alapján 
+  most nem küldjük)
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.8` → `0.8.9`
+- `src/components/common/Header.astro` — `data-authenticated` attribute set/remove
+- `src/styles/components/header.css` — pseudo-element pötty + animation
+- `docs/09-changelog.md`
+
+---
+
+
 
 **Frontend + backend csomag** a Google fiókos bejelentkezéshez.
 

@@ -328,11 +328,13 @@ const isActive = (href: string) =>
         // Logged-in mód
         const greetingName = state.customer.firstName || "Vendég";
         authTrigger.setAttribute("aria-label", `${greetingName} — menü`);
+        authTrigger.setAttribute("data-authenticated", "true");
         if (userGreeting) userGreeting.textContent = `Üdv, ${greetingName}!`;
         if (userEmail) userEmail.textContent = state.customer.email;
       } else {
         // Anonymous — modal nyitja
         authTrigger.setAttribute("aria-label", "Belépés");
+        authTrigger.removeAttribute("data-authenticated");
         closeMenu();
       }
     });
