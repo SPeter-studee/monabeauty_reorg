@@ -849,7 +849,7 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
   .auth-modal__checkbox {
     display: flex;
     align-items: flex-start;
-    gap: var(--space-2);
+    gap: var(--space-3);
     font-family: var(--mona-sans);
     font-size: 13px;
     line-height: 1.5;
@@ -860,18 +860,48 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
   }
 
   .auth-modal__checkbox > input {
-    /* A checkbox közepe a szöveg első sorának közepével essen egybe.
-       A line-height 1.5 × 13px = 19.5px sor, a 16px checkbox center-elése:
-       (19.5 - 16) / 2 ≈ 1.75px → 2px margin-top fent. */
-    margin: 2px 0 0;
-    width: 16px;
-    height: 16px;
+    /* Dedikált 24px hot-spot a checkbox-nak — vizuálisan a 18px doboz a 
+       szöveg első sorának közepével egybeesik. A height: line-height match-eli
+       az első sor magasságát (13px × 1.5 = 19.5px), a flex-shrink: 0 pedig
+       biztosítja hogy ne nyúljon meg ha sok a szöveg.
+       
+       Az appearance: none egyfajta cross-browser reset; a custom border-rel
+       konzisztens megjelenést érünk el. A checked állapot az accent-color
+       miatt natívan dolgozik (Chrome/Firefox/Safari). */
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
-    accent-color: var(--mona-warm);
-    cursor: pointer;
-    /* Globális input reset override — ne legyen padding/border ami eltolja */
+    margin: 0;
     padding: 0;
+    /* A 18px box közepe a 19.5px sor közepével essen egybe */
+    margin-top: 0.75px;
+    border: 1px solid var(--mona-border);
+    background: var(--mona-bg);
+    cursor: pointer;
     box-sizing: border-box;
+    transition: background var(--motion-fast) var(--ease),
+                border-color var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__checkbox > input:hover {
+    border-color: var(--mona-warm);
+  }
+
+  .auth-modal__checkbox > input:checked {
+    background: var(--mona-warm);
+    border-color: var(--mona-warm);
+    /* Inline SVG check-mark — fehér pipa a háttérben */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3.5,8.5 6.5,11.5 12.5,5.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px 14px;
+  }
+
+  .auth-modal__checkbox > input:focus-visible {
+    outline: 2px solid var(--mona-warm);
+    outline-offset: 2px;
   }
 
   .auth-modal__checkbox > span {

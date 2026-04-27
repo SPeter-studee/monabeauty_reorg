@@ -14,7 +14,71 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.6] — 2026-04-27 — Sprint 4 hotfix — Auth modal vizuális kiscsiszolás
+## [0.8.7] — 2026-04-27 — Sprint 4 hotfix — Custom checkbox vizuális precízió
+
+### Probléma
+
+A v0.8.6 után a checkbox-szöveg sorok **még mindig nem voltak egy vonalban** 
+a regisztrációs ablakban — a checkbox doboz vagy magasabban vagy alacsonyabban 
+volt mint a szöveg első sor közepe.
+
+### Diagnózis
+
+A natív `accent-color: var(--mona-warm)` stílus használata azt jelenti, hogy a 
+**böngésző maga rendereli** a checkbox-ot, ami **böngészőnként eltérő pixel-padding-et** 
+ad. Chrome-ban egy 16px-es checkbox 16px valós méretű, **DE** Firefox-ban néhány 
+pixel border-padding-gel van rendelve, és Safari-ban megint más. **Lehetetlen 
+pontosan ugyanazt a vizuális vonalozást elérni cross-browser** natív appearance 
+mellett.
+
+### Javítás — fully custom checkbox
+
+**`appearance: none` + custom border + custom checked-style**:
+
+```css
+.auth-modal__checkbox > input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-top: 0.75px;  /* 18px box közepe = 19.5px sor közepe */
+  border: 1px solid var(--mona-border);
+  background: var(--mona-bg);
+}
+
+.auth-modal__checkbox > input:checked {
+  background: var(--mona-warm);
+  border-color: var(--mona-warm);
+  background-image: url("data:image/svg+xml;...polyline...");  /* fehér pipa */
+}
+```
+
+**Eredmény**:
+- **Cross-browser konzisztens** — minden böngészőben pontosan ugyanaz
+- **Pixel-pontos vonalozás** — a 18×18 doboz közepe egzaktul a 19.5px sor közepe
+- **Brand-illeszkedő** — patina arany `--mona-warm` checked háttér + fehér SVG pipa
+- **Hover state** — `border-color: var(--mona-warm)` finom visszajelzés
+- **Focus-visible** — accessibility outline 2px arany
+
+### Tanulság (Sprint 5+ tervezésre)
+
+Ha **brand-precízió fontos** (mint a Mona Studio-nál), **mindig custom checkbox** 
+helyett `accent-color` natív stílus. Az `accent-color` egyszerű és gyors, **de** 
+cross-browser pixel-szinten nem egyforma — ez nem feltűnő alapszintű form-okban, 
+de luxus brand-eknél (mint a kozmetikai szalon) vizuális zaj.
+
+Ezt a custom-checkbox mintát használjuk a **Sprint 5** profil oldalakon, 
+checkout-on, admin felületen, stb.
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.6` → `0.8.7`
+- `src/components/auth/AuthModal.astro` — fully custom checkbox styling
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Javítva
 
