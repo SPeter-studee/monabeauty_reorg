@@ -14,7 +14,58 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.5] — 2026-04-27 — Sprint 4 hotfix — PBKDF2 Cloudflare Workers limit ⭐⭐
+## [0.8.6] — 2026-04-27 — Sprint 4 hotfix — Auth modal vizuális kiscsiszolás
+
+### Javítva
+
+#### 1. Password toggle szem-ikon "szétesett" → tiszta Feather/Lucide path
+A `data-password-toggle` gombon belül a két szem-ikon SVG (open/closed eye) 
+**egymásra rakódott** — vizuálisan a pupilla és körvonal elcsúszottnak tűnt.
+
+**Gyökér-ok**: a globális `reset.css`-ben:
+```css
+img, svg, video, canvas, audio, iframe, embed, object {
+  display: block;
+}
+```
+Ez **felülírja a `hidden` HTML attribútum** default `display: none` értékét → 
+mindkét SVG egyszerre renderelődik (egymásra rakva), és **mindkettőnek látszik 
+a stroke-ja**.
+
+**Fix**:
+```css
+.auth-modal__password-toggle svg[hidden] {
+  display: none !important;
+}
+```
+Plusz a SVG path-ok lecserélve a Feather/Lucide szabványra (cleaner ívek + 
+`stroke-linecap="round"` + `stroke-linejoin="round"`).
+
+#### 2. Checkbox sorok igazítása — finomhangolás
+- `.auth-modal__checkbox > input` — `padding: 0; box-sizing: border-box; 
+  cursor: pointer` hozzáadva (globális input reset override)
+- `.auth-modal__checkbox > span` — `flex: 1; min-width: 0` (a hosszú szöveg 
+  helyesen tördelődik)
+- `margin: 2px 0 0` ugyanazt tartja — vizuálisan a 16px checkbox közepe egy 
+  vonalban van a 13px szöveg első sorának közepével
+
+### Tanulság
+
+**Globális SVG reset (`display: block`)** + **HTML `hidden` attribute** közötti 
+konfliktus klasszikus pitfall. Bárhol ahol SVG-ket toggle-elünk a `hidden` 
+attribútummal (és van globális `svg { display: block }` reset), kell egy local 
+override `svg[hidden] { display: none !important }`. 
+
+Ezt érdemes lenne a globális reset.css-be tenni — Sprint 5+-ban refaktorra.
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.5` → `0.8.6`
+- `src/components/auth/AuthModal.astro` — SVG path-ok + checkbox + svg[hidden] CSS
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 
