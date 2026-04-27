@@ -92,16 +92,33 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
 
         <div class="auth-modal__field">
           <label class="auth-modal__label" for="login-password">Jelszó</label>
-          <input
-            type="password"
-            id="login-password"
-            name="password"
-            class="auth-modal__input"
-            autocomplete="current-password"
-            required
-            minlength="8"
-            placeholder="••••••••"
-          />
+          <div class="auth-modal__password-wrap">
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              class="auth-modal__input auth-modal__input--password"
+              autocomplete="current-password"
+              required
+              minlength="8"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              class="auth-modal__password-toggle"
+              data-password-toggle="login-password"
+              aria-label="Jelszó megjelenítése"
+            >
+              <svg class="auth-modal__eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="auth-modal__eye-off-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" hidden>
+                <path d="M2 12s3.5-7 10-7c2.5 0 4.5 1 6 2.2M22 12s-3.5 7-10 7c-2.5 0-4.5-1-6-2.2"/>
+                <line x1="3" y1="3" x2="21" y2="21"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <p class="auth-modal__error" data-auth-error="login" hidden></p>
@@ -173,16 +190,33 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
 
         <div class="auth-modal__field">
           <label class="auth-modal__label" for="register-password">Jelszó</label>
-          <input
-            type="password"
-            id="register-password"
-            name="password"
-            class="auth-modal__input"
-            autocomplete="new-password"
-            required
-            minlength="8"
-            placeholder="Legalább 8 karakter"
-          />
+          <div class="auth-modal__password-wrap">
+            <input
+              type="password"
+              id="register-password"
+              name="password"
+              class="auth-modal__input auth-modal__input--password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              placeholder="Legalább 8 karakter"
+            />
+            <button
+              type="button"
+              class="auth-modal__password-toggle"
+              data-password-toggle="register-password"
+              aria-label="Jelszó megjelenítése"
+            >
+              <svg class="auth-modal__eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="auth-modal__eye-off-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" hidden>
+                <path d="M2 12s3.5-7 10-7c2.5 0 4.5 1 6 2.2M22 12s-3.5 7-10 7c-2.5 0-4.5-1-6-2.2"/>
+                <line x1="3" y1="3" x2="21" y2="21"/>
+              </svg>
+            </button>
+          </div>
           <p class="auth-modal__hint">A jelszó legalább 8 karakter hosszú legyen.</p>
         </div>
 
@@ -408,9 +442,24 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
           }),
         });
 
-        const data = await res.json();
+        let data: any;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          const text = await res.text().catch(() => "");
+          console.error("[auth-modal] login: non-JSON response", {
+            status: res.status,
+            statusText: res.statusText,
+            body: text.slice(0, 500),
+          });
+          showError(errorEl, `Szerver hiba (HTTP ${res.status}). Próbáld újra később.`);
+          setLoading(submitBtn, false);
+          return;
+        }
+
         if (!res.ok || !data.success) {
-          showError(errorEl, data.message || "Bejelentkezés sikertelen.");
+          console.error("[auth-modal] login failed:", { status: res.status, data });
+          showError(errorEl, data.message || `Bejelentkezés sikertelen (HTTP ${res.status}).`);
           setLoading(submitBtn, false);
           return;
         }
@@ -418,7 +467,7 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
         setAuthenticated(data.customer);
         closeModal();
       } catch (err) {
-        console.error("[auth-modal] login error:", err);
+        console.error("[auth-modal] login network error:", err);
         showError(errorEl, "Hálózati hiba. Próbáld újra.");
         setLoading(submitBtn, false);
       }
@@ -477,9 +526,34 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
           }),
         });
 
-        const data = await res.json();
+        // JSON parse külön try — ha a backend nem JSON-t adott vissza (pl. 500 HTML),
+        // ne dobjunk egy zavaró "Hálózati hiba"-t, hanem érdemi üzenetet.
+        let data: any;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          const text = await res.text().catch(() => "");
+          console.error("[auth-modal] register: non-JSON response", {
+            status: res.status,
+            statusText: res.statusText,
+            body: text.slice(0, 500),
+          });
+          showError(
+            errorEl,
+            `Szerver hiba (HTTP ${res.status}). Próbáld újra később.`
+          );
+          setLoading(submitBtn, false);
+          return;
+        }
+
         if (!res.ok || !data.success) {
-          showError(errorEl, data.message || "Regisztráció sikertelen.");
+          console.error("[auth-modal] register failed:", { status: res.status, data });
+          // Debug info-t is megjelenítjük (Sprint 4.x-ben kivesszük)
+          let displayMsg = data.message || `Regisztráció sikertelen (HTTP ${res.status}).`;
+          if (data.debug) {
+            displayMsg += ` [debug: ${data.debug}]`;
+          }
+          showError(errorEl, displayMsg);
           setLoading(submitBtn, false);
           const ts = (window as any).turnstile;
           if (ts && turnstileWidgetId) {
@@ -493,11 +567,31 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
         closeModal();
         console.log("[auth-modal] register success:", data.message);
       } catch (err) {
-        console.error("[auth-modal] register error:", err);
+        console.error("[auth-modal] register network error:", err);
         showError(errorEl, "Hálózati hiba. Próbáld újra.");
         setLoading(submitBtn, false);
       }
     }
+
+    // ── Show password toggle ───────────────────────────────────────────────
+    document.querySelectorAll<HTMLButtonElement>("[data-password-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.passwordToggle;
+        if (!targetId) return;
+        const input = document.getElementById(targetId) as HTMLInputElement | null;
+        if (!input) return;
+
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+        btn.setAttribute("aria-label", isHidden ? "Jelszó elrejtése" : "Jelszó megjelenítése");
+
+        // Ikon váltás
+        const eyeIcon = btn.querySelector<SVGElement>(".auth-modal__eye-icon");
+        const eyeOffIcon = btn.querySelector<SVGElement>(".auth-modal__eye-off-icon");
+        if (eyeIcon) eyeIcon.hidden = isHidden;
+        if (eyeOffIcon) eyeOffIcon.hidden = !isHidden;
+      });
+    });
 
     // ── Helpers ─────────────────────────────────────────────────────────────
     function setLoading(btn: HTMLButtonElement | null, loading: boolean) {
@@ -701,6 +795,46 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     color: var(--mona-text-3);
     margin: 0;
     font-style: italic;
+  }
+
+  /* ─── Show password toggle ─────────────────────────────────────────────── */
+  .auth-modal__password-wrap {
+    position: relative;
+  }
+
+  .auth-modal__input--password {
+    /* Helyet adunk a szem ikon-nak jobbra */
+    padding-right: 44px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .auth-modal__password-toggle {
+    position: absolute;
+    top: 50%;
+    right: var(--space-2);
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--mona-text-3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__password-toggle:hover {
+    color: var(--mona-text);
+  }
+
+  .auth-modal__password-toggle:focus-visible {
+    outline: 2px solid var(--mona-warm);
+    outline-offset: 2px;
   }
 
   /* ─── Checkbox ─────────────────────────────────────────────────────────── */

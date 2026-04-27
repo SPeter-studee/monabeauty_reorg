@@ -29,6 +29,29 @@ import {
 } from "@/lib/types/auth";
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    return await handleLogin(request, locals);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : undefined;
+    console.error("[login] UNHANDLED EXCEPTION:", errorMessage, errorStack);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "server_exception",
+        message: "Szerverhiba történt. Próbáld később.",
+        debug: errorMessage,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+async function handleLogin(request: Request, locals: any): Promise<Response> {
   const env = locals.runtime.env as any;
   const db: D1Database = env.DB;
 
@@ -116,7 +139,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       "Set-Cookie": cookie,
     },
   });
-};
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -41,6 +41,31 @@ import {
 } from "@/lib/types/auth";
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    return await handleRegister(request, locals);
+  } catch (err) {
+    // Bármilyen unhandled exception → JSON-os 500
+    // (Sosem szabad üres body-jú 500-at adni, mert a frontend JSON parse fail-el)
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : undefined;
+    console.error("[register] UNHANDLED EXCEPTION:", errorMessage, errorStack);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "server_exception",
+        message: "Szerverhiba történt. Próbáld később.",
+        debug: errorMessage, // ideiglenes — Sprint 4.x-ben kivesszük production-ben
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+async function handleRegister(request: Request, locals: any): Promise<Response> {
   const env = locals.runtime.env as any;
   const db: D1Database = env.DB;
 
@@ -180,7 +205,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       "Set-Cookie": cookie,
     },
   });
-};
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS

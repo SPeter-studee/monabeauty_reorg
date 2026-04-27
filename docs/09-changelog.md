@@ -14,7 +14,85 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.2] — 2026-04-27 — Sprint 4.2 hotfix — Astro script blokkok javítása ⭐
+## [0.8.4] — 2026-04-27 — Sprint 4 hotfix — Backend exception handling + debug info ⭐
+
+### Probléma
+
+A v0.8.x deploy után a **regisztráció 500-as hibát** adott vissza, **üres body-val**.
+A frontend ezt a választ próbálta JSON-ként parse-olni → `Unexpected end of JSON input`.
+A vendég **nem látott semmit** ami segítene neki vagy nekünk a diagnózisban.
+
+### Diagnózis
+
+A leggyakoribb ok: a `register.ts` valamelyik DB lookup vagy library hívás 
+**unhandled exception**-t dobott, és a Cloudflare Pages Functions runtime 
+default 500-as választ adott (üres body-val).
+
+A leggyanúsabb gyökér-ok: **a v0.8.0 D1 migráció nem futott le** a production 
+adatbázison, így a `customers` tábla nem létezik → az első `SELECT FROM customers`
+exception → 500.
+
+### Javítás
+
+#### 1. Backend — outer try/catch
+Mindkét endpoint (`register.ts`, `login.ts`) most:
+```typescript
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    return await handleRegister(request, locals);
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "server_exception",
+        message: "Szerverhiba történt. Próbáld később.",
+        debug: err.message,  // ideiglenes, Sprint 4.x-ben kivesszük production-ben
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+};
+```
+Most **bármilyen exception** struktúrált JSON-os választ ad — a frontend tudja parse-olni.
+
+#### 2. Frontend — debug info megjelenítése
+Az AuthModal hibaüzenet most kibővül a `debug` mezővel, ha van:
+```
+"Szerverhiba történt. Próbáld később. [debug: no such table: customers]"
+```
+Ez ideiglenes — Sprint 4.x-ben (production-ready) eltávolítjuk.
+
+### Mit kell még tenned
+
+**Ellenőrizd a D1 séma migrációt**:
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+```
+
+Ha **NEM szerepel** a `customers` tábla:
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0003_sprint4_customers.sql
+```
+
+### Tanulság (Sprint 5+ tervezésre)
+
+**Minden API endpoint-nak outer try/catch-csel kell rendelkeznie**, hogy bármilyen 
+unhandled exception **strukturált JSON** választ adjon. A Cloudflare Pages default 
+500-as response-ja **üres body-jú**, ami a frontend JSON parse-t törleli — ez 
+silent fail, és a felhasználó csak egy generikus hibát lát.
+
+A Sprint 5+ admin endpointokra (CRUD termékek, rendelések, stb.) is ezt a mintát 
+fogjuk követni.
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.3` → `0.8.4`
+- `src/pages/api/auth/register.ts` — outer try/catch + handleRegister helper
+- `src/pages/api/auth/login.ts` — outer try/catch + handleLogin helper
+- `src/components/auth/AuthModal.astro` — debug info megjelenítés
+
+---
+
+
 
 ### Javítva — kritikus
 
