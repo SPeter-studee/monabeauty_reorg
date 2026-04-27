@@ -22,6 +22,12 @@
 const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
   || import.meta.env.TURNSTILE_SITE_KEY
   || "";
+
+// Sprint 4.3 — Google OAuth: ha a CLIENT_ID nincs beállítva, a gomb disabled
+const googleEnabled = !!(
+  (Astro.locals as any).runtime?.env?.GOOGLE_CLIENT_ID
+  || import.meta.env.GOOGLE_CLIENT_ID
+);
 ---
 
 <div
@@ -75,6 +81,27 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
       <p class="auth-modal__intro">
         Üdv újra! Jelentkezz be a folytatáshoz.
       </p>
+
+      {/* Sprint 4.3 — Google OAuth gomb */}
+      <button
+        type="button"
+        class="auth-modal__oauth-btn"
+        data-google-btn
+        disabled={!googleEnabled}
+        title={googleEnabled ? "" : "A Google bejelentkezés még nincs konfigurálva."}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+        </svg>
+        <span>Belépés Google fiókkal</span>
+      </button>
+
+      <div class="auth-modal__divider">
+        <span>vagy</span>
+      </div>
 
       <form class="auth-modal__form" data-auth-form="login" novalidate>
         <div class="auth-modal__field">
@@ -146,6 +173,27 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
       <p class="auth-modal__intro">
         Csatlakozz a Mona Studio közösséghez. Néhány adat, és kész is.
       </p>
+
+      {/* Sprint 4.3 — Google OAuth gomb */}
+      <button
+        type="button"
+        class="auth-modal__oauth-btn"
+        data-google-btn
+        disabled={!googleEnabled}
+        title={googleEnabled ? "" : "A Google regisztráció még nincs konfigurálva."}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+        </svg>
+        <span>Regisztráció Google fiókkal</span>
+      </button>
+
+      <div class="auth-modal__divider">
+        <span>vagy</span>
+      </div>
 
       <form class="auth-modal__form" data-auth-form="register" novalidate>
         <div class="auth-modal__field-row">
@@ -593,6 +641,60 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
       });
     });
 
+    // ── Sprint 4.3 — Google OAuth gomb ─────────────────────────────────────
+    document.querySelectorAll<HTMLButtonElement>("[data-google-btn]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        // Aktuális oldalra fog visszatérni a callback után
+        const fromPath = location.pathname + location.search;
+        const url = `/api/auth/google?from=${encodeURIComponent(fromPath)}`;
+        window.location.href = url;
+      });
+    });
+
+    // ── Sprint 4.3 — auth_error query param kezelés ────────────────────────
+    // Ha a Google callback hibásan tért vissza, a URL-ben ?auth_error=...
+    // szerepel. Megjelenítjük a megfelelő üzenetet.
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const authError = params.get("auth_error");
+      if (!authError) return;
+
+      const errorMessages: Record<string, string> = {
+        google_oauth_not_configured: "A Google bejelentkezés jelenleg nem elérhető.",
+        google_error: "A Google bejelentkezés megszakadt.",
+        state_mismatch: "Biztonsági ellenőrzés sikertelen. Próbáld újra.",
+        token_exchange_failed: "Nem sikerült a Google azonosítás. Próbáld újra.",
+        userinfo_failed: "Nem sikerült a Google profil lekérése. Próbáld újra.",
+        no_email_from_google: "A Google fiók nem ad email címet. Használj email + jelszó regisztrációt.",
+        customer_insert_failed: "Hiba a fiók létrehozásakor.",
+        customer_lookup_failed: "Hiba a fiók keresésekor.",
+        account_inactive: "A fiókod jelenleg nem aktív.",
+        server_exception: "Szerverhiba történt a bejelentkezéskor.",
+      };
+
+      const message = errorMessages[authError] || "Bejelentkezési hiba történt.";
+      console.warn(`[auth-modal] OAuth error: ${authError}`);
+
+      // Tisztítjuk az URL-t (a ?auth_error param eltűnik)
+      params.delete("auth_error");
+      params.delete("auth_error_debug");
+      const cleanUrl = location.pathname + (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState({}, "", cleanUrl);
+
+      // Modal-t megnyitjuk login nézetben + hibaüzenet
+      // (rövid timeout, hogy a többi init lefusson)
+      setTimeout(() => {
+        const errorEl = document.querySelector<HTMLElement>('[data-auth-error="login"]');
+        if (errorEl) {
+          errorEl.textContent = message;
+          errorEl.hidden = false;
+        }
+        // Trigger a modal megnyitást
+        window.dispatchEvent(new CustomEvent(AUTH_MODAL_OPEN_EVENT, { detail: { view: "login" } }));
+      }, 100);
+    })();
+
     // ── Helpers ─────────────────────────────────────────────────────────────
     function setLoading(btn: HTMLButtonElement | null, loading: boolean) {
       if (!btn) return;
@@ -736,6 +838,62 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     line-height: 1.5;
     color: var(--mona-text);
     margin: 0 0 var(--space-5);
+  }
+
+  /* ─── Sprint 4.3 — OAuth gombok (Google, később Facebook) ──────────────── */
+  .auth-modal__oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: 12px var(--space-4);
+    min-height: 0;
+    border: 0.5px solid var(--mona-border);
+    background: var(--mona-bg);
+    color: var(--mona-text);
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color var(--motion-fast) var(--ease),
+                background var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__oauth-btn:hover:not(:disabled) {
+    border-color: var(--mona-text);
+    background: var(--mona-elevated);
+  }
+
+  .auth-modal__oauth-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .auth-modal__oauth-btn svg {
+    flex-shrink: 0;
+  }
+
+  /* "vagy" elválasztó az OAuth gomb és a klasszikus form között */
+  .auth-modal__divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+  }
+
+  .auth-modal__divider::before,
+  .auth-modal__divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--mona-border);
   }
 
   /* ─── Form ─────────────────────────────────────────────────────────────── */

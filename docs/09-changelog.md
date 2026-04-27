@@ -14,7 +14,139 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.7] — 2026-04-27 — Sprint 4 hotfix — Custom checkbox vizuális precízió
+## [0.8.8] — 2026-04-27 — Sprint 4.3 — Google OAuth integráció ⭐
+
+**Frontend + backend csomag** a Google fiókos bejelentkezéshez.
+
+### Hozzáadva — Backend
+
+- **`src/lib/oauth-google.ts`** (~210 sor) — Google OAuth helpers:
+  - `buildGoogleAuthUrl(env, state, redirectUri)` — authorization URL építés
+  - `exchangeGoogleCode(env, code, redirectUri)` — code → access_token + id_token
+  - `fetchGoogleUserInfo(accessToken)` — userinfo lekérés (sub, email, name, picture)
+  - State CSRF cookie kezelés: `buildOAuthStateCookies`, `readOAuthStateCookies`, 
+    `buildClearOAuthStateCookies`
+  - 10 perces state cookie érvényesség
+  - `prompt=select_account` — multi-account user-eknél mindig kérdez
+- **`src/pages/api/auth/google.ts`** (~60 sor) — initiate endpoint:
+  - GET `/api/auth/google?from=/aktualis-oldal`
+  - State token generálás → cookie
+  - "from" query paraméter validálás (open redirect védelem: csak relatív path)
+  - 302 redirect a Google authorization URL-re
+  - Ha `GOOGLE_CLIENT_ID` nincs beállítva → 503 hibaüzenet
+- **`src/pages/api/auth/google/callback.ts`** (~190 sor) — callback endpoint:
+  - GET `/api/auth/google/callback?code=...&state=...`
+  - State CSRF ellenőrzés
+  - Code → token → userinfo flow
+  - **Customer match logika**:
+    1. `google_id` alapján → login
+    2. `email` alapján → összekapcsolás (set `google_id` + `email_verified=1`)
+    3. Nincs → új customer létrehozás (auto-verified, mert Google már 
+       verifikálta az email-t)
+  - Mailchimp bridge — új vendég esetén
+  - Session létrehozás + cookie + `last_login_at` frissítés
+  - Hibás esetben: redirect a "from" path-ra `?auth_error=...` paraméterrel
+  - Outer try/catch: minden exception strukturált 302 redirect (sosem üres 500)
+
+### Hozzáadva — Frontend
+
+- **`src/components/auth/AuthModal.astro`**:
+  - **Frontmatter**: `googleEnabled` boolean a `GOOGLE_CLIENT_ID` env var alapján
+  - **Login view**: "Belépés Google fiókkal" gomb az intro után
+  - **Register view**: "Regisztráció Google fiókkal" gomb az intro után
+  - **"vagy" elválasztó** (`.auth-modal__divider`) a Google gomb és a klasszikus 
+    form között — két vízszintes vonal + "VAGY" felirat
+  - **Disabled állapot**: ha `googleEnabled === false` (env var hiányzik), a 
+    gomb disabled + tooltip "A Google bejelentkezés még nincs konfigurálva"
+  - **Google logo SVG**: hivatalos Google brand SVG (4 színes G)
+  - **JS — gomb kattintás**: `window.location.href = "/api/auth/google?from=" + encodeURIComponent(location.pathname)`
+  - **JS — `?auth_error=` query param kezelés**: ha a Google callback hibásan tér 
+    vissza, a URL-ben szerepel egy `auth_error` paraméter. Erre bekapcsolódik a 
+    modal login view-ban + magyar nyelvű hibaüzenet, és az URL is megtisztul
+
+### Változott — wrangler.toml
+
+- **`GOOGLE_CLIENT_ID`** placeholder hozzáadás a `[vars]` szekcióba (publikus, 
+  üres string default)
+- **`GOOGLE_CLIENT_SECRET`** dokumentáció a komment szekcióban (Secret-ként a 
+  Cloudflare Dashboardon)
+
+### Cloudflare Pages env vars Sprint 4.3-hoz
+
+| Változó | Hol | Sprint |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | `wrangler.toml` `[vars]` (Plaintext) | 4.3 (most) |
+| `GOOGLE_CLIENT_SECRET` | CF Dashboard Secret | 4.3 (most) |
+
+### Mónika setup teendők
+
+1. **Google Cloud Console** (`mona@monastudio.hu` Workspace fiókkal):
+   - Create Project: "Mona Studio Auth"
+   - OAuth consent screen: External, App name "Mona Studio", Support email 
+     `mona@monastudio.hu`, Authorized domains `monastudio.hu`
+   - Scopes: `openid`, `email`, `profile`
+   - Test users: a fejlesztő email-jei
+   - Credentials → OAuth Client ID → Web application
+   - Authorized JavaScript origins: `https://monastudio.hu`, 
+     `https://monabeauty2.pages.dev`
+   - Authorized redirect URIs: `https://monastudio.hu/api/auth/google/callback`,
+     `https://monabeauty2.pages.dev/api/auth/google/callback`
+2. **Client ID**-t a `wrangler.toml`-ba másolni (vagy Dashboardon beállítani 
+   ha új CF UI engedi)
+3. **Client Secret**-et a CF Dashboard → Variables and Secrets → Add Secret-ként
+
+### Architektúra részletek
+
+#### CSRF state cookie
+
+A `state` paraméter random 32-hex token, ami mind a:
+- **Cookie-ban** (`mona_oauth_state`, httpOnly + Secure + SameSite=Lax, 10 perc érvényes)
+- **Google redirect URL-jében**
+
+szerepel. A callback ellenőrzi hogy egyezik-e — ez megakadályozza a session 
+fixation támadást.
+
+#### Open redirect védelem
+
+A `?from=...` query paraméter csak relatív path lehet (`/aktualis-oldal`). 
+Ha valaki `?from=https://malicious.com`-ot küldene, a backend silent-en `/`-re 
+redirectal.
+
+#### Email match konzisztencia
+
+Ha egy vendég előbb klasszikus email + jelszó-val regisztrált, majd később 
+Google-lal próbálkozik **ugyanabban az email-ben** — mi automatikusan 
+**összekapcsoljuk a két fiókot** (set `google_id` az meglévő rekordra). 
+Ettől kezdve **mindkét módon** beléphet ugyanabba a fiókba.
+
+A fordított eset: ha valaki Google-lal regisztrált, később jelszóval szeretne 
+belépni — a login.ts visszadob egy `oauth_only_account` hibát (Sprint 4.5-ben 
+lesz "Jelszó beállítása" flow a profilban).
+
+### Mit NEM csinál (Sprint 4.4-4.5)
+
+- ❌ Facebook Login gomb — Sprint 4.4
+- ❌ Apple Sign-In — későbbi (Sprint 7+, iOS app esetén)
+- ❌ "Jelszó beállítása" flow OAuth-only fiókokhoz — Sprint 4.5
+- ❌ Profil oldalon "Connect Google" gomb (link/unlink Google fiókot a logged-in 
+  vendégnek) — Sprint 4.5
+
+### Fájlok (5 új + 3 módosított)
+
+**Új**:
+- `src/lib/oauth-google.ts`
+- `src/pages/api/auth/google.ts`
+- `src/pages/api/auth/google/callback.ts`
+
+**Módosított**:
+- `package.json` — verzió `0.8.7` → `0.8.8`
+- `src/components/auth/AuthModal.astro` — Google gomb + divider + JS + auth_error handler
+- `wrangler.toml` — `GOOGLE_CLIENT_ID` placeholder
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 

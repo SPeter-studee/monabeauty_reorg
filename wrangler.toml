@@ -34,16 +34,21 @@ ORDER_NOTIFICATION_EMAIL = "mona@monastudio.hu"
 # Secret Key külön Cloudflare Dashboard env var (encrypted).
 TURNSTILE_SITE_KEY = "0x4AAAAAADEH_nQXuBd04EEr"
 
+# Sprint 4.3 — Google OAuth Client ID (publikus)
+# A Google Cloud Console → Credentials → OAuth Client ID-ról másold ide.
+# Példa: "123456789012-abc...xyz.apps.googleusercontent.com"
+# Ha üresen marad, a Google bejelentkezés gomb disabled állapotban lesz.
+GOOGLE_CLIENT_ID = ""
+
 # ── Környezet változók (titkos kulcsok) ──────────────────────────────────────
 # Cloudflare dashboardon kell beállítani (Encrypted/Secret típussal):
 # Settings → Variables and Secrets → Production + Preview scope:
 #
 # Sprint 4 (auth):
 #   TURNSTILE_SECRET_KEY    (Cloudflare Turnstile — server-side captcha verify)
-#   GOOGLE_CLIENT_ID
-#   GOOGLE_CLIENT_SECRET
-#   FACEBOOK_APP_ID         (új — Sprint 2B 6. kör)
-#   FACEBOOK_APP_SECRET     (új — Sprint 2B 6. kör)
+#   GOOGLE_CLIENT_SECRET    (Google Cloud Console — OAuth Client Secret, "GOCSPX-..." formátum)
+#   FACEBOOK_APP_ID         (Sprint 4.4)
+#   FACEBOOK_APP_SECRET     (Sprint 4.4)
 #
 # Sprint 2A (email + newsletter):
 #   RESEND_API_KEY
