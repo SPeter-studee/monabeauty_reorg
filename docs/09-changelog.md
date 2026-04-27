@@ -14,7 +14,65 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.1] — 2026-04-27 — Sprint 4.2 — Login / Register modal popup UI ⭐
+## [0.8.2] — 2026-04-27 — Sprint 4.2 hotfix — Astro script blokkok javítása ⭐
+
+### Javítva — kritikus
+
+A v0.8.1-es Sprint 4.2 deploy után a **header 👤 ikon kattintás semmit sem 
+csinált**. Diagnózis:
+
+A v0.8.1 mind az AuthModal.astro mind a Header.astro **dinamikus `import()` 
+expression**-t használt:
+```javascript
+import("@/lib/auth-state").then((mod) => { ... });
+```
+
+**Ez az Astro script blokkokban két okból nem működik**:
+
+1. **AuthModal.astro** `<script define:vars={{ turnstileSiteKey }}>`-t használt — 
+   ez **Astro inline mode** ami **NEM bundle-ölődik Vite-tel**. A path alias (`@/`) 
+   és az ES module dinamikus import nem resolve-ódik runtime-ban → silent fail
+2. **Header.astro** normál `<script>`-ben dinamikus `import()`-ot használt — 
+   ez technikailag működhet, de **inkonzisztens** a fájl többi `import` 
+   statikus stílusával, és bizonyos build konfigurációkban (különösen Cloudflare 
+   Pages) chunk loading hibára futhat
+
+### Fix — két különálló script-blokk + statikus import
+
+**AuthModal.astro**:
+- Egy `<script is:inline define:vars={{ turnstileSiteKey }}>` — csak a publikus
+  `TURNSTILE_SITE_KEY`-t teszi a `window.__MONA_TURNSTILE_SITE_KEY__` globálba
+- Egy normál `<script>` (Vite bundle) — **statikus import** `@/lib/auth-state`-ből,
+  IIFE wrapper, az inline-ban kitett globálból olvas
+
+**Header.astro**:
+- A meglévő top-level `import { ... } from "@/lib/cart"` mintát követve,
+  `import { ... } from "@/lib/auth-state"` szintén top-level
+- Az auth integráció IIFE-be wrappolva (nem dinamikus import callback)
+
+### Tanulság
+
+**Astro `<script>` blokkok három mód**:
+1. **`<script>`** — alapértelmezett, **bundle-ölődik Vite-tel**, statikus 
+   `import` és path alias működnek. **Frontmatter változó NEM elérhető**.
+2. **`<script is:inline>`** — DOM-ba kerül változatlanul, **Vite NEM bundle-eli**.
+   Statikus `import` **NEM** működik (no Vite transform). Frontmatter változó 
+   `define:vars`-szel átadható.
+3. **`<script define:vars>`** — automatikusan `is:inline` mode-ban. Frontmatter 
+   változót átveszi de NEM bundle-ölődik.
+
+**Helyes minta**: ha frontmatter változót kell **és** import is kell, **két 
+script blokk** (mint a v0.8.2 AuthModal-ban): inline a változó-bridge, normál 
+script a logikának.
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.1` → `0.8.2`
+- `src/components/auth/AuthModal.astro` — script struktúra javítás
+- `src/components/common/Header.astro` — auth-state statikus importtá
+
+---
+
+
 
 **Frontend** kiegészítés a Sprint 4.1 backend-jéhez. Most a vendég **ténylegesen** 
 tud regisztrálni és bejelentkezni — a header 👤 ikonja **élővé válik**.

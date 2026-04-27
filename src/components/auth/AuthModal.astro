@@ -238,29 +238,39 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
   </div>
 </div>
 
-<script define:vars={{ turnstileSiteKey }}>
-  // ── Imports ─────────────────────────────────────────────────────────────────
-  import("@/lib/auth-state").then((mod) => {
-    initAuthModal(mod);
-  });
+<!-- Inline script — csak a publikus Site Key-t teszi a window-ra (Astro define:vars
+     nem támogat ES import-ot, ezért ez a kis "bridge" inline) -->
+<script is:inline define:vars={{ turnstileSiteKey }}>
+  window.__MONA_TURNSTILE_SITE_KEY__ = turnstileSiteKey || "";
+</script>
 
-  function initAuthModal(authState) {
-    const {
-      setAuthenticated,
-      AUTH_MODAL_OPEN_EVENT,
-      AUTH_MODAL_CLOSE_EVENT,
-    } = authState;
+<script>
+  // Sprint 4.2 — AuthModal logika
+  // (Ez a script bundle-ölődik Vite-tel, működik az import + path alias)
 
-    const modal = document.querySelector("[data-auth-modal]");
-    const overlay = document.querySelector("[data-auth-modal-overlay]");
-    const closeBtn = document.querySelector("[data-auth-modal-close]");
-    const loginView = document.querySelector('[data-auth-view="login"]');
-    const registerView = document.querySelector('[data-auth-view="register"]');
-    const tabs = document.querySelectorAll("[data-auth-tab]");
-    const switchBtns = document.querySelectorAll("[data-switch-to]");
-    const loginForm = document.querySelector('[data-auth-form="login"]');
-    const registerForm = document.querySelector('[data-auth-form="register"]');
-    const turnstileContainer = document.querySelector("[data-turnstile-container]");
+  import {
+    setAuthenticated,
+    getAuthState,
+    AUTH_MODAL_OPEN_EVENT,
+    AUTH_MODAL_CLOSE_EVENT,
+  } from "@/lib/auth-state";
+
+  // Globálba kitett változó az inline script-ből
+  const turnstileSiteKey: string = (window as any).__MONA_TURNSTILE_SITE_KEY__ || "";
+
+  initAuthModal();
+
+  function initAuthModal() {
+    const modal = document.querySelector<HTMLElement>("[data-auth-modal]");
+    const overlay = document.querySelector<HTMLElement>("[data-auth-modal-overlay]");
+    const closeBtn = document.querySelector<HTMLButtonElement>("[data-auth-modal-close]");
+    const loginView = document.querySelector<HTMLElement>('[data-auth-view="login"]');
+    const registerView = document.querySelector<HTMLElement>('[data-auth-view="register"]');
+    const tabs = document.querySelectorAll<HTMLButtonElement>("[data-auth-tab]");
+    const switchBtns = document.querySelectorAll<HTMLButtonElement>("[data-switch-to]");
+    const loginForm = document.querySelector<HTMLFormElement>('[data-auth-form="login"]');
+    const registerForm = document.querySelector<HTMLFormElement>('[data-auth-form="register"]');
+    const turnstileContainer = document.querySelector<HTMLElement>("[data-turnstile-container]");
 
     if (!modal || !overlay || !loginForm || !registerForm) {
       console.error("[auth-modal] markup missing");
@@ -268,15 +278,16 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     }
 
     let turnstileLoaded = false;
-    let turnstileWidgetId = null;
+    let turnstileWidgetId: string | null = null;
     let lastTurnstileToken = "";
-    let currentView = "login";
 
     // ── Open / close event listeners ─────────────────────────────────────────
-    window.addEventListener(AUTH_MODAL_OPEN_EVENT, (e) => {
-      const view = (e && e.detail && e.detail.view) || "login";
+    window.addEventListener(AUTH_MODAL_OPEN_EVENT, ((e: Event) => {
+      const ce = e as CustomEvent<{ view?: "login" | "register" }>;
+      const view = ce.detail?.view || "login";
       openModal(view);
-    });
+    }) as EventListener);
+
     window.addEventListener(AUTH_MODAL_CLOSE_EVENT, closeModal);
 
     overlay.addEventListener("click", closeModal);
@@ -289,12 +300,11 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
       }
     });
 
-    function openModal(view) {
-      modal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden"; // background scroll lock
+    function openModal(view: "login" | "register") {
+      modal!.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
       switchView(view);
 
-      // Focus first input — accessibility
       requestAnimationFrame(() => {
         const firstInput = view === "login"
           ? document.getElementById("login-email")
@@ -304,10 +314,9 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     }
 
     function closeModal() {
-      modal.setAttribute("aria-hidden", "true");
+      modal!.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
-      // Hibaüzenetek törlése
-      document.querySelectorAll("[data-auth-error]").forEach(el => {
+      document.querySelectorAll<HTMLElement>("[data-auth-error]").forEach((el) => {
         el.hidden = true;
         el.textContent = "";
       });
@@ -316,30 +325,26 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     // ── Tab váltás ──────────────────────────────────────────────────────────
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
-        const view = tab.dataset.authTab;
+        const view = tab.dataset.authTab as "login" | "register";
         switchView(view);
       });
     });
 
     switchBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
-        switchView(btn.dataset.switchTo);
+        switchView(btn.dataset.switchTo as "login" | "register");
       });
     });
 
-    function switchView(view) {
-      currentView = view;
-      // Tabs
+    function switchView(view: "login" | "register") {
       tabs.forEach((t) => {
         const isActive = t.dataset.authTab === view;
         t.classList.toggle("auth-modal__tab--active", isActive);
         t.setAttribute("aria-selected", String(isActive));
       });
-      // Views
-      loginView.hidden = view !== "login";
-      registerView.hidden = view !== "register";
+      loginView!.hidden = view !== "login";
+      registerView!.hidden = view !== "register";
 
-      // Turnstile lazy load — csak amikor először a register tab-ra kapcsolunk
       if (view === "register" && !turnstileLoaded) {
         loadTurnstile();
       }
@@ -357,28 +362,19 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
         return;
       }
 
-      // Set up the global onload callback
-      window.onTurnstileLoad = () => {
-        if (!window.turnstile) {
-          console.error("[auth-modal] Turnstile script loaded but window.turnstile not available");
-          return;
-        }
-        turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+      (window as any).onTurnstileLoad = () => {
+        const ts = (window as any).turnstile;
+        if (!ts || !turnstileContainer) return;
+        turnstileContainer.innerHTML = "";
+        turnstileWidgetId = ts.render(turnstileContainer, {
           sitekey: turnstileSiteKey,
           theme: "light",
-          callback: (token) => {
-            lastTurnstileToken = token;
-          },
-          "expired-callback": () => {
-            lastTurnstileToken = "";
-          },
-          "error-callback": () => {
-            lastTurnstileToken = "";
-          },
+          callback: (token: string) => { lastTurnstileToken = token; },
+          "expired-callback": () => { lastTurnstileToken = ""; },
+          "error-callback": () => { lastTurnstileToken = ""; },
         });
       };
 
-      // Inject the Turnstile script
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad";
       script.async = true;
@@ -394,9 +390,9 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     });
 
     async function submitLogin() {
-      const submitBtn = document.querySelector('[data-auth-submit="login"]');
-      const errorEl = document.querySelector('[data-auth-error="login"]');
-      const formData = new FormData(loginForm);
+      const submitBtn = document.querySelector<HTMLButtonElement>('[data-auth-submit="login"]');
+      const errorEl = document.querySelector<HTMLElement>('[data-auth-error="login"]');
+      const formData = new FormData(loginForm!);
 
       setLoading(submitBtn, true);
       hideError(errorEl);
@@ -419,7 +415,6 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
           return;
         }
 
-        // Sikeres login
         setAuthenticated(data.customer);
         closeModal();
       } catch (err) {
@@ -436,14 +431,13 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     });
 
     async function submitRegister() {
-      const submitBtn = document.querySelector('[data-auth-submit="register"]');
-      const errorEl = document.querySelector('[data-auth-error="register"]');
-      const formData = new FormData(registerForm);
+      const submitBtn = document.querySelector<HTMLButtonElement>('[data-auth-submit="register"]');
+      const errorEl = document.querySelector<HTMLElement>('[data-auth-error="register"]');
+      const formData = new FormData(registerForm!);
 
       const acceptsTerms = formData.get("acceptsTerms") === "on";
       const acceptsMarketing = formData.get("acceptsMarketing") === "on";
 
-      // Kliens oldali validáció
       if (!acceptsTerms) {
         showError(errorEl, "Az ÁSZF és az adatvédelmi tájékoztató elfogadása kötelező.");
         return;
@@ -455,14 +449,12 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
         return;
       }
 
-      // Turnstile token — ha turnstile site key be van állítva, kötelező
       let turnstileToken = lastTurnstileToken;
       if (turnstileSiteKey && !turnstileToken) {
         showError(errorEl, "Kérlek várd meg a robotvédelem ellenőrzését.");
         return;
       }
       if (!turnstileSiteKey) {
-        // Fejlesztői módban a backend is átengedi — placeholder token
         turnstileToken = "DEV_NO_CAPTCHA";
       }
 
@@ -489,19 +481,16 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
         if (!res.ok || !data.success) {
           showError(errorEl, data.message || "Regisztráció sikertelen.");
           setLoading(submitBtn, false);
-          // Turnstile reset — egy token csak egyszer használható
-          if (window.turnstile && turnstileWidgetId) {
-            window.turnstile.reset(turnstileWidgetId);
+          const ts = (window as any).turnstile;
+          if (ts && turnstileWidgetId) {
+            ts.reset(turnstileWidgetId);
             lastTurnstileToken = "";
           }
           return;
         }
 
-        // Sikeres register
         setAuthenticated(data.customer);
         closeModal();
-
-        // Sikerüzenet — TODO: toast vagy welcome banner Sprint 4.5-ben
         console.log("[auth-modal] register success:", data.message);
       } catch (err) {
         console.error("[auth-modal] register error:", err);
@@ -511,22 +500,22 @@ const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
-    function setLoading(btn, loading) {
+    function setLoading(btn: HTMLButtonElement | null, loading: boolean) {
       if (!btn) return;
-      const text = btn.querySelector(".auth-modal__submit-text");
-      const loadingEl = btn.querySelector(".auth-modal__submit-loading");
+      const text = btn.querySelector<HTMLElement>(".auth-modal__submit-text");
+      const loadingEl = btn.querySelector<HTMLElement>(".auth-modal__submit-loading");
       if (text) text.hidden = loading;
       if (loadingEl) loadingEl.hidden = !loading;
       btn.disabled = loading;
     }
 
-    function showError(el, message) {
+    function showError(el: HTMLElement | null, message: string) {
       if (!el) return;
       el.textContent = message;
       el.hidden = false;
     }
 
-    function hideError(el) {
+    function hideError(el: HTMLElement | null) {
       if (!el) return;
       el.textContent = "";
       el.hidden = true;
