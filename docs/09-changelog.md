@@ -7,9 +7,99 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 4 — Ügyfél törzs (auth)_
-- _Sprint 5 — Termékoldalon kötelező Bőrtípus választás, AI chatbot proaktív 
+- _Sprint 4.2 — Login / Register modal popup UI (frontend)_
+- _Sprint 4.3 — Google OAuth integráció_
+- _Sprint 4.4 — Facebook Login_
+- _Sprint 4.5 — Profil oldalak (/profil, /profil/rendelesek, /profil/cimek, /profil/kivansaglista) + email verifikáció_
+- _Sprint 5 — Admin (Mónika) + Termékoldalon kötelező Bőrtípus választás, AI chatbot proaktív 
   konzultáció, post-purchase email, GA4 add_to_cart event_
+
+---
+
+## [0.8.0] — 2026-04-27 — Sprint 4.1 — Auth backend (D1 séma + API endpoints) ⭐
+
+**MINOR bump** — Sprint 4 (Ügyfél törzs / auth) első csomagja.
+
+### Hozzáadva — Adatbázis (D1)
+
+- **`migrations/0003_sprint4_customers.sql`** — új migráció:
+  - `customers` tábla: email + jelszó hash (PBKDF2) + OAuth ID-k (Google, Facebook, 
+    Apple — utóbbi placeholder Sprint 7+ -re) + profil adatok + Mailchimp bridge 
+    flag-ek + status / metadata
+  - `customer_sessions` tábla: server-side session tárolás (session_id 32-byte hex, 
+    customer_id FK, IP + UA audit, expires_at + last_used_at)
+  - `customer_addresses` tábla: címkönyv (label, recipient_name, street/city/postal,
+    is_shipping/is_billing/is_default flag-ek)
+  - `wishlists` tábla: kívánságlista (customer_id × product_id)
+  - **`orders` bővítés**: `customer_id INTEGER REFERENCES customers(id)` — 
+    a Sprint 3.4 guest checkout-ja most opcionálisan customer-hez köthető
+  - `updated_at` triggerek + 12 index a gyakori lookup mintákhoz
+
+### Hozzáadva — TypeScript libraries
+
+- **`src/lib/types/auth.ts`** (~250 sor) — D1 row és public view típusok
+- **`src/lib/auth.ts`** (~280 sor) — PBKDF2 hash, session, cookie, Turnstile, validátorok
+- **`src/lib/mailchimp.ts`** (~370 sor) — `lookupMember`, `addTags`, 
+  `bridgeRegistrationToMailchimp`, `tagPurchase` + tiszta TS MD5 (RFC 1321)
+
+### Hozzáadva — API endpointok
+
+- **`POST /api/auth/register`** — email + jelszó + Turnstile, Mailchimp sync bridge
+- **`POST /api/auth/login`** — email + jelszó, user enumeration védelem
+- **`POST /api/auth/logout`** — idempotens, cookie clear
+- **`GET /api/auth/me`** — current user check (frontend polling)
+
+### Architektúra döntések
+
+- **Session**: server-side D1 + httpOnly cookie (nem JWT)
+- **Jelszó hash**: PBKDF2 600k iter. + SHA-256 + 32-byte salt (Web Crypto API, 
+  nincs npm dep, OWASP 2023 ajánlás)
+- **Captcha**: Cloudflare Turnstile (ingyenes, GDPR-friendly)
+- **Mailchimp bridge**: synchronous (~500-1000ms a regisztrációhoz egyszer)
+
+### Cloudflare Pages env vars
+
+Új env vars (Mónika állítja be a CF Pages → Settings → Environment Variables-ben):
+
+| Változó | Honnan | Sprint |
+|---|---|---|
+| `TURNSTILE_SITE_KEY` | dash.cloudflare.com → Turnstile → Add Site | 4.2 |
+| `TURNSTILE_SECRET_KEY` | ugyanott | **4.1 most** |
+| `GOOGLE_CLIENT_ID/SECRET` | Google Cloud Console → OAuth | 4.3 |
+| `FACEBOOK_APP_ID/SECRET` | Meta for Developers | 4.4 |
+
+### Migráció futtatás (Mónika feladata)
+
+```powershell
+# Lokális teszt:
+npx wrangler d1 execute monastudio-v2-db --local --file migrations/0003_sprint4_customers.sql
+
+# Production:
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0003_sprint4_customers.sql
+
+# Ellenőrzés:
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
+```
+
+### Mit NEM csinál ez a verzió (Sprint 4.x folytatás)
+
+- ❌ Login/Register UI (modal popup) — Sprint 4.2
+- ❌ Google OAuth flow — Sprint 4.3
+- ❌ Facebook Login — Sprint 4.4
+- ❌ Profil oldalak + email verifikáció + password reset — Sprint 4.5
+- ❌ Brute-force védelem (rate limiting) — Sprint 4.x KV-vel
+
+### Fájlok (9 új)
+
+- `package.json` — verzió `0.7.17` → `0.8.0` (MINOR)
+- `migrations/0003_sprint4_customers.sql`
+- `src/lib/types/auth.ts`
+- `src/lib/auth.ts`
+- `src/lib/mailchimp.ts`
+- `src/pages/api/auth/register.ts`
+- `src/pages/api/auth/login.ts`
+- `src/pages/api/auth/logout.ts`
+- `src/pages/api/auth/me.ts`
 
 ---
 

@@ -1326,7 +1326,92 @@ git push
 
 ---
 
-## ⏳ Sprint 4 — Ügyfél törzs (auth)
+## 🚧 Sprint 4 — Ügyfél törzs (auth) — folyamatban
+
+**Cél**: Regisztráció, bejelentkezés (email+jelszó, Google OAuth, Facebook Login), profil oldal.
+
+### Sprint 4.1 — Auth backend (v0.8.0) ✅ KÉSZ
+- D1 séma: `customers`, `customer_sessions`, `customer_addresses`, `wishlists` + 
+  `orders.customer_id` FK
+- TS típusok: `CustomerRow` / `CustomerPublic` (a hash sosem kerül ki!)
+- Auth library: PBKDF2 600k iter. + SHA-256 (Web Crypto API), session cookie 
+  (httpOnly + Secure + SameSite=Lax), Cloudflare Turnstile captcha
+- Mailchimp library: refaktorált, `bridgeRegistrationToMailchimp` + `tagPurchase`
+- API endpointok: `POST /api/auth/register`, `/login`, `/logout`, `GET /api/auth/me`
+
+### Sprint 4.2 — Login / Register UI (modal popup) ⏳
+- Modal komponens (Sephora-style, gyorsabb mint dedikált oldal)
+- Login form: email + jelszó + "Belépés"
+- Register form: email + jelszó + first/last name (opt) + ÁSZF + marketing consent + Turnstile widget
+- "Elfelejtett jelszó" link → reset modal (Sprint 4.5)
+- Header avatar dropdown ha logged-in (Belépés link helyett)
+- Cart drawer / checkout: prefill címek a logged-in vendég profile-jából
+
+### Sprint 4.3 — Google OAuth ⏳
+- `/api/auth/google` (redirect endpoint) + `/api/auth/google-callback`
+- OAuth state CSRF protection (cookie-ban)
+- Email match: ha létező customer (csak password), összekapcsolás (`google_id` mező)
+- Új customer ha még nincs
+
+### Sprint 4.4 — Facebook Login ⏳
+- Hasonló mint Google, de Facebook Graph API
+- App Review-ra szükség lehet (ha publikus)
+- Mailchimp bridge ugyanaz: ha az email már newsletter member, "registered" tag
+
+### Sprint 4.5 — Profil oldalak + email verifikáció + password reset ⏳
+
+**Új oldalak** (mind védett, redirect ha nem logged-in):
+- `/profil` — szerkesztés (név, telefon, avatar, jelszó-csere link)
+- `/profil/rendelesek` — rendelési előzmények (`orders` tábla customer_id alapján)
+- `/profil/cimek` — címkönyv (CRUD a `customer_addresses` tábla-n)
+- `/profil/kivansaglista` — wishlist (CRUD a `wishlists` táblán)
+
+**Email verifikáció**:
+- Regisztrációkor `email_verified = 0` (most 0 default), `email_verify_token` set
+- Welcome email: link `/api/auth/verify-email?token=...`
+- Verifikáció után: `email_verified = 1`, token törölve
+- A nem verifikált fiókok bizonyos műveleteket nem csinálhatnak (pl. checkout)
+
+**Password reset**:
+- `/api/auth/forgot-password` — email + Turnstile → `password_reset_token` + email
+- `/api/auth/reset-password` — token + új jelszó → új hash
+- Token 1h-os érvényességű
+
+### OAuth providerek — már a doksiban lévő összehasonlítás megmarad
+
+| Provider | Mit ad | Költség | Magyar piac |
+|---|---|---|---|
+| **Google** | email, név, kép, locale | Ingyen | ✅ Mindenki használ |
+| **Facebook** | email (ha hozzájárul), név, ID | Ingyen, App Review kell | ✅ Magas penetrate |
+| **Apple** | email vagy proxy, név (csak 1× ad) | $99/év Developer | 🟡 Csak iPhone |
+| **Email/jelszó** | nincs (mi tároljuk) | Ingyen | ✅ Mindenki tudja |
+
+### Cloudflare env vars
+
+- `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` (új — Sprint 4.1 most kell)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (Sprint 4.3)
+- `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` (Sprint 4.4)
+
+### Apple Sign-In későbbre (opcionális, doksi szerint)
+
+A `customers` tábla `apple_id` mezővel készült — ha valaha iOS app-ot készítenénk, 
+nem kell migráció. Egyelőre kihagyva ($99/év Developer Account, ES256 JWT bonyolultság).
+
+### Hírlevél ↔ regisztráció bridge — Sprint 4.1-ben ✅ implementálva
+
+A `bridgeRegistrationToMailchimp()` függvény a regisztráció flow-ban:
+1. Mailchimp lookup az új customer email alapján
+2. Ha **megtalálja** (status: subscribed/pending) → `is_newsletter_member = 1`, 
+   `newsletter_joined_at = now()`, "registered" tag a Mailchimp-en
+3. A register API válaszában jelzi: *"Mivel már fel vagy iratkozva a havi naplóra, 
+   az első rendelésednél kedvezményt kapsz."*
+
+A pontos kedvezmény (-10% az első rendelésnél) **Sprint 4.5 / Sprint 5-ben** 
+implementálódik a checkout flow-ban (most még csak a flag van mentve).
+
+---
+
+## ⏳ Sprint 4 — Ügyfél törzs (auth) — eredeti tervezet (referenciaként megőrizve)
 
 **Cél**: Regisztráció, bejelentkezés (email+jelszó, Google OAuth, Facebook Login), profil oldal.
 
@@ -1508,7 +1593,8 @@ A pontos kedvezmény értékek és a jutalom-logika **Sprint 4-ben véglegesedik
 | Sprint 3.3 | 2026-04-26 | ✅ Kész | Termékoldal + kosár drawer + /kosar |
 | Sprint 3.4 | 2026-04-26 | ✅ Kész | Pénztár + email + Mailchimp tag |
 | UI csiszolási hullám | 2026-04-26 → 27 | ✅ Kész | v0.7.3-v0.7.8 (cart UI, termékoldal, header mobile) |
-| Sprint 4 | TBD | ⏳ | Ügyfél törzs (auth) — 15+ |
+| Sprint 4.1 | 2026-04-27 | ✅ Kész | Auth backend (D1 + API) — v0.8.0 |
+| Sprint 4.2-5 | TBD | 🚧 | Ügyfél törzs folytatás (UI, OAuth, profil) |
 | Sprint 5 | TBD | ⏳ | Admin felület — 30+ |
 | Sprint 6 | TBD | ⏳ | Integrációk + AI (FoxPost, Setmore, chatbot) — 20+ |
 | Sprint 7 | TBD | ⏳ | Cutover (DNS váltás) — minimal |
