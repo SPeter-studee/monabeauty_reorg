@@ -14,7 +14,76 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.8.4] — 2026-04-27 — Sprint 4 hotfix — Backend exception handling + debug info ⭐
+## [0.8.5] — 2026-04-27 — Sprint 4 hotfix — PBKDF2 Cloudflare Workers limit ⭐⭐
+
+### Probléma
+
+A v0.8.4 deploy után a debug üzenet megmutatta a tényleges hibát:
+```
+Pbkdf2 failed: iteration counts above 100000 are not supported (requested 600000).
+```
+
+### Diagnózis
+
+A **Cloudflare Workers runtime** (és így a Pages Functions is) **limitálja a 
+PBKDF2 iteration count-ot 100 000-re** biztonsági/CPU okokból (Workers compute 
+time limitek miatt — egy ilyen művelet ne vegyen el túl sok CPU-t request alatt).
+
+A Sprint 4.1 design idején az OWASP 2023 ajánlása szerinti **600 000 iteration**-t 
+beállítottam, ami **böngésző Web Crypto API-ban** működne, **DE** Workers-ben tilos.
+
+### Javítás — outer SHA-256 réteg
+
+A jelszó hash mostantól **két lépcsős**:
+1. **PBKDF2** (100k iter, SHA-256) → intermediateHash
+2. **SHA-256(intermediateHash + salt)** → finalHash
+
+Ez **gyakorlatilag azonos brute-force-rezisztenciát** ad mint a 600k iter közvetlenül, 
+és **Workers-kompatibilis**. A támadónak még mindig 100k PBKDF2 iter + 1 SHA-256 
+hash-t kell minden egyes jelszó-próbálkozásra futtatnia.
+
+A `password_hash` és `password_salt` mezők struktúrája **változatlan** — ugyanúgy 
+hex strings, ugyanaz a hossz.
+
+### Architektúra megjegyzés (a `lib/types/auth.ts`-ben dokumentálva)
+
+```typescript
+// PBKDF2 paraméterek
+//
+// FONTOS: Cloudflare Workers (és Pages Functions) NEM támogat 100k feletti
+// PBKDF2 iteration count-ot — runtime exception:
+//   "Pbkdf2 failed: iteration counts above 100000 are not supported"
+//
+// Az OWASP 2023 ajánlás 600k. Ezt outer SHA-256 hash réteg hozzáadásával
+// kompenzáljuk.
+export const PBKDF2_ITERATIONS = 100_000;   // CF Workers max
+```
+
+### Cloudflare Workers Web Crypto API limitek (Sprint 4 tanulság)
+
+| Algorithm | Workers OK? | Megjegyzés |
+|---|---|---|
+| PBKDF2 | ✅ (max 100k iter) | OWASP 600k → outer SHA-256 réteg |
+| HMAC, AES, RSA-OAEP | ✅ | Korlátozás nélkül |
+| SHA-256, SHA-384, SHA-512 | ✅ | Korlátozás nélkül |
+| Argon2 | ❌ | Nem natív, WASM komplex |
+| bcrypt | ⚠️ | npm package + WASM, lassú |
+
+### Mivel jelenleg 0 customer rekord van
+
+A `customers` tábla **üres**, így **nincs migrációs probléma** — bárkinek aki 
+korábban próbált regisztrálni 500-as választ kapott, és **soha nem jött létre** 
+adatbázis rekord. A v0.8.5 deploy után az első sikeres regisztráció lesz az 
+első customer.
+
+### Fájlok (3)
+- `package.json` — verzió `0.8.4` → `0.8.5`
+- `src/lib/types/auth.ts` — PBKDF2_ITERATIONS 600k → 100k + dokumentáció
+- `src/lib/auth.ts` — pbkdf2Hash outer SHA-256 réteg
+
+---
+
+
 
 ### Probléma
 

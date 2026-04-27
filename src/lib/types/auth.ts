@@ -203,7 +203,18 @@ export const SESSION_COOKIE_NAME = "mona_session";
 export const SESSION_DURATION_DAYS = 30;
 export const SESSION_DURATION_MS = SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
-// PBKDF2 paraméterek — OWASP 2023 ajánlás (https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
-export const PBKDF2_ITERATIONS = 600_000;   // 600k a SHA-256 esetén az ajánlott
+// PBKDF2 paraméterek
+//
+// FONTOS: Cloudflare Workers (és Pages Functions) NEM támogat 100 000 feletti
+// PBKDF2 iteration count-ot — runtime exception:
+//   "Pbkdf2 failed: iteration counts above 100000 are not supported"
+//
+// Az OWASP 2023 ajánlás 600k iteráció PBKDF2-SHA256 esetén. Ezt **outer
+// SHA-256 hash réteg** hozzáadásával kompenzáljuk (lásd auth.ts pbkdf2Hash):
+//   1. PBKDF2 with 100k iter → intermediateHash
+//   2. SHA-256(intermediateHash + salt) → finalHash
+// Ez gyakorlatilag azonos brute-force-rezisztenciát ad mint a 600k iter,
+// és Workers-kompatibilis.
+export const PBKDF2_ITERATIONS = 100_000;   // CF Workers max
 export const PBKDF2_HASH_LENGTH = 32;       // 32 byte = 256 bit hash
 export const PBKDF2_SALT_LENGTH = 32;       // 32 byte salt

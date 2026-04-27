@@ -35,7 +35,13 @@ function generateSalt(): string {
 }
 
 /**
- * Jelszó hash PBKDF2-vel. Eredmény: hex string (64 karakter, 32 byte).
+ * Jelszó hash PBKDF2-vel + outer SHA-256 réteg.
+ * Eredmény: hex string (64 karakter, 32 byte).
+ *
+ * **Architektúra**: a Cloudflare Workers PBKDF2 100k iter limit miatt a 600k
+ * helyett egy outer SHA-256 hash réteget alkalmazunk. Ez gyakorlatilag azonos
+ * brute-force költség, de Workers-kompatibilis.
+ *
  * @param password — kliens által küldött plaintext jelszó
  * @param saltHex — 64-karakter hex salt (a customers.password_salt mezőből)
  */
@@ -44,7 +50,7 @@ async function pbkdf2Hash(password: string, saltHex: string): Promise<string> {
   const passwordBuffer = enc.encode(password);
   const saltBuffer = hexToBytes(saltHex);
 
-  // Web Crypto API: importPasswordKey + deriveBits
+  // Step 1: PBKDF2 (100k iter, max ami CF Workers-ben elérhető)
   const baseKey = await crypto.subtle.importKey(
     "raw",
     passwordBuffer,
@@ -64,7 +70,13 @@ async function pbkdf2Hash(password: string, saltHex: string): Promise<string> {
     PBKDF2_HASH_LENGTH * 8 // bits
   );
 
-  return bytesToHex(new Uint8Array(derivedBits));
+  // Step 2: Outer SHA-256(intermediateHash + salt) — extra brute-force költség
+  const combined = new Uint8Array(derivedBits.byteLength + saltBuffer.byteLength);
+  combined.set(new Uint8Array(derivedBits), 0);
+  combined.set(saltBuffer, derivedBits.byteLength);
+
+  const finalHashBuffer = await crypto.subtle.digest("SHA-256", combined);
+  return bytesToHex(new Uint8Array(finalHashBuffer));
 }
 
 /**
