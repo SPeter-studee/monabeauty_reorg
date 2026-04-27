@@ -7,12 +7,117 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 4.2 — Login / Register modal popup UI (frontend)_
 - _Sprint 4.3 — Google OAuth integráció_
 - _Sprint 4.4 — Facebook Login_
-- _Sprint 4.5 — Profil oldalak (/profil, /profil/rendelesek, /profil/cimek, /profil/kivansaglista) + email verifikáció_
-- _Sprint 5 — Admin (Mónika) + Termékoldalon kötelező Bőrtípus választás, AI chatbot proaktív 
-  konzultáció, post-purchase email, GA4 add_to_cart event_
+- _Sprint 4.5 — Profil oldalak + email verifikáció + password reset_
+- _Sprint 5 — Admin (Mónika) + termékkártya finomítás_
+
+---
+
+## [0.8.1] — 2026-04-27 — Sprint 4.2 — Login / Register modal popup UI ⭐
+
+**Frontend** kiegészítés a Sprint 4.1 backend-jéhez. Most a vendég **ténylegesen** 
+tud regisztrálni és bejelentkezni — a header 👤 ikonja **élővé válik**.
+
+### Hozzáadva — Auth state management
+
+- **`src/lib/auth-state.ts`** (~130 sor) — kliens-oldali auth state (analóg cart.ts):
+  - Singleton in-memory state (`loading` / `authenticated` / `anonymous`)
+  - `mona-auth-update` custom event a változásokhoz
+  - `refreshAuthState()` — initial GET `/api/auth/me` page load-on
+  - `setAuthenticated(customer)` / `setAnonymous()` — login/logout után
+  - `subscribeAuthState(handler)` — komponensek (Header, AuthModal) erre subscribe-olnak
+  - `openAuthModal(view)` / `closeAuthModal()` — modal nyitás eseményei
+
+### Hozzáadva — Komponensek
+
+- **`src/components/auth/AuthModal.astro`** (~700 sor) — login/register modal popup:
+  - **Single-instance** (a BaseLayout-ban egyszer), **két nézet** váltva (login / register)
+  - **Sephora-stílusú** középre úszó panel + sötét overlay + close gomb (✕) + Esc-re bezár
+  - **Tab switch** + cross-link ("Még nincs fiókod? Regisztrálj")
+  - **Login form**: email + jelszó + "Bejelentkezés" gomb + "Elfelejtetted a jelszót?"
+  - **Register form**: keresztnév/vezetéknév (opcionális) + email + jelszó + ÁSZF (kötelező) +
+    marketing consent (opcionális) + Cloudflare Turnstile widget
+  - **Turnstile lazy load** — csak akkor töltjük be a Cloudflare scriptet, amikor 
+    a register tab először aktiválódik (csendes UX, kevesebb forgalom mindenhol másutt)
+  - **Hibaüzenetek** magyarul, server-error közvetlen megjelenítve
+  - **Loading állapot** a submit gombokon
+  - Sikeres login/register után: `setAuthenticated(customer)` + modal bezárás 
+    (a vendég ott marad ahol volt — Sephora-stílus)
+- **`src/components/auth/UserMenu.astro`** (~180 sor) — dropdown logged-in állapotban:
+  - Üdv-üzenet + email
+  - Linkek: Profilom, Rendelési előzmények, Címeim, Kívánságlista (Sprint 4.5-ig 
+    az oldalak placeholder/404 lesznek)
+  - Kijelentkezés gomb (POST `/api/auth/logout` + `setAnonymous()`)
+  - SVG ikon mind a 4 link-en (kis 16×16)
+
+### Változott — Header integráció
+
+- **`src/components/common/Header.astro`**:
+  - A 👤 ikon `<a href="/bejelentkezes">` → `<button data-auth-trigger>` (placeholder
+    URL helyett funkciós gomb)
+  - Új wrapper `.site-header__account-wrap` `position: relative` — a UserMenu 
+    dropdown ehhez van pozícionálva (`top: 100%; right: 0`)
+  - JS subscribe `subscribeAuthState`-re — minden auth állapot változás-on frissít:
+    - **Anonymous**: ikon `aria-label="Belépés"`, kattintásra `openAuthModal("login")`
+    - **Authenticated**: ikon `aria-label="Üdv {firstName} — menü"`, kattintásra 
+      a UserMenu dropdown nyit
+  - Click outside + Esc-re a dropdown bezár
+  - Logout flow: POST `/api/auth/logout` → `setAnonymous()` → menu bezár
+- **`src/styles/components/header.css`**:
+  - `.site-header__action` — `min-height: 0` + `padding: 0` (a globális button 44px override)
+  - `.site-header__account-wrap` — új flex wrapper
+
+### Változott — BaseLayout
+
+- **`src/layouts/BaseLayout.astro`**:
+  - `import AuthModal` + `<AuthModal />` render — minden oldalon egy single-instance 
+    modal a BaseLayout szintjén
+  - Sorrend: Footer → CartDrawer → **AuthModal** → CookieConsent → ToastContainer
+
+### UX részletek
+
+- **Sikeres login után**: a vendég **ott marad ahol volt** (Sephora-stílus). A modal 
+  becsukódik, a header automatikusan átvált logged-in módra. Nincs redirect.
+- **Sikeres register után**: ugyanaz, plusz a console-ba kerül a Mailchimp bridge 
+  üzenet ("Mivel már fel vagy iratkozva..." vagy üdvözlő üzenet)
+- **Login → Register váltás**: in-place tab switch, nem új modal, nem reload
+- **Background scroll lock** modal nyitva (`document.body.style.overflow = "hidden"`)
+- **Mobile-on**: a modal panel `max-height: calc(100vh - 2 * var(--space-4))` és 
+  `overflow-y: auto` — bármilyen képernyőn jól megy
+
+### Cloudflare Turnstile aktiválódás
+
+A captcha **csak akkor működik valóban**, ha:
+1. `wrangler.toml` `TURNSTILE_SITE_KEY` be van állítva (publikus)
+2. Cloudflare Dashboard `TURNSTILE_SECRET_KEY` (Secret) be van állítva
+3. A Cloudflare Turnstile dashboardon a domain hostnames között szerepel a site
+
+Fejlesztői módban (env var nélkül) a captcha **kihagyódik** — a frontend a 
+`"DEV_NO_CAPTCHA"` token-t küldi, a backend `console.warn`-ja jelzi a hiányt.
+
+### Mit NEM csinál még (Sprint 4.x)
+
+- ❌ "Elfelejtett jelszó" flow — Sprint 4.5
+- ❌ Profil oldalak (4 placeholder dropdown link, 404 ha kattintasz) — Sprint 4.5
+- ❌ Email verifikáció — Sprint 4.5 (most a customer status azonnal "active")
+- ❌ Google OAuth gomb a modal-on — Sprint 4.3
+- ❌ Facebook Login gomb — Sprint 4.4
+- ❌ Welcome toast/banner sikeres register után — Sprint 4.5
+- ❌ Mentett címek prefill checkout-on — Sprint 4.5
+
+### Fájlok (5 új + 4 módosított)
+
+**Új**:
+- `src/lib/auth-state.ts`
+- `src/components/auth/AuthModal.astro`
+- `src/components/auth/UserMenu.astro`
+
+**Módosított**:
+- `package.json` — verzió `0.8.0` → `0.8.1`
+- `src/components/common/Header.astro` — auth trigger + UserMenu integráció
+- `src/styles/components/header.css` — account-wrap + action button reset
+- `src/layouts/BaseLayout.astro` — AuthModal render
 
 ---
 
@@ -59,14 +164,21 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ### Cloudflare Pages env vars
 
-Új env vars (Mónika állítja be a CF Pages → Settings → Environment Variables-ben):
+Új env vars beállítása **kétféleképpen** történik:
 
-| Változó | Honnan | Sprint |
-|---|---|---|
-| `TURNSTILE_SITE_KEY` | dash.cloudflare.com → Turnstile → Add Site | 4.2 |
-| `TURNSTILE_SECRET_KEY` | ugyanott | **4.1 most** |
-| `GOOGLE_CLIENT_ID/SECRET` | Google Cloud Console → OAuth | 4.3 |
-| `FACEBOOK_APP_ID/SECRET` | Meta for Developers | 4.4 |
+**A) `wrangler.toml`-ban (`[vars]` szekció)** — publikus, a kódba kerül (commit-elve):
+- `TURNSTILE_SITE_KEY = "0x..."` (ez a verzió tartalmazza)
+- (Hasonlóan a meglévő `SHIPPING_FOXPOST_FT`, `ORDER_NOTIFICATION_EMAIL`, stb.)
+
+**B) Cloudflare Dashboard → Variables and Secrets** — titkos, encrypted:
+- `TURNSTILE_SECRET_KEY` (új — Sprint 4.1 most kell)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (Sprint 4.3)
+- `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` (Sprint 4.4)
+
+**FONTOS megjegyzés**: a CF Dashboard **csak Secret-eket** enged hozzáadni vagy 
+módosítani, ha a projekt `wrangler.toml`-ban `[vars]` szekció van — a Plaintext 
+változókat kötelezően a `wrangler.toml`-ban kell deklarálni. Ez az új CF UI 
+viselkedés (2025+), és a megosztott env var management egységesítését szolgálja.
 
 ### Migráció futtatás (Mónika feladata)
 

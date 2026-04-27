@@ -6,6 +6,7 @@
 // - Hover state csak hover-képes eszközön
 
 import { getTranslations } from "@/i18n/utils";
+import UserMenu from "@/components/auth/UserMenu.astro";
 
 interface Props {
   currentPath?: string;
@@ -69,12 +70,23 @@ const isActive = (href: string) =>
         <span class="site-header__cart-count" data-cart-count hidden></span>
       </a>
 
-      <a href="/bejelentkezes" class="site-header__action" aria-label="Bejelentkezés">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </a>
+      <div class="site-header__account-wrap" data-auth-trigger-wrap>
+        <button
+          type="button"
+          class="site-header__action"
+          aria-label="Belépés"
+          data-auth-trigger
+          aria-expanded="false"
+          aria-haspopup="menu"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <UserMenu />
+      </div>
 
       <button
         class="site-header__action site-header__hamburger"
@@ -284,6 +296,96 @@ const isActive = (href: string) =>
     });
     ticking = true;
   }, { passive: true });
+
+  // ── Sprint 4.2 — Auth integráció ──────────────────────────────────────────
+  import("@/lib/auth-state").then((authMod) => {
+    const {
+      refreshAuthState,
+      subscribeAuthState,
+      openAuthModal,
+      setAnonymous,
+    } = authMod;
+
+    const authTrigger = document.querySelector("[data-auth-trigger]");
+    const authTriggerWrap = document.querySelector("[data-auth-trigger-wrap]");
+    const userMenu = document.querySelector("[data-user-menu]");
+    const userGreeting = document.querySelector("[data-user-greeting]");
+    const userEmail = document.querySelector("[data-user-email]");
+    const logoutBtn = document.querySelector("[data-logout-btn]");
+
+    if (!authTrigger || !authTriggerWrap || !userMenu) return;
+
+    let menuOpen = false;
+
+    // Initial load — server check
+    refreshAuthState();
+
+    // Subscribe — minden auth állapot változás-on frissít
+    subscribeAuthState((state) => {
+      if (state.status === "authenticated" && state.customer) {
+        // Logged-in mód
+        authTrigger.setAttribute("aria-label", `${state.customer.firstName || state.customer.email} — menü`);
+        const greetingName = state.customer.firstName || "Vendég";
+        userGreeting.textContent = `Üdv, ${greetingName}!`;
+        userEmail.textContent = state.customer.email;
+      } else {
+        // Anonymous — modal nyitja
+        authTrigger.setAttribute("aria-label", "Belépés");
+        closeMenu();
+      }
+    });
+
+    // Trigger gomb kattintás
+    authTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const state = authMod.getAuthState();
+      if (state.status === "authenticated") {
+        // Toggle menu
+        menuOpen ? closeMenu() : openMenu();
+      } else {
+        // Modal nyitás
+        openAuthModal("login");
+      }
+    });
+
+    // Click outside — menu close
+    document.addEventListener("click", (e) => {
+      if (menuOpen && authTriggerWrap && !authTriggerWrap.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    // Esc-re close
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menuOpen) closeMenu();
+    });
+
+    function openMenu() {
+      userMenu.hidden = false;
+      authTrigger.setAttribute("aria-expanded", "true");
+      menuOpen = true;
+    }
+
+    function closeMenu() {
+      userMenu.hidden = true;
+      authTrigger.setAttribute("aria-expanded", "false");
+      menuOpen = false;
+    }
+
+    // Logout
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (err) {
+        console.warn("[header] logout request failed:", err);
+      }
+      setAnonymous();
+      closeMenu();
+    });
+  });
 </script>
 
 <style>

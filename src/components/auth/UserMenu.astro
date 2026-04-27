@@ -1,0 +1,158 @@
+---
+// src/components/auth/UserMenu.astro
+// Sprint 4.2 — Felhasználói dropdown a header-ben (logged-in állapotban)
+//
+// Markup-ot tartalmaz, JS logika a Header.astro-ban van (mert a Header dönti el
+// hogy az ikon "Belépés" módban vagy "Profil" módban viselkedik).
+//
+// A dropdown szerkezet:
+//   ┌─ "Üdv, {firstName}" ──────────┐
+//   │  Profilom                      │
+//   │  Rendelési előzmények         │
+//   │  Címeim                        │
+//   │  Kívánságlista                 │
+//   │  ────────────                  │
+//   │  Kijelentkezés                 │
+//   └────────────────────────────────┘
+---
+
+<div class="user-menu" data-user-menu hidden>
+  <div class="user-menu__header">
+    <p class="user-menu__greeting" data-user-greeting>Üdv!</p>
+    <p class="user-menu__email" data-user-email></p>
+  </div>
+
+  <nav class="user-menu__nav" aria-label="Felhasználói menü">
+    <a href="/profil" class="user-menu__link">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+      </svg>
+      Profilom
+    </a>
+
+    <a href="/profil/rendelesek" class="user-menu__link">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none">
+        <rect x="4" y="4" width="16" height="16" rx="1"/>
+        <path d="M8 9h8M8 13h8M8 17h5"/>
+      </svg>
+      Rendelési előzmények
+    </a>
+
+    <a href="/profil/cimek" class="user-menu__link">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/>
+        <circle cx="12" cy="9" r="2.5"/>
+      </svg>
+      Címeim
+    </a>
+
+    <a href="/profil/kivansaglista" class="user-menu__link">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M12 21l-1.5-1.4C5 14.5 2 11.7 2 8.2 2 5.5 4.1 3.5 6.7 3.5c1.5 0 3 .7 3.9 1.8l1.4 1.7 1.4-1.7c.9-1.1 2.4-1.8 3.9-1.8 2.6 0 4.7 2 4.7 4.7 0 3.5-3 6.3-8.5 11.4L12 21z"/>
+      </svg>
+      Kívánságlista
+    </a>
+
+    <hr class="user-menu__divider"/>
+
+    <button type="button" class="user-menu__link user-menu__link--logout" data-logout-btn>
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+      </svg>
+      Kijelentkezés
+    </button>
+  </nav>
+</div>
+
+<style is:global>
+  /* ─── User menu dropdown ──────────────────────────────────────────────── */
+  .user-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 100;
+    min-width: 240px;
+    background: var(--mona-bg);
+    border: 0.5px solid var(--mona-border);
+    box-shadow: 0 8px 24px rgb(44 41 38 / 0.12);
+    overflow: hidden;
+  }
+
+  .user-menu__header {
+    padding: var(--space-4);
+    border-bottom: 0.5px solid var(--mona-border);
+    background: var(--mona-elevated);
+  }
+
+  .user-menu__greeting {
+    font-family: var(--mona-serif);
+    font-size: 16px;
+    color: var(--mona-text);
+    margin: 0;
+  }
+
+  .user-menu__email {
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-text-3);
+    margin: var(--space-1) 0 0;
+    word-break: break-all;
+  }
+
+  .user-menu__nav {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-2) 0;
+  }
+
+  .user-menu__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    background: transparent;
+    color: var(--mona-text);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    min-height: 0;
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+  }
+
+  .user-menu__link:hover {
+    background: var(--mona-elevated);
+  }
+
+  .user-menu__link svg {
+    flex-shrink: 0;
+    color: var(--mona-text-2);
+  }
+
+  .user-menu__link:hover svg {
+    color: var(--mona-warm);
+  }
+
+  .user-menu__link--logout {
+    color: var(--mona-text-2);
+  }
+
+  .user-menu__link--logout:hover {
+    color: var(--mona-sale, #c84545);
+  }
+
+  .user-menu__link--logout:hover svg {
+    color: var(--mona-sale, #c84545);
+  }
+
+  .user-menu__divider {
+    border: none;
+    border-top: 0.5px solid var(--mona-border);
+    margin: var(--space-2) 0;
+  }
+</style>

@@ -1339,13 +1339,14 @@ git push
 - Mailchimp library: refaktorált, `bridgeRegistrationToMailchimp` + `tagPurchase`
 - API endpointok: `POST /api/auth/register`, `/login`, `/logout`, `GET /api/auth/me`
 
-### Sprint 4.2 — Login / Register UI (modal popup) ⏳
-- Modal komponens (Sephora-style, gyorsabb mint dedikált oldal)
-- Login form: email + jelszó + "Belépés"
-- Register form: email + jelszó + first/last name (opt) + ÁSZF + marketing consent + Turnstile widget
-- "Elfelejtett jelszó" link → reset modal (Sprint 4.5)
-- Header avatar dropdown ha logged-in (Belépés link helyett)
-- Cart drawer / checkout: prefill címek a logged-in vendég profile-jából
+### Sprint 4.2 — Login / Register UI (modal popup) ✅ KÉSZ
+- AuthModal komponens: Sephora-stílusú modal popup, login/register tab váltó
+- UserMenu dropdown: logged-in állapotban Profilom + 3 link + Kijelentkezés
+- Header 👤 ikon: anonymous = openAuthModal, authenticated = UserMenu toggle
+- Auth state library (auth-state.ts): event-based, subscribeAuthState
+- Cloudflare Turnstile lazy load (csak register tab aktív kapcsolásakor)
+- BaseLayout-ba beillesztve single-instance modal
+- Sephora-stílusú UX: sikeres login után a vendég ott marad ahol volt
 
 ### Sprint 4.3 — Google OAuth ⏳
 - `/api/auth/google` (redirect endpoint) + `/api/auth/google-callback`

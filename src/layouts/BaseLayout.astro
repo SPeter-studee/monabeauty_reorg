@@ -7,6 +7,7 @@ import Footer from "@/components/common/Footer.astro";
 import CookieConsent from "@/components/common/CookieConsent.astro";
 import ToastContainer from "@/components/common/ToastContainer.astro";
 import CartDrawer from "@/components/shop/CartDrawer.astro";
+import AuthModal from "@/components/auth/AuthModal.astro";
 
 import "@/styles/tokens.css";
 import "@/styles/reset.css";
@@ -187,6 +188,9 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
 
   <!-- Kosár drawer — minden oldalon elérhető (Sprint 3.3) -->
   <CartDrawer />
+
+  <!-- Sprint 4.2 — Auth modal (login/register popup) -->
+  <AuthModal />
 
   <!-- Cookie consent banner + modal -->
   <CookieConsent />

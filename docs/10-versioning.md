@@ -20,7 +20,7 @@ Például: `0.5.1`
 
 ---
 
-## Aktuális verzió: `0.8.0`
+## Aktuális verzió: `0.8.1`
 
 A verzió a `package.json`-ban van rögzítve:
 
@@ -156,7 +156,7 @@ git push --tags
 | UI csiszolási hullám — CartDrawer flex scroll fix + toast off | `0.7.16` | patch ⭐ (header/footer fixen, toast eltávolítva) |
 | UI csiszolási hullám — Szállítás csak a pénztáron | `0.7.17` | patch (drawer + /kosar egyszerűsítés) |
 | Sprint 4.1 — Auth backend (D1 séma + API) | `0.8.0` | **MINOR** ⭐ — Sprint 4 indul |
-| Sprint 4.2 — Login/Register UI (modal popup) | `0.8.x` | patch (frontend) |
+| Sprint 4.2 — Login/Register modal popup UI | `0.8.1` | patch (frontend) ✅ Kész |
 | Sprint 4.3 — Google OAuth | `0.8.x` | patch |
 | Sprint 4.4 — Facebook Login + Mailchimp bridge | `0.8.x` | patch |
 | Sprint 4.5 — Profil oldalak + email verifikáció | `0.8.x` | patch |

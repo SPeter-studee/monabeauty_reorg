@@ -1,0 +1,845 @@
+---
+// src/components/auth/AuthModal.astro
+// Sprint 4.2 — Login / Register modal popup
+//
+// Single-instance modal (a BaseLayout-ban egyszer beillesztve), két nézettel:
+//   - login: email + jelszó + "Bejelentkezés" + "Még nincs fiókod? Regisztráció"
+//   - register: email + jelszó + first/last name + ÁSZF + marketing + Turnstile widget
+//
+// Open/close events (auth-state.ts):
+//   - openAuthModal("login")  → megnyit login-on
+//   - openAuthModal("register") → megnyit register-en
+//   - closeAuthModal() → bezár
+//
+// Sikeres login/register esetén:
+//   - setAuthenticated(customer) — kliens state frissítés
+//   - closeAuthModal() — bezárás
+//   - A header automatikusan frissül a subscribeAuthState miatt
+//
+// Turnstile widget — lazy load: csak amikor a register tab aktívvá válik.
+// A site key a wrangler.toml `[vars]`-ból érkezik (publikus).
+
+const turnstileSiteKey = (Astro.locals as any).runtime?.env?.TURNSTILE_SITE_KEY
+  || import.meta.env.TURNSTILE_SITE_KEY
+  || "";
+---
+
+<div
+  class="auth-modal"
+  data-auth-modal
+  aria-hidden="true"
+  aria-modal="true"
+  role="dialog"
+  aria-labelledby="auth-modal-title"
+>
+  <div class="auth-modal__overlay" data-auth-modal-overlay></div>
+
+  <div class="auth-modal__panel">
+    <button
+      type="button"
+      class="auth-modal__close"
+      data-auth-modal-close
+      aria-label="Bezárás"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M6 6L18 18M6 18L18 6"/>
+      </svg>
+    </button>
+
+    {/* TAB SWITCH (login / register) */}
+    <div class="auth-modal__tabs" role="tablist">
+      <button
+        type="button"
+        class="auth-modal__tab auth-modal__tab--active"
+        data-auth-tab="login"
+        role="tab"
+        aria-selected="true"
+      >
+        Bejelentkezés
+      </button>
+      <button
+        type="button"
+        class="auth-modal__tab"
+        data-auth-tab="register"
+        role="tab"
+        aria-selected="false"
+      >
+        Regisztráció
+      </button>
+    </div>
+
+    <h2 id="auth-modal-title" class="visually-hidden">Belépés vagy regisztráció</h2>
+
+    {/* ─── LOGIN VIEW ─── */}
+    <div class="auth-modal__view auth-modal__view--login" data-auth-view="login">
+      <p class="auth-modal__intro">
+        Üdv újra! Jelentkezz be a folytatáshoz.
+      </p>
+
+      <form class="auth-modal__form" data-auth-form="login" novalidate>
+        <div class="auth-modal__field">
+          <label class="auth-modal__label" for="login-email">Email cím</label>
+          <input
+            type="email"
+            id="login-email"
+            name="email"
+            class="auth-modal__input"
+            autocomplete="email"
+            required
+            placeholder="te@example.hu"
+          />
+        </div>
+
+        <div class="auth-modal__field">
+          <label class="auth-modal__label" for="login-password">Jelszó</label>
+          <input
+            type="password"
+            id="login-password"
+            name="password"
+            class="auth-modal__input"
+            autocomplete="current-password"
+            required
+            minlength="8"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <p class="auth-modal__error" data-auth-error="login" hidden></p>
+
+        <button type="submit" class="auth-modal__submit btn btn-primary" data-auth-submit="login">
+          <span class="auth-modal__submit-text">Bejelentkezés</span>
+          <span class="auth-modal__submit-loading" hidden>Egy pillanat...</span>
+        </button>
+
+        <p class="auth-modal__alt">
+          <a href="#" class="auth-modal__link" data-forgot-password>Elfelejtetted a jelszót?</a>
+        </p>
+
+        <p class="auth-modal__switch">
+          Még nincs fiókod?
+          <button type="button" class="auth-modal__link" data-switch-to="register">
+            Regisztrálj
+          </button>
+        </p>
+      </form>
+    </div>
+
+    {/* ─── REGISTER VIEW ─── */}
+    <div class="auth-modal__view auth-modal__view--register" data-auth-view="register" hidden>
+      <p class="auth-modal__intro">
+        Csatlakozz a Mona Studio közösséghez. Néhány adat, és kész is.
+      </p>
+
+      <form class="auth-modal__form" data-auth-form="register" novalidate>
+        <div class="auth-modal__field-row">
+          <div class="auth-modal__field">
+            <label class="auth-modal__label" for="register-firstname">Keresztnév</label>
+            <input
+              type="text"
+              id="register-firstname"
+              name="firstName"
+              class="auth-modal__input"
+              autocomplete="given-name"
+              placeholder="Anna"
+              maxlength="50"
+            />
+          </div>
+          <div class="auth-modal__field">
+            <label class="auth-modal__label" for="register-lastname">Vezetéknév</label>
+            <input
+              type="text"
+              id="register-lastname"
+              name="lastName"
+              class="auth-modal__input"
+              autocomplete="family-name"
+              placeholder="Kovács"
+              maxlength="50"
+            />
+          </div>
+        </div>
+
+        <div class="auth-modal__field">
+          <label class="auth-modal__label" for="register-email">Email cím</label>
+          <input
+            type="email"
+            id="register-email"
+            name="email"
+            class="auth-modal__input"
+            autocomplete="email"
+            required
+            placeholder="te@example.hu"
+          />
+        </div>
+
+        <div class="auth-modal__field">
+          <label class="auth-modal__label" for="register-password">Jelszó</label>
+          <input
+            type="password"
+            id="register-password"
+            name="password"
+            class="auth-modal__input"
+            autocomplete="new-password"
+            required
+            minlength="8"
+            placeholder="Legalább 8 karakter"
+          />
+          <p class="auth-modal__hint">A jelszó legalább 8 karakter hosszú legyen.</p>
+        </div>
+
+        <label class="auth-modal__checkbox">
+          <input
+            type="checkbox"
+            name="acceptsTerms"
+            data-accepts-terms
+            required
+          />
+          <span>
+            Elolvastam és elfogadom az
+            <a href="/aszf" target="_blank" rel="noopener">ÁSZF-et</a> és az
+            <a href="/adatvedelem" target="_blank" rel="noopener">adatvédelmi tájékoztatót</a>.
+          </span>
+        </label>
+
+        <label class="auth-modal__checkbox">
+          <input
+            type="checkbox"
+            name="acceptsMarketing"
+            data-accepts-marketing
+          />
+          <span>
+            Szeretnék értesülni új termékekről és akciókról
+            <em>(opcionális)</em>
+          </span>
+        </label>
+
+        {/* Turnstile widget container — lazy load JS-ből */}
+        <div class="auth-modal__captcha" data-turnstile-container>
+          <div class="auth-modal__captcha-placeholder">
+            <span class="auth-modal__captcha-spinner" aria-hidden="true"></span>
+            Robotvédelem betöltése...
+          </div>
+        </div>
+
+        <p class="auth-modal__error" data-auth-error="register" hidden></p>
+
+        <button type="submit" class="auth-modal__submit btn btn-primary" data-auth-submit="register">
+          <span class="auth-modal__submit-text">Regisztrálok</span>
+          <span class="auth-modal__submit-loading" hidden>Egy pillanat...</span>
+        </button>
+
+        <p class="auth-modal__switch">
+          Már van fiókod?
+          <button type="button" class="auth-modal__link" data-switch-to="login">
+            Jelentkezz be
+          </button>
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ turnstileSiteKey }}>
+  // ── Imports ─────────────────────────────────────────────────────────────────
+  import("@/lib/auth-state").then((mod) => {
+    initAuthModal(mod);
+  });
+
+  function initAuthModal(authState) {
+    const {
+      setAuthenticated,
+      AUTH_MODAL_OPEN_EVENT,
+      AUTH_MODAL_CLOSE_EVENT,
+    } = authState;
+
+    const modal = document.querySelector("[data-auth-modal]");
+    const overlay = document.querySelector("[data-auth-modal-overlay]");
+    const closeBtn = document.querySelector("[data-auth-modal-close]");
+    const loginView = document.querySelector('[data-auth-view="login"]');
+    const registerView = document.querySelector('[data-auth-view="register"]');
+    const tabs = document.querySelectorAll("[data-auth-tab]");
+    const switchBtns = document.querySelectorAll("[data-switch-to]");
+    const loginForm = document.querySelector('[data-auth-form="login"]');
+    const registerForm = document.querySelector('[data-auth-form="register"]');
+    const turnstileContainer = document.querySelector("[data-turnstile-container]");
+
+    if (!modal || !overlay || !loginForm || !registerForm) {
+      console.error("[auth-modal] markup missing");
+      return;
+    }
+
+    let turnstileLoaded = false;
+    let turnstileWidgetId = null;
+    let lastTurnstileToken = "";
+    let currentView = "login";
+
+    // ── Open / close event listeners ─────────────────────────────────────────
+    window.addEventListener(AUTH_MODAL_OPEN_EVENT, (e) => {
+      const view = (e && e.detail && e.detail.view) || "login";
+      openModal(view);
+    });
+    window.addEventListener(AUTH_MODAL_CLOSE_EVENT, closeModal);
+
+    overlay.addEventListener("click", closeModal);
+    closeBtn?.addEventListener("click", closeModal);
+
+    // Esc-re bezárás
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.getAttribute("aria-hidden") === "false") {
+        closeModal();
+      }
+    });
+
+    function openModal(view) {
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden"; // background scroll lock
+      switchView(view);
+
+      // Focus first input — accessibility
+      requestAnimationFrame(() => {
+        const firstInput = view === "login"
+          ? document.getElementById("login-email")
+          : document.getElementById("register-firstname");
+        firstInput?.focus();
+      });
+    }
+
+    function closeModal() {
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      // Hibaüzenetek törlése
+      document.querySelectorAll("[data-auth-error]").forEach(el => {
+        el.hidden = true;
+        el.textContent = "";
+      });
+    }
+
+    // ── Tab váltás ──────────────────────────────────────────────────────────
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const view = tab.dataset.authTab;
+        switchView(view);
+      });
+    });
+
+    switchBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchView(btn.dataset.switchTo);
+      });
+    });
+
+    function switchView(view) {
+      currentView = view;
+      // Tabs
+      tabs.forEach((t) => {
+        const isActive = t.dataset.authTab === view;
+        t.classList.toggle("auth-modal__tab--active", isActive);
+        t.setAttribute("aria-selected", String(isActive));
+      });
+      // Views
+      loginView.hidden = view !== "login";
+      registerView.hidden = view !== "register";
+
+      // Turnstile lazy load — csak amikor először a register tab-ra kapcsolunk
+      if (view === "register" && !turnstileLoaded) {
+        loadTurnstile();
+      }
+    }
+
+    // ── Turnstile lazy loader ───────────────────────────────────────────────
+    function loadTurnstile() {
+      if (!turnstileSiteKey) {
+        console.warn("[auth-modal] TURNSTILE_SITE_KEY not configured — captcha skipped");
+        if (turnstileContainer) {
+          turnstileContainer.innerHTML =
+            '<p style="font-size: 12px; color: var(--mona-text-3); margin: 0;">Robotvédelem nem aktív (fejlesztői mód).</p>';
+        }
+        turnstileLoaded = true;
+        return;
+      }
+
+      // Set up the global onload callback
+      window.onTurnstileLoad = () => {
+        if (!window.turnstile) {
+          console.error("[auth-modal] Turnstile script loaded but window.turnstile not available");
+          return;
+        }
+        turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+          sitekey: turnstileSiteKey,
+          theme: "light",
+          callback: (token) => {
+            lastTurnstileToken = token;
+          },
+          "expired-callback": () => {
+            lastTurnstileToken = "";
+          },
+          "error-callback": () => {
+            lastTurnstileToken = "";
+          },
+        });
+      };
+
+      // Inject the Turnstile script
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+      turnstileLoaded = true;
+    }
+
+    // ── LOGIN form submit ───────────────────────────────────────────────────
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await submitLogin();
+    });
+
+    async function submitLogin() {
+      const submitBtn = document.querySelector('[data-auth-submit="login"]');
+      const errorEl = document.querySelector('[data-auth-error="login"]');
+      const formData = new FormData(loginForm);
+
+      setLoading(submitBtn, true);
+      hideError(errorEl);
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: formData.get("email"),
+            password: formData.get("password"),
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showError(errorEl, data.message || "Bejelentkezés sikertelen.");
+          setLoading(submitBtn, false);
+          return;
+        }
+
+        // Sikeres login
+        setAuthenticated(data.customer);
+        closeModal();
+      } catch (err) {
+        console.error("[auth-modal] login error:", err);
+        showError(errorEl, "Hálózati hiba. Próbáld újra.");
+        setLoading(submitBtn, false);
+      }
+    }
+
+    // ── REGISTER form submit ────────────────────────────────────────────────
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await submitRegister();
+    });
+
+    async function submitRegister() {
+      const submitBtn = document.querySelector('[data-auth-submit="register"]');
+      const errorEl = document.querySelector('[data-auth-error="register"]');
+      const formData = new FormData(registerForm);
+
+      const acceptsTerms = formData.get("acceptsTerms") === "on";
+      const acceptsMarketing = formData.get("acceptsMarketing") === "on";
+
+      // Kliens oldali validáció
+      if (!acceptsTerms) {
+        showError(errorEl, "Az ÁSZF és az adatvédelmi tájékoztató elfogadása kötelező.");
+        return;
+      }
+
+      const password = formData.get("password");
+      if (typeof password !== "string" || password.length < 8) {
+        showError(errorEl, "A jelszó legalább 8 karakter hosszú legyen.");
+        return;
+      }
+
+      // Turnstile token — ha turnstile site key be van állítva, kötelező
+      let turnstileToken = lastTurnstileToken;
+      if (turnstileSiteKey && !turnstileToken) {
+        showError(errorEl, "Kérlek várd meg a robotvédelem ellenőrzését.");
+        return;
+      }
+      if (!turnstileSiteKey) {
+        // Fejlesztői módban a backend is átengedi — placeholder token
+        turnstileToken = "DEV_NO_CAPTCHA";
+      }
+
+      setLoading(submitBtn, true);
+      hideError(errorEl);
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: formData.get("email"),
+            password,
+            firstName: formData.get("firstName") || undefined,
+            lastName: formData.get("lastName") || undefined,
+            acceptsTerms: true,
+            acceptsMarketing,
+            turnstileToken,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showError(errorEl, data.message || "Regisztráció sikertelen.");
+          setLoading(submitBtn, false);
+          // Turnstile reset — egy token csak egyszer használható
+          if (window.turnstile && turnstileWidgetId) {
+            window.turnstile.reset(turnstileWidgetId);
+            lastTurnstileToken = "";
+          }
+          return;
+        }
+
+        // Sikeres register
+        setAuthenticated(data.customer);
+        closeModal();
+
+        // Sikerüzenet — TODO: toast vagy welcome banner Sprint 4.5-ben
+        console.log("[auth-modal] register success:", data.message);
+      } catch (err) {
+        console.error("[auth-modal] register error:", err);
+        showError(errorEl, "Hálózati hiba. Próbáld újra.");
+        setLoading(submitBtn, false);
+      }
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function setLoading(btn, loading) {
+      if (!btn) return;
+      const text = btn.querySelector(".auth-modal__submit-text");
+      const loadingEl = btn.querySelector(".auth-modal__submit-loading");
+      if (text) text.hidden = loading;
+      if (loadingEl) loadingEl.hidden = !loading;
+      btn.disabled = loading;
+    }
+
+    function showError(el, message) {
+      if (!el) return;
+      el.textContent = message;
+      el.hidden = false;
+    }
+
+    function hideError(el) {
+      if (!el) return;
+      el.textContent = "";
+      el.hidden = true;
+    }
+  }
+</script>
+
+<style is:global>
+  /* ─── AuthModal — overlay és panel ─────────────────────────────────────── */
+  .auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .auth-modal[aria-hidden="false"] {
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .auth-modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.5);
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--ease);
+  }
+
+  .auth-modal[aria-hidden="false"] .auth-modal__overlay {
+    opacity: 1;
+  }
+
+  .auth-modal__panel {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 2 * var(--space-4));
+    background: var(--mona-bg);
+    border: 0.5px solid var(--mona-border);
+    box-shadow: 0 12px 48px rgb(44 41 38 / 0.18);
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform var(--motion-base) var(--ease),
+                opacity var(--motion-base) var(--ease);
+  }
+
+  .auth-modal[aria-hidden="false"] .auth-modal__panel {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ─── Close button ─────────────────────────────────────────────────────── */
+  .auth-modal__close {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--mona-text-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__close:hover {
+    color: var(--mona-text);
+  }
+
+  /* ─── Tabs ─────────────────────────────────────────────────────────────── */
+  .auth-modal__tabs {
+    display: flex;
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  .auth-modal__tab {
+    flex: 1;
+    padding: var(--space-4) var(--space-3);
+    min-height: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color var(--motion-fast) var(--ease),
+                border-color var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__tab:hover {
+    color: var(--mona-text);
+  }
+
+  .auth-modal__tab--active {
+    color: var(--mona-text);
+    border-bottom-color: var(--mona-warm);
+  }
+
+  /* ─── View (login/register tartalom) ───────────────────────────────────── */
+  .auth-modal__view {
+    padding: var(--space-6) var(--space-5) var(--space-5);
+  }
+
+  .auth-modal__intro {
+    font-family: var(--mona-serif);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--mona-text);
+    margin: 0 0 var(--space-5);
+  }
+
+  /* ─── Form ─────────────────────────────────────────────────────────────── */
+  .auth-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .auth-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .auth-modal__field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 480px) {
+    .auth-modal__field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .auth-modal__label {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  .auth-modal__input {
+    padding: 10px var(--space-3);
+    background: var(--mona-elevated);
+    border: 0.5px solid var(--mona-border);
+    color: var(--mona-text);
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    transition: border-color var(--motion-fast) var(--ease);
+  }
+
+  .auth-modal__input:focus {
+    outline: none;
+    border-color: var(--mona-warm);
+  }
+
+  .auth-modal__hint {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    color: var(--mona-text-3);
+    margin: 0;
+    font-style: italic;
+  }
+
+  /* ─── Checkbox ─────────────────────────────────────────────────────────── */
+  .auth-modal__checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--mona-text-2);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .auth-modal__checkbox > input {
+    margin: 2px 0 0;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--mona-warm);
+  }
+
+  .auth-modal__checkbox > span {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .auth-modal__checkbox a {
+    color: var(--mona-warm);
+    text-decoration: underline;
+  }
+
+  .auth-modal__checkbox em {
+    font-style: italic;
+    color: var(--mona-text-3);
+  }
+
+  /* ─── Captcha placeholder + container ─────────────────────────────────── */
+  .auth-modal__captcha {
+    min-height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-modal__captcha-placeholder {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-text-3);
+    font-style: italic;
+  }
+
+  .auth-modal__captcha-spinner {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--mona-border);
+    border-top-color: var(--mona-warm);
+    border-radius: 50%;
+    animation: auth-spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes auth-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── Submit gomb ─────────────────────────────────────────────────────── */
+  .auth-modal__submit {
+    margin-top: var(--space-2);
+  }
+
+  .auth-modal__submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ─── Hibák, alt link-ek, váltás ──────────────────────────────────────── */
+  .auth-modal__error {
+    background: rgb(212 80 80 / 0.08);
+    border-left: 2px solid var(--mona-sale, #c84545);
+    color: var(--mona-sale, #c84545);
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .auth-modal__alt,
+  .auth-modal__switch {
+    text-align: center;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+    margin: 0;
+  }
+
+  .auth-modal__link {
+    background: none;
+    border: none;
+    padding: 0;
+    min-height: 0;
+    color: var(--mona-warm);
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .auth-modal__link:hover {
+    color: var(--mona-text);
+  }
+
+  /* ─── Accessibility helper ─────────────────────────────────────────────── */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

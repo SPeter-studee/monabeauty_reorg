@@ -135,11 +135,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_customer_addresses_default
   ON customer_addresses(customer_id) WHERE is_default = 1;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- ORDERS + customer_id
+-- ORDERS — customer_id MÁR LÉTEZIK a Sprint 3 óta (0001_sprint3_webshop.sql)
 -- ─────────────────────────────────────────────────────────────────────────────
--- Az `orders.customer_id` és `idx_orders_customer` már a migrations/0001 mező —
--- nem kell ALTER TABLE. Az FK constraint SQLite-ban csak új táblánál strict;
--- runtime-ban az app köti a customers(id)-hez.
+-- A Sprint 3.4 órákben az orders táblát guest checkout-tal csináltuk, és már
+-- akkor placeholder-ként benne volt a customer_id INTEGER (NULL ha guest, vagy
+-- a Sprint 4 után customer-hez kötve).
+--
+-- Megjegyzés: a SQLite NEM támogatja az utólagos FK constraint hozzáadást egy
+-- létező oszlophoz (csak tábla-rebuild-del lenne lehetséges, ami production
+-- adatokon kockázatos). Ezért a customer_id ↔ customers FK csak az alkalmazás
+-- kódjában van kényszerítve:
+--   - Customer "törlés" = status='deleted' soft delete (hard DELETE nincs)
+--   - Az API mindig validálja hogy a customer_id létező customer-re mutat-e
+-- Index már létezik (idx_orders_customer) — itt nem ismételjük meg.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- WISHLISTS — kívánságlista

@@ -151,6 +151,8 @@
   justify-content: center;
   width: 36px;
   height: 36px;
+  min-height: 0;
+  padding: 0;
   background: transparent;
   border: 0.5px solid transparent;
   color: var(--mona-text);
@@ -159,6 +161,12 @@
   position: relative;
   transition: border-color var(--motion-fast) var(--ease);
   flex-shrink: 0;
+}
+
+/* Sprint 4.2 — Account wrapper a UserMenu dropdown pozícionáláshoz */
+.site-header__account-wrap {
+  position: relative;
+  display: inline-flex;
 }
 
 @media (min-width: 768px) {

@@ -28,15 +28,18 @@ SHIPPING_FOXPOST_FT = "1990"
 SHIPPING_PERSONAL_FT = "0"
 SHIPPING_FREE_THRESHOLD_FT = "20000"
 ORDER_NOTIFICATION_EMAIL = "mona@monastudio.hu"
-# Sprint 4.1 — Cloudflare Turnstile (publikus site key; a secret: Dashboard → Secret)
-TURNSTILE_SITE_KEY = ""
+
+# Sprint 4 — auth (Cloudflare Turnstile captcha)
+# Site Key publikus — bekerül a frontend HTML-be a register form-on.
+# Secret Key külön Cloudflare Dashboard env var (encrypted).
+TURNSTILE_SITE_KEY = "0x4AAAAAADEH_nQXuBd04EEr"
 
 # ── Környezet változók (titkos kulcsok) ──────────────────────────────────────
-# Cloudflare dashboardon kell beállítani:
-# Settings → Environment Variables → Production + Preview scope:
+# Cloudflare dashboardon kell beállítani (Encrypted/Secret típussal):
+# Settings → Variables and Secrets → Production + Preview scope:
 #
 # Sprint 4 (auth):
-#   TURNSTILE_SECRET_KEY   (Sprint 4.1 — regisztrációs captcha; site key: TURNSTILE_SITE_KEY fent)
+#   TURNSTILE_SECRET_KEY    (Cloudflare Turnstile — server-side captcha verify)
 #   GOOGLE_CLIENT_ID
 #   GOOGLE_CLIENT_SECRET
 #   FACEBOOK_APP_ID         (új — Sprint 2B 6. kör)
