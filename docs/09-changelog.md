@@ -18,7 +18,93 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.9] — 2026-04-27 — Sprint 4.5.x — Címkönyv inline expand UX (modal helyett)
+## [0.9.10] — 2026-04-27 — Sprint 4.5.x — Rendelési visszaigazolás (print-friendly)
+
+A vendég mostantól letöltheti a rendelési visszaigazolást PDF-be (a böngésző
+natív "Save as PDF" funkciójával) vagy kinyomtathatja papírra.
+
+### Hozzáadva
+
+#### Új API endpoint
+- **`GET /api/profile/orders/[orderNumber]`** — egy rendelés részletei
+  - Ownership check: customer_id VAGY guest_email egyezés (v0.9.8 fallback alapján)
+  - 404 ha nem találja vagy nem a vendég rendelése
+  - Visszaadja az `OrderPublic` objektumot a tételekkel együtt
+
+#### Új oldal: `/profil/rendelesek/[orderNumber]`
+- **Részletes rendelés-nézet** (loading + error + content state)
+- **"Nyomtatás / PDF letöltés"** gomb → `window.print()`
+- Layout:
+  - Header: cím + alcím (rendelés azonosító + dátum)
+  - Status badge (színes)
+  - Termékek táblázat (kép, név, db, egységár, részösszeg)
+  - Árösszesítés (részösszeg, kedvezmény ha van, szállítás, **összesen**)
+  - Vásárlói adatok + Szállítási cím (két oszlop, az auth-state-ből)
+  - Fizetési mód + Szállítási mód
+  - Megjegyzés (ha van)
+
+#### Print stylesheet
+- **`@media print`** szabályok a tisztán nyomtatható kinézethez:
+  - Header / sidebar / footer / drawer **elrejtve**
+  - Mona Studio fejléc (logo + cím) felül megjelenik (`order-detail__print-header`)
+  - Köszönő láb alul megjelenik (`order-detail__print-footer`)
+  - Színek fehérre / feketére normalizálva (PDF-friendly)
+  - Termékkép 32x32 (volt 48x48) — kompaktabb papír layout
+  - `page-break-inside: avoid` minden szekción — nem szakad el a közepén
+
+#### Részletek link a `/profil/rendelesek` listán
+- Minden kibontott rendelés alján egy "**Részletek és nyomtatás**" gomb
+- Stílus: arany border, hover-en telített arany háttér
+
+### UX folyamat
+
+1. Vendég a `/profil/rendelesek` listán bontja ki egy rendelést
+2. Klikk "Részletek és nyomtatás" → `/profil/rendelesek/MS-2026-0001`
+3. Az oldal betölti a részleteket az új API endpoint-ról
+4. Klikk "Nyomtatás / PDF letöltés"
+5. Böngésző Print Preview megnyílik → "Save as PDF" → letöltés
+
+### A nyomtatott PDF tartalmazza
+
+- Mona Studio fejléc + cím + elérhetőség
+- "Megrendelés visszaigazolása" cím
+- Rendelés azonosító + dátum
+- Státusz
+- Termékek táblázat
+- Árösszesítés
+- Vásárlói adatok + szállítási cím
+- Fizetési + szállítási mód
+- Vendég megjegyzés (ha van)
+- Köszönő láb
+
+### Mit NEM csinál még
+
+- ❌ Hivatalos NAV-kompatibilis számla — Sprint 5+ (Számlázz.hu / Billingo integráció)
+- ❌ Email-ben automatikus PDF csatolmány a rendelés visszaigazolásához
+- ❌ Brand-erős szerver oldali PDF (most a böngésző-nyomtatás minőségére hagyatkozunk)
+
+### Fájlok (4)
+
+**Új**:
+- `src/pages/api/profile/orders/[orderNumber].ts` — egy rendelés API endpoint
+- `src/pages/profil/rendelesek/[orderNumber].astro` — részletes oldal + print stylesheet
+
+**Módosított**:
+- `src/pages/profil/rendelesek.astro` — "Részletek és nyomtatás" link a kártyákban
+- `package.json` — `0.9.9` → `0.9.10`
+- `docs/09-changelog.md`
+
+### Sprint 5+ tervezett — Hivatalos számlázás
+
+Mónika kiválasztja a számlázó szolgáltatót (Számlázz.hu / Billingo / KBOSS),
+regisztrál, és a webhook integráció: rendelés sikeres fizetés után automatikus
+számla generálás. A számla URL bekerül az `orders.invoice_url` mezőbe, és
+a vendég a `/profil/rendelesek/[orderNumber]` oldalon külön gomb ("Számla
+letöltése") segítségével letölti.
+
+---
+
+
 
 ### Probléma
 

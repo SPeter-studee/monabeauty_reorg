@@ -226,6 +226,15 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
                 <span>${totalFormatted}</span>
               </div>
             </div>
+
+            <div class="order-card__detail-actions">
+              <a href="/profil/rendelesek/${escape(order.orderNumber)}" class="order-card__detail-link">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+                </svg>
+                Részletek és nyomtatás
+              </a>
+            </div>
           </div>
         </li>
       `;
@@ -633,6 +642,35 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     gap: var(--space-2);
     padding-top: var(--space-4);
     border-top: 0.5px solid var(--mona-border);
+  }
+
+  /* Részletek + Nyomtatás link a kártya alján */
+  .order-card__detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 0.5px solid var(--mona-border);
+  }
+
+  .order-card__detail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 12px;
+    color: var(--mona-warm);
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 0.5px solid var(--mona-warm);
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+  }
+
+  .order-card__detail-link:hover {
+    background: var(--mona-warm);
+    color: var(--mona-bg);
   }
 
   .order-card__totals-row {

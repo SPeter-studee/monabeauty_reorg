@@ -1,0 +1,808 @@
+---
+// src/pages/profil/rendelesek/[orderNumber].astro
+// Sprint 4.5.x — Egy rendelés részletes nézete + print-friendly nyomtatás
+//
+// A vendég a /profil/rendelesek listán a "Részletek" linkre kattintva
+// jut ide. Innen a "🖨 Nyomtatás" gomb triggereli a window.print()-t,
+// és a vendég Save as PDF-elheti.
+
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+---
+
+<ProfileLayout currentSection="orders" title="Rendelés részletei">
+  <div class="order-detail">
+    {/* Print-only header — csak nyomtatáskor látszik */}
+    <div class="order-detail__print-header" aria-hidden="true">
+      <div class="order-detail__print-brand">
+        <h1>Mona Studio</h1>
+        <p>A szépség benned van</p>
+      </div>
+      <div class="order-detail__print-meta">
+        <p>2600 Vác, Zrínyi Miklós u. 3.</p>
+        <p>+36 20 913 0126 · monastudio.hu</p>
+      </div>
+    </div>
+
+    {/* Loading state */}
+    <div class="order-detail__loading" data-order-loading>
+      <div class="order-detail__spinner"></div>
+      <p>Rendelés betöltése...</p>
+    </div>
+
+    {/* Error state */}
+    <div class="order-detail__error" data-order-error hidden>
+      <p data-order-error-text>—</p>
+      <a href="/profil/rendelesek" class="btn-secondary">← Vissza a listához</a>
+    </div>
+
+    {/* Order content — JS feltölti */}
+    <div class="order-detail__content" data-order-content hidden>
+      <header class="order-detail__header">
+        <div class="order-detail__header-main">
+          <a href="/profil/rendelesek" class="order-detail__back-link" data-no-print>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            Vissza a rendelésekhez
+          </a>
+          <h1 class="order-detail__title">
+            Megrendelés visszaigazolása
+          </h1>
+          <p class="order-detail__subtitle">
+            Rendelés azonosító: <strong data-order-number>—</strong> ·
+            <span data-order-date>—</span>
+          </p>
+        </div>
+        <div class="order-detail__header-actions" data-no-print>
+          <button type="button" class="btn btn-primary" data-print-btn>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+            </svg>
+            Nyomtatás / PDF letöltés
+          </button>
+        </div>
+      </header>
+
+      {/* Status badge */}
+      <div class="order-detail__status-row">
+        <span class="order-detail__status-label">Státusz:</span>
+        <span class="order-detail__status-badge" data-status-badge>—</span>
+      </div>
+
+      {/* Items table */}
+      <section class="order-detail__section">
+        <h2 class="order-detail__section-title">Termékek</h2>
+        <table class="order-detail__items">
+          <thead>
+            <tr>
+              <th class="order-detail__items-th-product">Termék</th>
+              <th class="order-detail__items-th-qty">Db</th>
+              <th class="order-detail__items-th-price">Egységár</th>
+              <th class="order-detail__items-th-subtotal">Részösszeg</th>
+            </tr>
+          </thead>
+          <tbody data-order-items></tbody>
+        </table>
+      </section>
+
+      {/* Summary */}
+      <section class="order-detail__section">
+        <h2 class="order-detail__section-title">Árösszesítés</h2>
+        <div class="order-detail__summary">
+          <div class="order-detail__summary-row">
+            <span>Részösszeg</span>
+            <span data-summary-subtotal>—</span>
+          </div>
+          <div class="order-detail__summary-row" data-summary-discount-row hidden>
+            <span data-summary-discount-label>Kedvezmény</span>
+            <span data-summary-discount>—</span>
+          </div>
+          <div class="order-detail__summary-row">
+            <span data-summary-shipping-label>Szállítás</span>
+            <span data-summary-shipping>—</span>
+          </div>
+          <div class="order-detail__summary-row order-detail__summary-row--total">
+            <span>Összesen</span>
+            <span data-summary-total>—</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer + Shipping info — két oszlopban */}
+      <section class="order-detail__section">
+        <div class="order-detail__info-grid">
+          <div class="order-detail__info-block">
+            <h3 class="order-detail__info-title">Vásárlói adatok</h3>
+            <p data-info-customer-name>—</p>
+            <p data-info-customer-email>—</p>
+            <p data-info-customer-phone>—</p>
+          </div>
+
+          <div class="order-detail__info-block" data-info-shipping-block hidden>
+            <h3 class="order-detail__info-title">Szállítási cím</h3>
+            <p data-info-shipping>—</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Payment + Note */}
+      <section class="order-detail__section">
+        <div class="order-detail__info-grid">
+          <div class="order-detail__info-block">
+            <h3 class="order-detail__info-title">Fizetési mód</h3>
+            <p data-info-payment>—</p>
+          </div>
+
+          <div class="order-detail__info-block">
+            <h3 class="order-detail__info-title">Szállítási mód</h3>
+            <p data-info-shipping-method>—</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer note (ha van) */}
+      <section class="order-detail__section" data-info-note-section hidden>
+        <h3 class="order-detail__info-title">Megjegyzés</h3>
+        <p class="order-detail__note" data-info-note>—</p>
+      </section>
+
+      {/* Print-only lábléc */}
+      <footer class="order-detail__print-footer" aria-hidden="true">
+        <p>Köszönjük a rendelésed! Bármilyen kérdéssel keress minket bizalommal.</p>
+        <p>Mona Studio · 2600 Vác, Zrínyi Miklós u. 3. · mona@monastudio.hu</p>
+      </footer>
+    </div>
+  </div>
+</ProfileLayout>
+
+<script>
+  import type { OrderPublic } from "@/lib/types/orders";
+
+  (() => {
+    const loadingEl = document.querySelector<HTMLElement>("[data-order-loading]");
+    const errorEl = document.querySelector<HTMLElement>("[data-order-error]");
+    const errorText = document.querySelector<HTMLElement>("[data-order-error-text]");
+    const contentEl = document.querySelector<HTMLElement>("[data-order-content]");
+
+    // URL-ből kinyerni az orderNumber-t
+    const pathParts = window.location.pathname.split("/");
+    const orderNumber = pathParts[pathParts.length - 1];
+
+    if (!orderNumber || orderNumber === "rendelesek") {
+      showError("Érvénytelen rendelés azonosító.");
+      return;
+    }
+
+    // Print gomb
+    document.querySelector<HTMLButtonElement>("[data-print-btn]")?.addEventListener("click", () => {
+      window.print();
+    });
+
+    loadOrder(orderNumber);
+
+    async function loadOrder(orderNum: string) {
+      try {
+        const res = await fetch(`/api/profile/orders/${encodeURIComponent(orderNum)}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (res.status === 401) {
+            showError("Bejelentkezés szükséges. Frissítsd az oldalt.");
+            return;
+          }
+          if (res.status === 404) {
+            showError("A rendelés nem található. Lehet hogy másik fiókban van.");
+            return;
+          }
+          showError(data.message || `Sikertelen betöltés (HTTP ${res.status}).`);
+          return;
+        }
+
+        renderOrder(data.order);
+      } catch (err) {
+        console.error("[order-detail] load error:", err);
+        showError("Hálózati hiba a rendelés betöltésekor.");
+      }
+    }
+
+    function renderOrder(order: OrderPublic) {
+      // Header
+      setText("[data-order-number]", order.orderNumber);
+      setText("[data-order-date]", order.createdAtFormatted);
+
+      // Document title (sürgős print esetén szebb)
+      document.title = `${order.orderNumber} — Megrendelés visszaigazolása`;
+
+      // Status badge
+      const badgeEl = document.querySelector<HTMLElement>("[data-status-badge]");
+      if (badgeEl) {
+        badgeEl.textContent = order.statusLabel;
+        badgeEl.className = `order-detail__status-badge order-detail__status-badge--${order.statusColor}`;
+      }
+
+      // Items
+      const itemsBody = document.querySelector<HTMLElement>("[data-order-items]");
+      if (itemsBody) {
+        itemsBody.innerHTML = order.items.map(item => `
+          <tr>
+            <td class="order-detail__items-td-product">
+              ${item.productImageUrl ? `<img src="${escape(item.productImageUrl)}" alt="" class="order-detail__items-img" />` : ""}
+              <span class="order-detail__items-name">${escape(item.productName)}</span>
+            </td>
+            <td class="order-detail__items-td-qty">${item.qty}</td>
+            <td class="order-detail__items-td-price">${formatPrice(item.priceAtOrderFt)}</td>
+            <td class="order-detail__items-td-subtotal">${formatPrice(item.subtotalFt)}</td>
+          </tr>
+        `).join("");
+      }
+
+      // Summary
+      setText("[data-summary-subtotal]", formatPrice(order.subtotalFt));
+
+      // Discount (ha van)
+      if (order.discountAmountFt > 0) {
+        const discountRow = document.querySelector<HTMLElement>("[data-summary-discount-row]");
+        if (discountRow) discountRow.hidden = false;
+        setText("[data-summary-discount]", `−${formatPrice(order.discountAmountFt)}`);
+      }
+
+      // Shipping
+      setText("[data-summary-shipping-label]", order.shippingMethodLabel);
+      setText("[data-summary-shipping]", order.shippingFeeFt > 0 ? formatPrice(order.shippingFeeFt) : "Ingyen");
+
+      // Total
+      setText("[data-summary-total]", formatPrice(order.totalFt));
+
+      // Customer info — auth-state-ből
+      import("@/lib/auth-state").then(({ getAuthState }) => {
+        const auth = getAuthState();
+        if (auth.status === "authenticated" && auth.customer) {
+          const fullName = [auth.customer.firstName, auth.customer.lastName].filter(Boolean).join(" ").trim();
+          setText("[data-info-customer-name]", fullName || "—");
+          setText("[data-info-customer-email]", auth.customer.email || "—");
+          setText("[data-info-customer-phone]", auth.customer.phone || "");
+        }
+      }).catch(() => { /* no-op */ });
+
+      // Shipping address
+      if (order.shippingAddress && order.shippingCity && order.shippingZip) {
+        const shippingBlock = document.querySelector<HTMLElement>("[data-info-shipping-block]");
+        if (shippingBlock) shippingBlock.hidden = false;
+        setText("[data-info-shipping]", `${order.shippingZip} ${order.shippingCity}, ${order.shippingAddress}`);
+      }
+
+      // Payment + shipping method
+      setText("[data-info-payment]", order.paymentMethodLabel);
+      setText("[data-info-shipping-method]", order.shippingMethodLabel);
+
+      // Customer note
+      if (order.customerNote && order.customerNote.trim()) {
+        const noteSection = document.querySelector<HTMLElement>("[data-info-note-section]");
+        if (noteSection) noteSection.hidden = false;
+        setText("[data-info-note]", order.customerNote);
+      }
+
+      // Show content, hide loading
+      if (loadingEl) loadingEl.hidden = true;
+      if (contentEl) contentEl.hidden = false;
+    }
+
+    function showError(msg: string) {
+      if (loadingEl) loadingEl.hidden = true;
+      if (contentEl) contentEl.hidden = true;
+      if (errorText) errorText.textContent = msg;
+      if (errorEl) errorEl.hidden = false;
+    }
+
+    function setText(selector: string, text: string) {
+      const el = document.querySelector<HTMLElement>(selector);
+      if (el) el.textContent = text;
+    }
+
+    function formatPrice(ft: number): string {
+      return `${ft.toLocaleString("hu-HU")} Ft`;
+    }
+
+    function escape(text: string): string {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  })();
+</script>
+
+<style is:global>
+  /* ─── Order detail page ──────────────────────────────────────────────── */
+  .order-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* [hidden] override */
+  .order-detail__loading[hidden],
+  .order-detail__error[hidden],
+  .order-detail__content[hidden],
+  [data-summary-discount-row][hidden],
+  [data-info-shipping-block][hidden],
+  [data-info-note-section][hidden] {
+    display: none !important;
+  }
+
+  /* Print-only elemek (csak nyomtatáskor látszanak) */
+  .order-detail__print-header,
+  .order-detail__print-footer {
+    display: none;
+  }
+
+  /* ─── Loading / error ─────────────────────────────────────────────────── */
+  .order-detail__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-8) 0;
+    color: var(--mona-text-3);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+  }
+
+  .order-detail__spinner {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid var(--mona-border);
+    border-top-color: var(--mona-warm);
+    border-radius: 50%;
+    animation: order-detail-spin 0.7s linear infinite;
+  }
+
+  @keyframes order-detail-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .order-detail__error {
+    text-align: center;
+    padding: var(--space-6);
+    background: rgb(212 80 80 / 0.08);
+    border-left: 2px solid var(--mona-sale, #c84545);
+    color: var(--mona-sale, #c84545);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  /* ─── Header ──────────────────────────────────────────────────────────── */
+  .order-detail__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .order-detail__header-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .order-detail__back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--mona-text-3);
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    text-decoration: none;
+    margin-bottom: var(--space-3);
+    transition: color var(--motion-fast) var(--ease);
+  }
+
+  .order-detail__back-link:hover {
+    color: var(--mona-text);
+  }
+
+  .order-detail__title {
+    font-family: var(--mona-serif);
+    font-size: 32px;
+    line-height: 1.1;
+    color: var(--mona-text);
+    margin: 0 0 var(--space-2);
+  }
+
+  .order-detail__subtitle {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+    margin: 0;
+  }
+
+  .order-detail__subtitle strong {
+    color: var(--mona-text);
+    font-weight: 600;
+  }
+
+  .order-detail__header-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .order-detail__header-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* ─── Status row ──────────────────────────────────────────────────────── */
+  .order-detail__status-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--mona-elevated);
+    border: 0.5px solid var(--mona-border);
+  }
+
+  .order-detail__status-label {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+  }
+
+  .order-detail__status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+
+  .order-detail__status-badge--amber  { background: rgb(192 154 80 / 0.18); color: var(--mona-warm); }
+  .order-detail__status-badge--green  { background: rgb(80 160 100 / 0.15); color: #4a8a5e; }
+  .order-detail__status-badge--blue   { background: rgb(80 130 180 / 0.12); color: #4a7298; }
+  .order-detail__status-badge--gray   { background: rgb(120 120 120 / 0.10); color: var(--mona-text-2); }
+  .order-detail__status-badge--red    { background: rgb(212 80 80 / 0.10); color: var(--mona-sale, #c84545); }
+
+  /* ─── Sections ────────────────────────────────────────────────────────── */
+  .order-detail__section {
+    border: 0.5px solid var(--mona-border);
+    background: var(--mona-bg);
+    padding: var(--space-5);
+  }
+
+  .order-detail__section-title {
+    font-family: var(--mona-serif);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--mona-text);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  /* ─── Items table ─────────────────────────────────────────────────────── */
+  .order-detail__items {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+  }
+
+  .order-detail__items thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    padding: var(--space-2) var(--space-2) var(--space-3);
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  .order-detail__items-th-qty,
+  .order-detail__items-th-price,
+  .order-detail__items-th-subtotal {
+    text-align: right !important;
+  }
+
+  .order-detail__items tbody td {
+    padding: var(--space-3) var(--space-2);
+    border-bottom: 0.5px solid var(--mona-border);
+    color: var(--mona-text-2);
+    vertical-align: middle;
+  }
+
+  .order-detail__items-td-product {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .order-detail__items-img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    background: var(--mona-elevated);
+    flex-shrink: 0;
+  }
+
+  .order-detail__items-name {
+    color: var(--mona-text);
+    font-weight: 500;
+  }
+
+  .order-detail__items-td-qty,
+  .order-detail__items-td-price,
+  .order-detail__items-td-subtotal {
+    text-align: right;
+  }
+
+  .order-detail__items-td-subtotal {
+    color: var(--mona-text);
+    font-weight: 600;
+  }
+
+  /* ─── Summary ─────────────────────────────────────────────────────────── */
+  .order-detail__summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .order-detail__summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+  }
+
+  .order-detail__summary-row--total {
+    font-family: var(--mona-serif);
+    font-size: 18px;
+    color: var(--mona-text);
+    padding-top: var(--space-3);
+    margin-top: var(--space-2);
+    border-top: 0.5px solid var(--mona-border);
+  }
+
+  /* ─── Info grid (két oszlop) ──────────────────────────────────────────── */
+  .order-detail__info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 600px) {
+    .order-detail__info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .order-detail__info-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .order-detail__info-title {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    margin: 0 0 var(--space-2);
+  }
+
+  .order-detail__info-block p {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .order-detail__note {
+    font-style: italic;
+    background: var(--mona-elevated);
+    padding: var(--space-3);
+    border-left: 2px solid var(--mona-warm);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  /* PRINT STYLES                                                            */
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  @media print {
+    /* Page setup */
+    @page {
+      size: A4;
+      margin: 1.5cm;
+    }
+
+    /* Mindent egyszerűsítünk nyomtatáshoz */
+    body, html {
+      background: white !important;
+      color: black !important;
+    }
+
+    /* Rejtjük a nem-nyomtatandó elemeket */
+    .header,
+    .footer,
+    .profile-layout__sidebar,
+    .cart-drawer,
+    .auth-modal,
+    [data-no-print] {
+      display: none !important;
+    }
+
+    /* Layout reset */
+    .profile-layout {
+      max-width: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .profile-layout__container {
+      grid-template-columns: 1fr !important;
+      gap: 0 !important;
+    }
+
+    .profile-layout__main {
+      padding: 0 !important;
+    }
+
+    /* Print-only header */
+    .order-detail__print-header {
+      display: flex !important;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 1cm;
+      margin-bottom: 0.8cm;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .order-detail__print-brand h1 {
+      font-family: var(--mona-serif), serif;
+      font-size: 24pt;
+      margin: 0 0 4pt;
+      color: black;
+    }
+
+    .order-detail__print-brand p {
+      font-size: 9pt;
+      color: #666;
+      margin: 0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .order-detail__print-meta {
+      text-align: right;
+    }
+
+    .order-detail__print-meta p {
+      font-size: 9pt;
+      color: #666;
+      margin: 0 0 2pt;
+    }
+
+    /* Sections nyomtatáshoz */
+    .order-detail__title {
+      font-size: 18pt !important;
+      color: black !important;
+    }
+
+    .order-detail__subtitle {
+      font-size: 10pt !important;
+      color: #444 !important;
+    }
+
+    .order-detail__back-link,
+    .order-detail__header-actions {
+      display: none !important;
+    }
+
+    .order-detail__section {
+      border: none !important;
+      padding: 0 !important;
+      background: white !important;
+      margin-bottom: 0.6cm;
+      page-break-inside: avoid;
+    }
+
+    .order-detail__section-title {
+      font-size: 12pt !important;
+      color: black !important;
+      border-bottom: 0.5pt solid #ccc !important;
+      padding-bottom: 4pt !important;
+      margin-bottom: 8pt !important;
+    }
+
+    .order-detail__status-row {
+      background: white !important;
+      border: 0.5pt solid #ccc !important;
+      padding: 6pt 10pt !important;
+    }
+
+    .order-detail__status-label,
+    .order-detail__info-title {
+      color: #666 !important;
+      font-size: 8pt !important;
+    }
+
+    .order-detail__status-badge {
+      background: white !important;
+      border: 0.5pt solid currentColor;
+      color: black !important;
+    }
+
+    .order-detail__items {
+      font-size: 9pt !important;
+    }
+
+    .order-detail__items thead th {
+      font-size: 8pt !important;
+      color: #666 !important;
+      border-bottom-color: #ccc !important;
+    }
+
+    .order-detail__items tbody td {
+      color: black !important;
+      border-bottom-color: #eee !important;
+    }
+
+    .order-detail__items-img {
+      width: 32px !important;
+      height: 32px !important;
+    }
+
+    .order-detail__summary-row {
+      color: #444 !important;
+      font-size: 10pt !important;
+    }
+
+    .order-detail__summary-row--total {
+      color: black !important;
+      font-size: 12pt !important;
+      border-top-color: #ccc !important;
+    }
+
+    .order-detail__info-block p {
+      color: black !important;
+      font-size: 10pt !important;
+    }
+
+    .order-detail__note {
+      background: #f9f9f9 !important;
+      border-left-color: #ccc !important;
+    }
+
+    /* Print-only footer */
+    .order-detail__print-footer {
+      display: block !important;
+      margin-top: 1cm;
+      padding-top: 0.5cm;
+      border-top: 0.5pt solid #ccc;
+      text-align: center;
+    }
+
+    .order-detail__print-footer p {
+      font-size: 8pt;
+      color: #666;
+      margin: 0 0 2pt;
+    }
+  }
+</style>
