@@ -295,6 +295,17 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     gap: var(--space-6);
   }
 
+  /* FONTOS: a globális reset.css `display: block` és a saját display:flex
+     szabályok felülírják a `hidden` HTML attribútum default `display: none`
+     értékét. Ezért minden state-elem-en explicit override szükséges, hogy
+     a JS-ben végzett `el.hidden = true` ténylegesen elrejtse az elemet. */
+  .orders-page__loading[hidden],
+  .orders-page__empty[hidden],
+  .orders-page__error[hidden],
+  .orders-page__list[hidden] {
+    display: none !important;
+  }
+
   .orders-page__header {
     display: flex;
     flex-direction: column;

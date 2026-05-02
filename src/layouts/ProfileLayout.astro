@@ -198,6 +198,14 @@ const navItems = [
       padding: var(--space-6) var(--space-4);
     }
 
+    /* [hidden] override — a globális reset és a saját display szabályok
+       felülírják a `hidden` HTML attribute default `display: none` értékét.
+       Ezért explicit override szükséges. */
+    .profile-layout__guard[hidden],
+    .profile-layout__container[hidden] {
+      display: none !important;
+    }
+
     /* Guard (logged-out állapot) ─────────────────────────────────────────── */
     .profile-layout__guard {
       max-width: 480px;

@@ -18,7 +18,201 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.5] — 2026-04-27 — Sprint 4.5.x — Verifikációs banner Statement + cleanup ⭐
+## [0.9.7] — 2026-04-27 — Sprint 4.5 hotfix — `[hidden]` attribute CSS override ⭐
+
+### Probléma
+
+A `/profil/rendelesek` oldal-on a vendég azt látta, hogy **mind a "Rendelések 
+betöltése..." spinner, mind az "Még nincsenek rendeléseid" empty state 
+egyszerre megjelenik** (lásd screenshot).
+
+A JS logika **OK** volt — `showEmpty()` lefutott, `hideAll()` beállította 
+`loadingEl.hidden = true`-t. **De vizuálisan** a loading még mindig látszott.
+
+### Diagnózis
+
+A CSS-ben a `.orders-page__loading { display: flex }` (és más állapot-elemek 
+`display: flex` / `grid` / `block`) **felülírja** a `[hidden]` HTML 
+attribútum default `display: none` értékét, mert a class selector specificitása 
+magasabb mint az attribute selector-é.
+
+Ugyanez a hiba az **AuthModal SVG eye-icon** problémájának (v0.8.6) tükörképe — 
+a globális `reset.css svg { display: block }` ott okozta ugyanezt a tüneten.
+
+### Javítás — explicit `[hidden]` override mindenhol
+
+Hozzáadva minden state-elem-re az `is:global` style-blokkban:
+```css
+.profile-layout__guard[hidden],
+.profile-layout__container[hidden],
+.orders-page__loading[hidden],
+.orders-page__empty[hidden],
+.orders-page__error[hidden],
+.orders-page__list[hidden],
+.addresses-page__loading[hidden],
+.addresses-page__empty[hidden],
+.addresses-page__error[hidden],
+.addresses-page__container[hidden],
+.address-modal[hidden] {
+  display: none !important;
+}
+```
+
+### Tanulság (minta a Sprint 5+ -ra)
+
+**Bárhol ahol a JS-ben `el.hidden = true` állítást használunk**, és **az elem 
+CSS osztálya `display: flex/grid/block`-ot deklarál**, **kell egy explicit 
+`[hidden] { display: none !important }` override**.
+
+Ezt **a 02-design-system.md** dokumentumba érdemes tenni mint kötelező 
+konvenciót, a Sprint 5+ admin felület és további form-ok előtt. **Akár egy 
+globális szabály** is jó megoldás a `reset.css`-ben:
+
+```css
+/* reset.css — javasolt addíció Sprint 5 előtt */
+[hidden] {
+  display: none !important;
+}
+```
+
+Ezt **most NEM** alkalmazom (kockázatos retrospektív refactor), csak a 
+Sprint 5 előkészítéshez tervezzük.
+
+### Fájlok (4)
+- `package.json` — `0.9.6` → `0.9.7`
+- `src/layouts/ProfileLayout.astro` — guard + container override
+- `src/pages/profil/rendelesek.astro` — loading + empty + error + list override
+- `src/pages/profil/cimek.astro` — loading + empty + error + container + modal override
+- `docs/09-changelog.md`
+
+---
+
+
+
+A vendég profil területén megjelenik a `/profil/cimek` oldal: hozzáadhat, 
+szerkeszthet, törölhet **legfeljebb 10** mentett címet, és külön választhat 
+default szállítási és számlázási címet.
+
+### Architektúra döntések rögzítve
+
+- **Címtípus**: hibrid — univerzális címek + külön szállítási/számlázási default
+- **Limit**: max 10 cím vendégenként
+- **Auto-mentés**: az első checkout-ról auto-default mentés; később checkbox 
+  "Mentsd a címet a fiókomba" (Sprint 4.5.3.x)
+
+### Hozzáadva — D1 séma
+
+- **`migrations/0005_sprint4_5_3_addresses.sql`**:
+  - `customer_addresses.is_default_shipping` (új mező)
+  - `customer_addresses.is_default_billing` (új mező)
+  - Migráció: meglévő `is_default = 1` → mindkét új flag-re átkonvertálva
+  - Régi `idx_customer_addresses_default` index TÖRÖLVE
+  - Új unique index-ek: `idx_customer_addresses_default_shipping`, 
+    `idx_customer_addresses_default_billing` (egy customer-enként max 1 default)
+  - Megjegyzés: a régi `is_default` mező maradt (D1 SQLite nem támogat 
+    DROP COLUMN), de az új kódbázis nem használja
+
+### Hozzáadva — TS típusok
+
+- **`src/lib/types/addresses.ts`** (~180 sor):
+  - `AddressRow` (D1 shape) + `AddressPublic` (frontend view)
+  - `AddressCreateRequest`, `AddressUpdateRequest`, `SetDefaultRequest`
+  - `AddressListResponse`, `AddressMutationResponse`
+  - `validateAddress()` — kötelező mezők + max length-ek
+  - `MAX_ADDRESSES_PER_CUSTOMER = 10`
+
+### Hozzáadva — API endpoints (4 db)
+
+- **`GET /api/profile/addresses`** — vendég összes címe, default-ok elsőként
+- **`POST /api/profile/addresses`** — új cím (validáció + limit check + 
+  auto-default ha első cím)
+- **`PUT /api/profile/addresses/[id]`** — módosít (ownership check, default-ok 
+  átállítás)
+- **`DELETE /api/profile/addresses/[id]`** — töröl (ownership check, 
+  ON DELETE CASCADE az indexek miatt)
+- **`POST /api/profile/addresses/default`** — `{ type, addressId }` — 
+  két lépésű művelet: töröl mindenhonnan + beállít a célon
+
+Minden endpoint:
+- Auth required
+- Outer try/catch + struktúrált 500 JSON
+- Ownership check (a vendég csak a saját címeit kezelheti)
+
+### Hozzáadva — `/profil/cimek` oldal
+
+- **`src/pages/profil/cimek.astro`** (~700 sor):
+  - **3 állapot**: loading, empty, error
+  - **Cím-kártyák grid** (2 oszlop desktop, 1 oszlop mobile):
+    - Címke ("Otthon", "Munkahely") + badge-ek (Szállítási default / 
+      Számlázási default)
+    - Címzett neve + telefon
+    - 2600 Vác, Zrínyi Miklós u. 3.
+    - Használat tag-ek (Szállítás · Számlázás) ha nincs default
+    - Action gombok: szerkeszt + töröl (mini ikon-gombok)
+    - Footer: "Tedd szállítási default-tá" / "Tedd számlázási default-tá" 
+      gyors gombok
+  - **"+ Új cím hozzáadása"** szaggatott border gomb (hover patina arany)
+  - **Modal popup** (új / szerkesztés):
+    - Címke, Címzett, Telefon (opc), Utca + házszám
+    - Irányítószám + Város (1:2 grid)
+    - Fieldset: Cím használata (Szállítás / Számlázás checkbox-ok)
+    - Fieldset: Alapértelmezett (Szállítási / Számlázási default checkbox-ok)
+    - Custom checkbox stílus (consistent a profile-page-szel: arany pipa)
+    - Mentés gomb loading állapottal
+  - **Limit kezelés**: ha 10 cím van, az "Új cím hozzáadása" gomb disabled, 
+    szöveg: "Maximum 10 cím tárolható (10/10)"
+
+### UX részletek
+
+- **Default jelzések**:
+  - Patina arany badge a "Szállítási default" cím-en
+  - Kék badge a "Számlázási default" cím-en
+  - Ha mindkettő egy címen van: 2 badge egymás mellett
+- **Set default link** csak akkor látszik a footerben, ha:
+  - A cím nem már default arra a célra
+  - A cím használható arra a célra (`is_shipping` / `is_billing` = 1)
+- **Hover effect**: card border patina aranyra vált
+- **Modal**: backdrop blur + centered panel, ESC bezárja, klikk a backdrop-on 
+  is bezárja
+- **Confirm dialog** törléskor: `confirm("Biztosan törölni szeretnéd a(z) "X" címet?")`
+
+### Mit NEM csinál még (Sprint 4.5.3.x)
+
+- ❌ **Auto-mentés a checkout-ról** (a vendég első rendelésénél a cím 
+  automatikusan elmentésre kerül a címkönyvébe + default lesz) — később
+- ❌ **"Mentsd a címet a fiókomba" checkbox** a checkout-on (logged-in 
+  vendég, már nem első rendelés)
+- ❌ **"Korábbi cím használata" gyors választó** a checkout-on (lista a 
+  mentett címekből → egy klikk auto-fill)
+- ❌ **Címek importálása** (CSV / vCard) — Sprint 5+
+
+### Fájlok (5 új + 2 módosított)
+
+**Új**:
+- `migrations/0005_sprint4_5_3_addresses.sql`
+- `src/lib/types/addresses.ts`
+- `src/pages/api/profile/addresses/index.ts` (GET + POST)
+- `src/pages/api/profile/addresses/[id].ts` (PUT + DELETE)
+- `src/pages/api/profile/addresses/default.ts` (POST)
+- `src/pages/profil/cimek.astro`
+
+**Módosított**:
+- `package.json` — `0.9.5` → `0.9.6`
+- `docs/09-changelog.md`
+
+### Migráció futtatás
+
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0005_sprint4_5_3_addresses.sql
+
+# Ellenőrzés:
+npx wrangler d1 execute monastudio-v2-db --remote --command "PRAGMA table_info(customer_addresses);"
+# Várt: ..., is_default_shipping, is_default_billing, ...
+```
+
+---
+
+
 
 ### Probléma
 
