@@ -639,11 +639,12 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     }
 
     /* Rejtjük a nem-nyomtatandó elemeket */
-    .header,
-    .footer,
+    .site-header,
+    .site-footer,
     .profile-layout__sidebar,
     .cart-drawer,
     .auth-modal,
+    [data-site-header],
     [data-no-print] {
       display: none !important;
     }

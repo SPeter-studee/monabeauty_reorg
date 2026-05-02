@@ -18,7 +18,65 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.12] — 2026-04-27 — Sprint 4.5.x — Címkönyv empty state bug fix
+## [0.9.13] — 2026-04-27 — Sprint 4.5.x — Print stylesheet header/footer fix
+
+### Probléma
+
+A v0.9.10 print-friendly rendelés-letöltés után, **a 2. és 3. oldalon** 
+megjelent a Mona Studio header (logo, navigáció, HU·EN, kosár, fiók ikonok) 
+és a footer (WEBSHOP / SZALON / INFORMÁCIÓK linkek + copyright) a PDF-en — 
+pedig ezeket a print stylesheet-nek el kellett volna rejtenie.
+
+### Diagnózis
+
+A v0.9.10 `@media print` blokkban hibás osztályneveket céloztam:
+```css
+.header,
+.footer,
+... { display: none !important; }
+```
+
+**A valódi osztályok**:
+- Header: `.site-header` (a `Header.astro` komponensben)
+- Footer: `.site-footer` (a `Footer.astro` komponensben)
+
+Az általam használt `.header` és `.footer` **nem létező osztályok** — 
+nem volt match, így a print-en **nem rejtődtek el**.
+
+### Javítás
+
+```css
+@media print {
+  .site-header,
+  .site-footer,
+  .profile-layout__sidebar,
+  .cart-drawer,
+  .auth-modal,
+  [data-site-header],
+  [data-no-print] {
+    display: none !important;
+  }
+}
+```
+
+A `[data-site-header]` attribute selector is hozzáadva mint backup, mivel a 
+header markup-ban szerepel ez az attribútum is.
+
+### Tanulság
+
+**Print stylesheet-nél**: a CSS osztályneveket **közvetlenül a markup-ból 
+kell venni**, nem feltételezve azokat. Sprint 5+ -ban érdemes a printable 
+oldalakat **közös print.css fájlba** szervezni, ahol minden globális elem 
+egy helyen van rejtve.
+
+### Fájlok (3)
+- `package.json` — `0.9.12` → `0.9.13`
+- `src/pages/profil/rendelesek/[orderNumber].astro` — print CSS osztálynevek
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 
