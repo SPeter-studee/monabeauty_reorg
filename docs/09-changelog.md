@@ -18,30 +18,149 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.7] — 2026-04-27 — Sprint 4.5 hotfix — `[hidden]` attribute CSS override ⭐
+## [0.9.7] — 2026-04-27 — Sprint 4.5 hotfix — Banner pozíció + [hidden] fix
 
 ### Probléma
 
-A `/profil/rendelesek` oldal-on a vendég azt látta, hogy **mind a "Rendelések 
-betöltése..." spinner, mind az "Még nincsenek rendeléseid" empty state 
-egyszerre megjelenik** (lásd screenshot).
-
-A JS logika **OK** volt — `showEmpty()` lefutott, `hideAll()` beállította 
-`loadingEl.hidden = true`-t. **De vizuálisan** a loading még mindig látszott.
+A v0.9.6 deploy után a `/profil` oldalon a verifikációs banner **alsó éle 
+átfedte a "SZEMÉLYES ADATOK" cím vízszintes vonalát**. Vizuálisan zavaró 
+volt — a banner és a következő szekció címe **összefolytak**.
 
 ### Diagnózis
 
-A CSS-ben a `.orders-page__loading { display: flex }` (és más állapot-elemek 
-`display: flex` / `grid` / `block`) **felülírja** a `[hidden]` HTML 
-attribútum default `display: none` értékét, mert a class selector specificitása 
+A banner a `<header class="profile-page__header">` **belsejében** volt 
+elhelyezve, ami azt jelentette:
+- A header `gap: var(--space-2)` szabálya működött a title + subtitle között
+- A `.profile-page { gap: var(--space-7) }` viszont csak a `<header>` és a 
+  következő blokk közötti távot adta — **a banner a header részeként** 
+  vizuálisan kilógott a header dobozából, és a következő szekció címe 
+  **a header doboztól** csatolódott, **nem a banner aljától**
+
+### Javítás
+
+#### 1. Banner kiemelése a header-ből önálló blokká
+
+```html
+<!-- ELŐTTE -->
+<header>
+  <h1>Profilom</h1>
+  <p>Itt kezelheted...</p>
+  <div class="...verify-banner">...</div>   ← header-en belül
+</header>
+<form>...</form>
+
+<!-- UTÁNA -->
+<header>
+  <h1>Profilom</h1>
+  <p>Itt kezelheted...</p>
+</header>
+<div class="...verify-banner">...</div>   ← önálló blokk
+<form>...</form>
+```
+
+A `.profile-page { gap: var(--space-7) }` flex-szabálya most automatikusan ad 
+teret **felette + alatta** is.
+
+#### 2. CSS finomhangolás
+
+- `margin-top: var(--space-4)` ELTÁVOLÍTVA a `.profile-page__verify-banner`-ből 
+  (a flex gap kezeli)
+- `[hidden]` override hozzáadva: `.profile-page__verify-banner[hidden] { 
+  display: none !important }` (ugyanaz mint a v0.9.6-os `[hidden]` fix mintája)
+
+### Tanulság
+
+**Hierarchikus markup**: ha egy elem **vizuálisan önálló blokk**, akkor 
+**szerkezetileg is** önállónak kell lennie. Ne ágyazzunk be vizuálisan eltérő 
+blokkokat egy `<header>` vagy `<section>` belsejébe csak azért mert "logikailag 
+szervesen tartoznak" — a CSS gap/margin szabályok jobban kezelik ha minden 
+blokk a tényleges parent-flex container közvetlen gyermeke.
+
+### Fájlok (3)
+- `package.json` — `0.9.6` → `0.9.7`
+- `src/pages/profil/index.astro` — banner kiemelés header-ből + CSS finomhangolás
+- `docs/09-changelog.md`
+
+---
+
+
+
+A `/profil/cimek` címkönyv oldal élesedik (CRUD + külön szállítási/számlázási
+default cím), valamint egy CSS bug-fix amit a `/profil/rendelesek` oldalon
+észleltünk a v0.9.2 deploy után.
+
+### Architektúra döntések rögzítve (Sprint 4.5.3)
+
+- **Címtípus**: hibrid — univerzális címek + külön szállítási/számlázási default
+- **Limit**: max 10 cím vendégenként
+- **Auto-mentés**: első checkout-ról auto-default mentés; később checkbox
+  "Mentsd a címet a fiókomba" (Sprint 4.5.3.x)
+
+### Hozzáadva — D1 séma
+
+- **`migrations/0005_sprint4_5_3_addresses.sql`**:
+  - `customer_addresses.is_default_shipping` (új mező)
+  - `customer_addresses.is_default_billing` (új mező)
+  - Migráció: meglévő `is_default = 1` → mindkét új flag-re átkonvertálva
+  - Régi `idx_customer_addresses_default` index TÖRÖLVE
+  - Új unique index-ek (egy customer-enként max 1 default-shipping + 1 default-billing)
+  - Megjegyzés: a régi `is_default` mező maradt (D1 SQLite nem támogat
+    DROP COLUMN), de az új kódbázis nem használja
+
+### Hozzáadva — TS típusok
+
+- **`src/lib/types/addresses.ts`** (~180 sor):
+  - `AddressRow` (D1) + `AddressPublic` (frontend view)
+  - `AddressCreateRequest`, `AddressUpdateRequest`, `SetDefaultRequest`
+  - `validateAddress()` — kötelező mezők + max length-ek
+  - `MAX_ADDRESSES_PER_CUSTOMER = 10`
+
+### Hozzáadva — API endpoints (4 db)
+
+- **`GET /api/profile/addresses`** — vendég összes címe, default-ok elsőként
+- **`POST /api/profile/addresses`** — új cím (validáció + limit + auto-default)
+- **`PUT /api/profile/addresses/[id]`** — módosít (ownership check)
+- **`DELETE /api/profile/addresses/[id]`** — töröl
+- **`POST /api/profile/addresses/default`** — `{ type, addressId }` default beállítás
+
+Minden endpoint: auth required, outer try/catch + struktúrált 500 JSON,
+ownership check (vendég csak a saját címeit kezelheti).
+
+### Hozzáadva — `/profil/cimek` oldal
+
+- **`src/pages/profil/cimek.astro`** (~700 sor):
+  - 3 állapot: loading, empty, error (mind explicit `[hidden]` override-zal)
+  - Cím-kártyák grid (2 oszlop desktop, 1 oszlop mobile)
+  - Címke + badge-ek (Szállítási default / Számlázási default)
+  - Action gombok: szerkeszt + töröl mini ikon-gombok
+  - "+ Új cím hozzáadása" szaggatott border gomb (hover patina arany)
+  - Modal popup (új / szerkesztés) — címke, címzett, telefon, utca, ZIP+város,
+    Cím használata fieldset (Szállítás/Számlázás), Alapértelmezett fieldset
+  - Custom checkbox: arany pipa fehér háttéren
+  - Limit: 10 cím (a 10. után disabled)
+
+### Javítva — `[hidden]` attribute CSS override
+
+#### Probléma
+
+A `/profil/rendelesek` oldalon a vendég azt látta, hogy **mind a "Rendelések
+betöltése..." spinner, mind az "Még nincsenek rendeléseid" empty state
+egyszerre megjelenik**. A JS logika **OK** volt — `showEmpty()` lefutott,
+`hideAll()` beállította `loadingEl.hidden = true`-t. **De vizuálisan** a
+loading még mindig látszott.
+
+#### Diagnózis
+
+A CSS-ben a `.orders-page__loading { display: flex }` (és más állapot-elemek
+`display: flex` / `grid` / `block`) **felülírja** a `[hidden]` HTML
+attribútum default `display: none` értékét, mert a class selector specificitása
 magasabb mint az attribute selector-é.
 
-Ugyanez a hiba az **AuthModal SVG eye-icon** problémájának (v0.8.6) tükörképe — 
-a globális `reset.css svg { display: block }` ott okozta ugyanezt a tüneten.
+Ugyanez a hiba az **AuthModal SVG eye-icon** problémájának (v0.8.6) tükörképe.
 
-### Javítás — explicit `[hidden]` override mindenhol
+#### Javítás — explicit `[hidden]` override
 
-Hozzáadva minden state-elem-re az `is:global` style-blokkban:
+Hozzáadva minden state-elem-re:
 ```css
 .profile-layout__guard[hidden],
 .profile-layout__container[hidden],
@@ -58,31 +177,38 @@ Hozzáadva minden state-elem-re az `is:global` style-blokkban:
 }
 ```
 
-### Tanulság (minta a Sprint 5+ -ra)
+### Tanulság (Sprint 5+ tervezésre)
 
-**Bárhol ahol a JS-ben `el.hidden = true` állítást használunk**, és **az elem 
-CSS osztálya `display: flex/grid/block`-ot deklarál**, **kell egy explicit 
-`[hidden] { display: none !important }` override**.
+Sprint 5 előtt érdemes a **`reset.css`-be** tenni egy globális
+`[hidden] { display: none !important }` szabályt, hogy ne kelljen minden
+komponens-ben külön foglalkozni vele.
 
-Ezt **a 02-design-system.md** dokumentumba érdemes tenni mint kötelező 
-konvenciót, a Sprint 5+ admin felület és további form-ok előtt. **Akár egy 
-globális szabály** is jó megoldás a `reset.css`-ben:
+### Migráció futtatás
 
-```css
-/* reset.css — javasolt addíció Sprint 5 előtt */
-[hidden] {
-  display: none !important;
-}
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0005_sprint4_5_3_addresses.sql
+
+# Ellenőrzés:
+npx wrangler d1 execute monastudio-v2-db --remote --command "PRAGMA table_info(customer_addresses);"
+# Várt: ..., is_default_shipping, is_default_billing, ...
 ```
 
-Ezt **most NEM** alkalmazom (kockázatos retrospektív refactor), csak a 
-Sprint 5 előkészítéshez tervezzük.
+### Fájlok (8)
 
-### Fájlok (4)
-- `package.json` — `0.9.6` → `0.9.7`
-- `src/layouts/ProfileLayout.astro` — guard + container override
-- `src/pages/profil/rendelesek.astro` — loading + empty + error + list override
-- `src/pages/profil/cimek.astro` — loading + empty + error + container + modal override
+**Új** (Sprint 4.5.3):
+- `migrations/0005_sprint4_5_3_addresses.sql`
+- `src/lib/types/addresses.ts`
+- `src/pages/api/profile/addresses/index.ts` (GET + POST)
+- `src/pages/api/profile/addresses/[id].ts` (PUT + DELETE)
+- `src/pages/api/profile/addresses/default.ts` (POST)
+- `src/pages/profil/cimek.astro`
+
+**Módosított** (hidden fix):
+- `src/layouts/ProfileLayout.astro`
+- `src/pages/profil/rendelesek.astro`
+
+**Verzió + dokumentáció**:
+- `package.json` — `0.9.5` → `0.9.6`
 - `docs/09-changelog.md`
 
 ---

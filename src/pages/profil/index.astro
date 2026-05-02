@@ -20,36 +20,37 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     <header class="profile-page__header">
       <h1 class="profile-page__title">Profilom</h1>
       <p class="profile-page__subtitle">Itt kezelheted a fiókod alapadatait.</p>
-
-      {/* Verifikációs banner — Statement variáns (Opció 2, v0.9.5).
-          Csak akkor látszik ha nem verifikált. Sprint 4.5.5-ben az
-          "Küldj linket" gomb aktiválódik. */}
-      <div class="profile-page__verify-banner" data-verify-banner hidden>
-        <div class="profile-page__verify-banner-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 7h16v10H4z"/>
-            <path d="M4 7l8 7 8-7"/>
-          </svg>
-        </div>
-        <div class="profile-page__verify-banner-content">
-          <p class="profile-page__verify-banner-title">Email verifikáció</p>
-          <p class="profile-page__verify-banner-text">
-            Verifikáld az email címed, és kapsz
-            <strong>−10% kedvezmény</strong>
-            az első rendelésre.
-          </p>
-        </div>
-        <button
-          type="button"
-          class="profile-page__verify-banner-btn"
-          data-resend-verify
-          disabled
-          title="Verifikációs email küldés — Sprint 4.5.5-ben aktiválódik"
-        >
-          Küldj linket
-        </button>
-      </div>
     </header>
+
+    {/* Verifikációs banner — Statement variáns (Opció 2).
+        Önálló blokk a .profile-page-en belül, így a flex gap-et automatikusan
+        megkapja felette és alatta is. Csak akkor látszik ha nem verifikált.
+        Sprint 4.5.5-ben az "Küldj linket" gomb aktiválódik. */}
+    <div class="profile-page__verify-banner" data-verify-banner hidden>
+      <div class="profile-page__verify-banner-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16v10H4z"/>
+          <path d="M4 7l8 7 8-7"/>
+        </svg>
+      </div>
+      <div class="profile-page__verify-banner-content">
+        <p class="profile-page__verify-banner-title">Email verifikáció</p>
+        <p class="profile-page__verify-banner-text">
+          Verifikáld az email címed, és kapsz
+          <strong>−10% kedvezmény</strong>
+          az első rendelésre.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="profile-page__verify-banner-btn"
+        data-resend-verify
+        disabled
+        title="Verifikációs email küldés — Sprint 4.5.5-ben aktiválódik"
+      >
+        Küldj linket
+      </button>
+    </div>
 
     {/* Profil adatok form */}
     <form class="profile-page__form" data-profile-form novalidate>
@@ -343,11 +344,17 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   }
 
   /* ─── Verification banner — Statement variáns (Opció 2, v0.9.5) ───── */
+  /* ─── Verification banner — Statement variáns ─────────────────────────── */
+  /* [hidden] override — display:flex felülírná a default display:none-t */
+  .profile-page__verify-banner[hidden] {
+    display: none !important;
+  }
+
   .profile-page__verify-banner {
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    margin-top: var(--space-4);
+    /* margin-top: nincs szükség, mert a .profile-page flex gap automatikusan ad teret */
     padding: var(--space-4) var(--space-5);
     background: rgb(192 154 80 / 0.10);
     border-left: 3px solid var(--mona-warm);
