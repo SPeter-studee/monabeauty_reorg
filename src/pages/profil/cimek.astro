@@ -1,6 +1,14 @@
 ---
 // src/pages/profil/cimek.astro
-// Sprint 4.5.3 — Címkönyv (logged-in vendég címeinek kezelése)
+// Sprint 4.5.3 — Címkönyv (v0.9.9: inline expand form, modal helyett)
+//
+// Változás a v0.9.6-hoz képest:
+//   - Modal popup helyett INLINE EXPAND a profil oldalon
+//   - "+ Új cím hozzáadása" gomb helyén nyílik ki a form
+//   - Szerkesztés a kártya helyén (helyette megjelenik a form)
+//   - Csendesebb UX, brand-konzisztens, mobile-on jobb
+//   - Settings: Cím használata + Alapértelmezett ÖSSZEVONVA, 2x2 grid
+//   - Checkbox feliratok: normál súly (nem uppercase, nem bold)
 
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
 ---
@@ -40,10 +48,90 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       <button type="button" class="btn-secondary" data-addresses-retry>Újrapróbálás</button>
     </div>
 
-    {/* Címek lista */}
+    {/* Címek lista + inline form */}
     <div class="addresses-page__container" data-addresses-container hidden>
       <ul class="addresses-page__list" data-addresses-list></ul>
 
+      {/* Inline form — kibontódik a lista alatt */}
+      <div class="address-form-block" data-form-block hidden>
+        <h3 class="address-form-block__title" data-form-title>Új cím hozzáadása</h3>
+
+        <form class="address-form-block__form" data-address-form novalidate>
+          <input type="hidden" name="addressId" value="" data-form-id />
+
+          <div class="address-form-block__field">
+            <label class="address-form-block__label" for="addr-label">Címke *</label>
+            <input type="text" id="addr-label" name="label" class="address-form-block__input" required maxlength="50" placeholder="pl. Otthon, Munkahely" />
+            <p class="address-form-block__hint">Csak Te látod — segít megkülönböztetni a címeket.</p>
+          </div>
+
+          <div class="address-form-block__field">
+            <label class="address-form-block__label" for="addr-recipient">Címzett neve *</label>
+            <input type="text" id="addr-recipient" name="recipientName" class="address-form-block__input" required maxlength="100" autocomplete="name" />
+          </div>
+
+          <div class="address-form-block__field">
+            <label class="address-form-block__label" for="addr-phone">Telefon</label>
+            <input type="tel" id="addr-phone" name="phone" class="address-form-block__input" maxlength="20" autocomplete="tel" placeholder="+36 30 ..." />
+            <p class="address-form-block__hint">Opcionális — a futár hívja erre, ha gond van.</p>
+          </div>
+
+          <div class="address-form-block__field">
+            <label class="address-form-block__label" for="addr-street">Utca, házszám *</label>
+            <input type="text" id="addr-street" name="street" class="address-form-block__input" required maxlength="200" autocomplete="street-address" />
+          </div>
+
+          <div class="address-form-block__field-row">
+            <div class="address-form-block__field">
+              <label class="address-form-block__label" for="addr-postal">Irányítószám *</label>
+              <input type="text" id="addr-postal" name="postalCode" class="address-form-block__input" required maxlength="10" autocomplete="postal-code" inputmode="numeric" />
+            </div>
+            <div class="address-form-block__field">
+              <label class="address-form-block__label" for="addr-city">Város *</label>
+              <input type="text" id="addr-city" name="city" class="address-form-block__input" required maxlength="100" autocomplete="address-level2" />
+            </div>
+          </div>
+
+          {/* Settings blokk — kompakt 2x2 grid */}
+          <div class="address-form-block__settings">
+            <p class="address-form-block__settings-label">Beállítások</p>
+
+            <div class="address-form-block__settings-grid">
+              <label class="address-form-block__checkbox">
+                <input type="checkbox" name="isShipping" checked />
+                <span>Szállításra használható</span>
+              </label>
+
+              <label class="address-form-block__checkbox">
+                <input type="checkbox" name="isBilling" checked />
+                <span>Számlázásra használható</span>
+              </label>
+
+              <label class="address-form-block__checkbox">
+                <input type="checkbox" name="setDefaultShipping" data-default-shipping />
+                <span>Alapértelmezett szállítási cím</span>
+              </label>
+
+              <label class="address-form-block__checkbox">
+                <input type="checkbox" name="setDefaultBilling" data-default-billing />
+                <span>Alapértelmezett számlázási cím</span>
+              </label>
+            </div>
+          </div>
+
+          <p class="address-form-block__error" data-form-error hidden></p>
+
+          <div class="address-form-block__actions">
+            <button type="button" class="btn-secondary" data-form-cancel>Mégse</button>
+            <button type="submit" class="btn btn-primary" data-form-submit>
+              <span data-submit-text>Cím mentése</span>
+              <span data-submit-loading hidden>Mentés...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* "+ Új cím hozzáadása" gomb — eltűnik amikor form látszik */}
       <button
         type="button"
         class="addresses-page__add-btn"
@@ -56,110 +144,17 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       </button>
     </div>
   </div>
-
-  {/* Modal: új / szerkesztés ─────────────────────────────────────────────── */}
-  <div class="address-modal" data-address-modal hidden role="dialog" aria-modal="true" aria-labelledby="address-modal-title">
-    <div class="address-modal__backdrop" data-modal-backdrop></div>
-    <div class="address-modal__panel">
-      <header class="address-modal__header">
-        <h2 id="address-modal-title" class="address-modal__title" data-modal-title>Új cím</h2>
-        <button type="button" class="address-modal__close" data-modal-close aria-label="Bezárás">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </header>
-
-      <form class="address-modal__form" data-address-form novalidate>
-        <input type="hidden" name="addressId" value="" data-form-id />
-
-        <div class="address-modal__field">
-          <label class="address-modal__label" for="addr-label">Címke *</label>
-          <input type="text" id="addr-label" name="label" class="address-modal__input" required maxlength="50" placeholder="pl. Otthon, Munkahely" />
-          <p class="address-modal__hint">Csak Te látod — segít megkülönböztetni a címeket.</p>
-        </div>
-
-        <div class="address-modal__field">
-          <label class="address-modal__label" for="addr-recipient">Címzett neve *</label>
-          <input type="text" id="addr-recipient" name="recipientName" class="address-modal__input" required maxlength="100" autocomplete="name" />
-        </div>
-
-        <div class="address-modal__field">
-          <label class="address-modal__label" for="addr-phone">Telefon</label>
-          <input type="tel" id="addr-phone" name="phone" class="address-modal__input" maxlength="20" autocomplete="tel" placeholder="+36 30 ..." />
-          <p class="address-modal__hint">Opcionális — a futár hívja erre, ha gond van.</p>
-        </div>
-
-        <div class="address-modal__field">
-          <label class="address-modal__label" for="addr-street">Utca, házszám *</label>
-          <input type="text" id="addr-street" name="street" class="address-modal__input" required maxlength="200" autocomplete="street-address" />
-        </div>
-
-        <div class="address-modal__field-row">
-          <div class="address-modal__field">
-            <label class="address-modal__label" for="addr-postal">Irányítószám *</label>
-            <input type="text" id="addr-postal" name="postalCode" class="address-modal__input" required maxlength="10" autocomplete="postal-code" inputmode="numeric" />
-          </div>
-          <div class="address-modal__field">
-            <label class="address-modal__label" for="addr-city">Város *</label>
-            <input type="text" id="addr-city" name="city" class="address-modal__input" required maxlength="100" autocomplete="address-level2" />
-          </div>
-        </div>
-
-        <fieldset class="address-modal__fieldset">
-          <legend class="address-modal__legend">Cím használata</legend>
-
-          <label class="address-modal__checkbox">
-            <input type="checkbox" name="isShipping" checked />
-            <span>Szállításra használható</span>
-          </label>
-
-          <label class="address-modal__checkbox">
-            <input type="checkbox" name="isBilling" checked />
-            <span>Számlázásra használható</span>
-          </label>
-        </fieldset>
-
-        <fieldset class="address-modal__fieldset">
-          <legend class="address-modal__legend">Alapértelmezett</legend>
-
-          <label class="address-modal__checkbox">
-            <input type="checkbox" name="setDefaultShipping" data-default-shipping />
-            <span>Alapértelmezett szállítási cím</span>
-          </label>
-
-          <label class="address-modal__checkbox">
-            <input type="checkbox" name="setDefaultBilling" data-default-billing />
-            <span>Alapértelmezett számlázási cím</span>
-          </label>
-        </fieldset>
-
-        <p class="address-modal__error" data-form-error hidden></p>
-
-        <div class="address-modal__actions">
-          <button type="button" class="btn-secondary" data-modal-close>Mégse</button>
-          <button type="submit" class="btn btn-primary" data-form-submit>
-            <span data-submit-text>Mentés</span>
-            <span data-submit-loading hidden>Mentés...</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 </ProfileLayout>
 
 <script>
-  // ── Címkönyv logika ────────────────────────────────────────────────────
   import { subscribeAuthState } from "@/lib/auth-state";
   import type { AddressPublic } from "@/lib/types/addresses";
 
   (() => {
-    // State
     let addresses: AddressPublic[] = [];
     let editingAddressId: number | null = null;
     let initialized = false;
 
-    // DOM refs
     const loadingEl = document.querySelector<HTMLElement>("[data-addresses-loading]");
     const emptyEl = document.querySelector<HTMLElement>("[data-addresses-empty]");
     const errorEl = document.querySelector<HTMLElement>("[data-addresses-error]");
@@ -168,19 +163,21 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     const containerEl = document.querySelector<HTMLElement>("[data-addresses-container]");
     const listEl = document.querySelector<HTMLUListElement>("[data-addresses-list]");
 
-    // Modal refs
-    const modal = document.querySelector<HTMLElement>("[data-address-modal]");
-    const modalTitle = document.querySelector<HTMLElement>("[data-modal-title]");
-    const modalForm = document.querySelector<HTMLFormElement>("[data-address-form]");
-    const modalIdInput = document.querySelector<HTMLInputElement>("[data-form-id]");
+    const formBlock = document.querySelector<HTMLElement>("[data-form-block]");
+    const formTitle = document.querySelector<HTMLElement>("[data-form-title]");
+    const form = document.querySelector<HTMLFormElement>("[data-address-form]");
+    const formIdInput = document.querySelector<HTMLInputElement>("[data-form-id]");
     const formError = document.querySelector<HTMLElement>("[data-form-error]");
     const submitBtn = document.querySelector<HTMLButtonElement>("[data-form-submit]");
     const submitText = document.querySelector<HTMLElement>("[data-submit-text]");
     const submitLoading = document.querySelector<HTMLElement>("[data-submit-loading]");
+    const cancelBtn = document.querySelector<HTMLButtonElement>("[data-form-cancel]");
 
-    if (!listEl || !modal || !modalForm) return;
+    const addButtons = document.querySelectorAll<HTMLButtonElement>("[data-add-address-btn]");
+    const addBtnText = document.querySelector<HTMLElement>("[data-add-btn-text]");
 
-    // Auth state subscribe — ha autentikált, töltsd be
+    if (!listEl || !formBlock || !form) return;
+
     subscribeAuthState((state) => {
       if (state.status === "authenticated" && !initialized) {
         initialized = true;
@@ -188,44 +185,31 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       }
     });
 
-    // ── Add / Retry gombok ──────────────────────────────────────────────
-    document.querySelectorAll<HTMLButtonElement>("[data-add-address-btn]").forEach(btn => {
-      btn.addEventListener("click", () => openModal(null));
+    addButtons.forEach(btn => {
+      btn.addEventListener("click", () => openForm(null));
     });
+
+    cancelBtn?.addEventListener("click", () => closeForm());
+
     retryBtn?.addEventListener("click", () => {
       hideAll();
       showLoading();
       loadAddresses();
     });
 
-    // ── Modal close gombok ──────────────────────────────────────────────
-    document.querySelectorAll<HTMLElement>("[data-modal-close], [data-modal-backdrop]").forEach(el => {
-      el.addEventListener("click", () => closeModal());
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modal && !modal.hidden) {
-        closeModal();
-      }
-    });
-
-    // ── Modal form submit ───────────────────────────────────────────────
-    modalForm.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       await handleFormSubmit();
     });
 
-    // ── API: címek betöltés ─────────────────────────────────────────────
     async function loadAddresses() {
       try {
         const res = await fetch("/api/profile/addresses", { credentials: "include" });
         const data = await res.json();
-
         if (!res.ok || !data.success) {
           showError(data.message || `Sikertelen betöltés (HTTP ${res.status}).`);
           return;
         }
-
         addresses = data.addresses || [];
         renderAddresses();
       } catch (err) {
@@ -234,7 +218,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────
     function renderAddresses() {
       if (addresses.length === 0) {
         showEmpty();
@@ -246,11 +229,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
       listEl!.innerHTML = addresses.map(addressToHtml).join("");
 
-      // Bind action buttons
       listEl!.querySelectorAll<HTMLButtonElement>("[data-edit-id]").forEach(btn => {
         btn.addEventListener("click", () => {
           const id = parseInt(btn.dataset.editId!, 10);
-          openModal(id);
+          openForm(id);
         });
       });
 
@@ -269,13 +251,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         });
       });
 
-      // Update "Add" button state — kihalt ha 10 cím van
-      document.querySelectorAll<HTMLButtonElement>("[data-add-address-btn]").forEach(btn => {
+      addButtons.forEach(btn => {
         btn.disabled = addresses.length >= 10;
       });
-      const addBtnText = document.querySelector<HTMLElement>("[data-add-btn-text]");
       if (addBtnText && addresses.length >= 10) {
         addBtnText.textContent = `Maximum 10 cím tárolható (${addresses.length}/10)`;
+      } else if (addBtnText) {
+        addBtnText.textContent = "Új cím hozzáadása";
       }
     }
 
@@ -283,10 +265,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       const badges: string[] = [];
       if (addr.isDefaultShipping) badges.push(`<span class="address-card__badge address-card__badge--shipping">Szállítási default</span>`);
       if (addr.isDefaultBilling) badges.push(`<span class="address-card__badge address-card__badge--billing">Számlázási default</span>`);
-
-      const useTags: string[] = [];
-      if (addr.isShipping && !addr.isDefaultShipping) useTags.push("Szállítás");
-      if (addr.isBilling && !addr.isDefaultBilling) useTags.push("Számlázás");
 
       return `
         <li class="address-card">
@@ -304,13 +282,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
               </button>
             </div>
           </div>
-
           <div class="address-card__body">
             <p class="address-card__recipient">${escape(addr.recipientName)}${addr.phone ? ` · ${escape(addr.phone)}` : ""}</p>
             <p class="address-card__address">${escape(addr.postalCode)} ${escape(addr.city)}, ${escape(addr.street)}</p>
-            ${useTags.length > 0 ? `<p class="address-card__usage">${useTags.join(" · ")}</p>` : ""}
           </div>
-
           <div class="address-card__footer">
             ${!addr.isDefaultShipping && addr.isShipping ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="shipping">Tedd szállítási default-tá</button>` : ""}
             ${!addr.isDefaultBilling && addr.isBilling ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="billing">Tedd számlázási default-tá</button>` : ""}
@@ -325,61 +300,57 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       return div.innerHTML;
     }
 
-    // ── Modal: open / close ─────────────────────────────────────────────
-    function openModal(addressId: number | null) {
+    function openForm(addressId: number | null) {
       editingAddressId = addressId;
-
-      // Reset form
-      modalForm!.reset();
       hideMessage(formError);
+      form!.reset();
 
       if (addressId === null) {
-        // Új cím
-        if (modalTitle) modalTitle.textContent = "Új cím";
-        if (modalIdInput) modalIdInput.value = "";
-
-        // Default checkbox: ha első cím, mindkét default-tá tesszük
+        if (formTitle) formTitle.textContent = "Új cím hozzáadása";
+        if (formIdInput) formIdInput.value = "";
         const isFirst = addresses.length === 0;
-        const defaultShippingCb = modalForm!.querySelector<HTMLInputElement>("[data-default-shipping]");
-        const defaultBillingCb = modalForm!.querySelector<HTMLInputElement>("[data-default-billing]");
-        if (defaultShippingCb) defaultShippingCb.checked = isFirst;
-        if (defaultBillingCb) defaultBillingCb.checked = isFirst;
+        const cbShip = form!.querySelector<HTMLInputElement>("[data-default-shipping]");
+        const cbBill = form!.querySelector<HTMLInputElement>("[data-default-billing]");
+        if (cbShip) cbShip.checked = isFirst;
+        if (cbBill) cbBill.checked = isFirst;
       } else {
-        // Szerkesztés
         const addr = addresses.find(a => a.id === addressId);
         if (!addr) return;
-
-        if (modalTitle) modalTitle.textContent = "Cím szerkesztése";
-        if (modalIdInput) modalIdInput.value = String(addr.id);
-
-        (modalForm!.querySelector("[name='label']") as HTMLInputElement).value = addr.label;
-        (modalForm!.querySelector("[name='recipientName']") as HTMLInputElement).value = addr.recipientName;
-        (modalForm!.querySelector("[name='phone']") as HTMLInputElement).value = addr.phone || "";
-        (modalForm!.querySelector("[name='street']") as HTMLInputElement).value = addr.street;
-        (modalForm!.querySelector("[name='postalCode']") as HTMLInputElement).value = addr.postalCode;
-        (modalForm!.querySelector("[name='city']") as HTMLInputElement).value = addr.city;
-        (modalForm!.querySelector("[name='isShipping']") as HTMLInputElement).checked = addr.isShipping;
-        (modalForm!.querySelector("[name='isBilling']") as HTMLInputElement).checked = addr.isBilling;
-        (modalForm!.querySelector("[name='setDefaultShipping']") as HTMLInputElement).checked = addr.isDefaultShipping;
-        (modalForm!.querySelector("[name='setDefaultBilling']") as HTMLInputElement).checked = addr.isDefaultBilling;
+        if (formTitle) formTitle.textContent = `${addr.label} — szerkesztés`;
+        if (formIdInput) formIdInput.value = String(addr.id);
+        (form!.querySelector("[name='label']") as HTMLInputElement).value = addr.label;
+        (form!.querySelector("[name='recipientName']") as HTMLInputElement).value = addr.recipientName;
+        (form!.querySelector("[name='phone']") as HTMLInputElement).value = addr.phone || "";
+        (form!.querySelector("[name='street']") as HTMLInputElement).value = addr.street;
+        (form!.querySelector("[name='postalCode']") as HTMLInputElement).value = addr.postalCode;
+        (form!.querySelector("[name='city']") as HTMLInputElement).value = addr.city;
+        (form!.querySelector("[name='isShipping']") as HTMLInputElement).checked = addr.isShipping;
+        (form!.querySelector("[name='isBilling']") as HTMLInputElement).checked = addr.isBilling;
+        (form!.querySelector("[name='setDefaultShipping']") as HTMLInputElement).checked = addr.isDefaultShipping;
+        (form!.querySelector("[name='setDefaultBilling']") as HTMLInputElement).checked = addr.isDefaultBilling;
       }
 
-      modal!.hidden = false;
-      document.body.style.overflow = "hidden";
+      if (formBlock) formBlock.hidden = false;
+      addButtons.forEach(btn => { btn.hidden = true; });
+
+      setTimeout(() => {
+        formBlock?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const labelInput = form!.querySelector<HTMLInputElement>("#addr-label");
+        labelInput?.focus();
+      }, 50);
     }
 
-    function closeModal() {
-      modal!.hidden = true;
-      document.body.style.overflow = "";
+    function closeForm() {
       editingAddressId = null;
+      if (formBlock) formBlock.hidden = true;
+      addButtons.forEach(btn => { btn.hidden = false; });
     }
 
-    // ── Form submit ─────────────────────────────────────────────────────
     async function handleFormSubmit() {
       hideMessage(formError);
       setLoading(true);
 
-      const formData = new FormData(modalForm!);
+      const formData = new FormData(form!);
       const body = {
         label: String(formData.get("label") || ""),
         recipientName: String(formData.get("recipientName") || ""),
@@ -396,9 +367,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
       try {
         const isEdit = editingAddressId !== null;
-        const url = isEdit
-          ? `/api/profile/addresses/${editingAddressId}`
-          : "/api/profile/addresses";
+        const url = isEdit ? `/api/profile/addresses/${editingAddressId}` : "/api/profile/addresses";
         const method = isEdit ? "PUT" : "POST";
 
         const res = await fetch(url, {
@@ -409,7 +378,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         });
 
         const data = await res.json();
-
         if (!res.ok || !data.success) {
           let msg = data.message || `Sikertelen mentés (HTTP ${res.status}).`;
           if (data.debug) msg += ` [debug: ${data.debug}]`;
@@ -418,9 +386,8 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
           return;
         }
 
-        // Sikeres → újratöltjük a listát és bezárjuk
         await loadAddresses();
-        closeModal();
+        closeForm();
         setLoading(false);
       } catch (err) {
         console.error("[addresses] form submit error:", err);
@@ -429,34 +396,23 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       }
     }
 
-    // ── Delete ──────────────────────────────────────────────────────────
     async function handleDelete(id: number) {
       const addr = addresses.find(a => a.id === id);
       if (!addr) return;
-
-      const confirmed = confirm(`Biztosan törölni szeretnéd a(z) "${addr.label}" címet?`);
-      if (!confirmed) return;
-
+      if (!confirm(`Biztosan törölni szeretnéd a(z) "${addr.label}" címet?`)) return;
       try {
-        const res = await fetch(`/api/profile/addresses/${id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        const res = await fetch(`/api/profile/addresses/${id}`, { method: "DELETE", credentials: "include" });
         const data = await res.json();
-
         if (!res.ok || !data.success) {
           alert(data.message || "Sikertelen törlés.");
           return;
         }
-
         await loadAddresses();
       } catch (err) {
-        console.error("[addresses] delete error:", err);
         alert("Hálózati hiba a törléskor.");
       }
     }
 
-    // ── Set default ────────────────────────────────────────────────────
     async function handleSetDefault(id: number, type: "shipping" | "billing") {
       try {
         const res = await fetch("/api/profile/addresses/default", {
@@ -466,56 +422,40 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
           body: JSON.stringify({ addressId: id, type }),
         });
         const data = await res.json();
-
         if (!res.ok || !data.success) {
           alert(data.message || "Sikertelen beállítás.");
           return;
         }
-
         await loadAddresses();
       } catch (err) {
-        console.error("[addresses] set default error:", err);
         alert("Hálózati hiba.");
       }
     }
 
-    // ── State helpers ────────────────────────────────────────────────────
     function hideAll() {
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) emptyEl.hidden = true;
       if (errorEl) errorEl.hidden = true;
       if (containerEl) containerEl.hidden = true;
     }
-
-    function showLoading() {
-      hideAll();
-      if (loadingEl) loadingEl.hidden = false;
-    }
-
-    function showEmpty() {
-      hideAll();
-      if (emptyEl) emptyEl.hidden = false;
-    }
-
+    function showLoading() { hideAll(); if (loadingEl) loadingEl.hidden = false; }
+    function showEmpty() { hideAll(); if (emptyEl) emptyEl.hidden = false; }
     function showError(msg: string) {
       hideAll();
       if (errorText) errorText.textContent = msg;
       if (errorEl) errorEl.hidden = false;
     }
-
     function setLoading(loading: boolean) {
       if (!submitBtn) return;
       submitBtn.disabled = loading;
       if (submitText) submitText.hidden = loading;
       if (submitLoading) submitLoading.hidden = !loading;
     }
-
     function showMessage(el: HTMLElement | null, msg: string) {
       if (!el) return;
       el.textContent = msg;
       el.hidden = false;
     }
-
     function hideMessage(el: HTMLElement | null) {
       if (!el) return;
       el.textContent = "";
@@ -532,12 +472,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     gap: var(--space-6);
   }
 
-  /* [hidden] override — lásd: rendelesek.astro v0.9.7 fix komment */
+  /* [hidden] override */
   .addresses-page__loading[hidden],
   .addresses-page__empty[hidden],
   .addresses-page__error[hidden],
   .addresses-page__container[hidden],
-  .address-modal[hidden] {
+  .address-form-block[hidden],
+  .addresses-page__add-btn[hidden] {
     display: none !important;
   }
 
@@ -562,7 +503,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     margin: 0;
   }
 
-  /* ─── Loading / empty / error ─────────────────────────────────────────── */
+  /* ─── Loading / empty / error ────────────────────────────────────────── */
   .addresses-page__loading {
     display: flex;
     flex-direction: column;
@@ -624,7 +565,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     font-size: 13px;
   }
 
-  /* ─── Container + List + Add button ──────────────────────────────────── */
+  /* ─── Container + List ───────────────────────────────────────────────── */
   .addresses-page__container {
     display: flex;
     flex-direction: column;
@@ -646,6 +587,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     }
   }
 
+  /* ─── Add button ─────────────────────────────────────────────────────── */
   .addresses-page__add-btn {
     display: flex;
     align-items: center;
@@ -789,13 +731,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     line-height: 1.5;
   }
 
-  .address-card__usage {
-    font-family: var(--mona-sans);
-    font-size: 11px;
-    color: var(--mona-text-3);
-    margin: var(--space-1) 0 0;
-  }
-
   .address-card__footer {
     display: flex;
     flex-wrap: wrap;
@@ -825,94 +760,54 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     text-decoration: none;
   }
 
-  /* ─── Address modal ─────────────────────────────────────────────────── */
-  .address-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-  }
-
-  .address-modal__backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgb(0 0 0 / 0.5);
-    backdrop-filter: blur(2px);
-  }
-
-  .address-modal__panel {
-    position: relative;
-    width: 100%;
-    max-width: 560px;
-    max-height: calc(100vh - var(--space-6));
-    overflow-y: auto;
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  /* INLINE FORM BLOCK (v0.9.9) — modal helyett                              */
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  .address-form-block {
     background: var(--mona-bg);
     border: 0.5px solid var(--mona-border);
-    box-shadow: 0 12px 40px rgb(0 0 0 / 0.15);
-  }
-
-  .address-modal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-4) var(--space-5);
-    border-bottom: 0.5px solid var(--mona-border);
-  }
-
-  .address-modal__title {
-    font-family: var(--mona-serif);
-    font-size: 22px;
-    color: var(--mona-text);
-    margin: 0;
-  }
-
-  .address-modal__close {
-    width: 32px;
-    height: 32px;
-    min-height: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--mona-text-3);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .address-modal__close:hover {
-    color: var(--mona-text);
-  }
-
-  .address-modal__form {
+    border-left: 3px solid var(--mona-warm);
     padding: var(--space-5);
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
   }
 
-  .address-modal__field {
+  .address-form-block__title {
+    font-family: var(--mona-serif);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--mona-text);
+    margin: 0;
+    padding-bottom: var(--space-3);
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  .address-form-block__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .address-form-block__field {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
   }
 
-  .address-modal__field-row {
+  .address-form-block__field-row {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: var(--space-3);
   }
 
   @media (max-width: 480px) {
-    .address-modal__field-row {
+    .address-form-block__field-row {
       grid-template-columns: 1fr;
     }
   }
 
-  .address-modal__label {
+  .address-form-block__label {
     font-family: var(--mona-sans);
     font-size: 11px;
     font-weight: 600;
@@ -921,7 +816,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     color: var(--mona-text-3);
   }
 
-  .address-modal__input {
+  .address-form-block__input {
     padding: 10px var(--space-3);
     background: var(--mona-elevated);
     border: 0.5px solid var(--mona-border);
@@ -932,13 +827,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
                 background var(--motion-fast) var(--ease);
   }
 
-  .address-modal__input:focus {
+  .address-form-block__input:focus {
     outline: none;
     border-color: var(--mona-warm);
     background: var(--mona-bg);
   }
 
-  .address-modal__hint {
+  .address-form-block__hint {
     font-family: var(--mona-sans);
     font-size: 11px;
     color: var(--mona-text-3);
@@ -946,26 +841,40 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     font-style: italic;
   }
 
-  .address-modal__fieldset {
-    border: 0.5px solid var(--mona-border);
-    padding: var(--space-3);
-    margin: 0;
+  /* ─── Settings blokk (kompakt 2x2 grid) ──────────────────────────────── */
+  .address-form-block__settings {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--mona-elevated);
+    border: 0.5px solid var(--mona-border);
   }
 
-  .address-modal__legend {
+  .address-form-block__settings-label {
     font-family: var(--mona-sans);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--mona-text-3);
-    padding: 0 var(--space-2);
+    margin: 0;
   }
 
-  .address-modal__checkbox {
+  .address-form-block__settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 600px) {
+    .address-form-block__settings-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ─── Custom checkbox ────────────────────────────────────────────────── */
+  .address-form-block__checkbox {
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
@@ -973,9 +882,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     font-size: 13px;
     color: var(--mona-text-2);
     cursor: pointer;
+    line-height: 1.4;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
   }
 
-  .address-modal__checkbox > input {
+  .address-form-block__checkbox > input {
     appearance: none;
     -webkit-appearance: none;
     width: 18px;
@@ -991,7 +904,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
                 border-color var(--motion-fast) var(--ease);
   }
 
-  .address-modal__checkbox > input:checked {
+  .address-form-block__checkbox > input:checked {
     background: var(--mona-warm);
     border-color: var(--mona-warm);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3.5,8.5 6.5,11.5 12.5,5.5'/></svg>");
@@ -1000,7 +913,19 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     background-size: 14px 14px;
   }
 
-  .address-modal__error {
+  .address-form-block__checkbox > input:focus-visible {
+    outline: 2px solid var(--mona-warm);
+    outline-offset: 2px;
+  }
+
+  .address-form-block__checkbox > span {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+  }
+
+  /* ─── Error message ──────────────────────────────────────────────────── */
+  .address-form-block__error {
     background: rgb(212 80 80 / 0.08);
     border-left: 2px solid var(--mona-sale, #c84545);
     color: var(--mona-sale, #c84545);
@@ -1010,11 +935,21 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     margin: 0;
   }
 
-  .address-modal__actions {
+  /* ─── Actions ────────────────────────────────────────────────────────── */
+  .address-form-block__actions {
     display: flex;
     justify-content: flex-end;
     gap: var(--space-3);
     padding-top: var(--space-3);
     border-top: 0.5px solid var(--mona-border);
+  }
+
+  @media (max-width: 480px) {
+    .address-form-block__actions {
+      flex-direction: column-reverse;
+    }
+    .address-form-block__actions > * {
+      width: 100%;
+    }
   }
 </style>

@@ -18,7 +18,65 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.8] — 2026-04-27 — Sprint 4.5.x — Anonymous rendelések összekapcsolása
+## [0.9.9] — 2026-04-27 — Sprint 4.5.x — Címkönyv inline expand UX (modal helyett)
+
+### Probléma
+
+A v0.9.6 modal popup-os címform UX túl agresszív volt:
+- Túl magas form mobile-on (scroll-behind-modal probléma)
+- Modal popup blokkolja a háttért — nem brand-konzisztens
+- Settings checkbox-ok (Cím használata + Alapértelmezett) **uppercase nagy 
+  feliratokkal** túl agresszívek voltak
+- A "Mentés" / "Mégse" gombok lent eltűntek a scroll alá
+
+### Javítás — inline expand pattern
+
+Modal popup → **inline expand a profil oldalon**:
+
+- A "+ Új cím hozzáadása" gomb helyén bontódik ki a form
+- A form-blokk **a lista alatt** ül, brand-konzisztens (3px arany bal akcentus, 
+  mint a verifikációs banner)
+- Smooth scroll a form-hoz nyitáskor + label input focus
+- "Cím használata" + "Alapértelmezett" összevonva egy **"Beállítások"** 
+  szekcióba, **kompakt 2x2 grid** layout-tal (mobile-on 1 oszlop)
+- Checkbox feliratok: **normál súly (400) + nincs uppercase** — sokkal 
+  csendesebb mint a v0.9.6-os fieldset legend-ek
+- ESC + backdrop click logika **eltávolítva** (nincs modal)
+- Cancel → form bezár, "+ Új cím" gomb visszajön
+
+### UX előnyök
+
+- **Mobile**: nincs két scroll-szint (modal-on belül + body), egyetlen oldal-scroll
+- **Desktop**: a vendég látja a már mentett címeket közben (nem rejtett modal-mögött)
+- **Brand**: csendesebb, nyugodtabb — illik a Mona Studio "fiók-területe" 
+  hangulatához
+- **Szerkesztés**: a kártya helyén bontódik ki a form, természetes vizuális 
+  folytonosság
+
+### Új CSS osztályok
+
+`.address-form-block*` (modal helyett):
+- `.address-form-block` — 3px arany bal akcentus, white background
+- `.address-form-block__title` — serif, 22px, alá vékony border
+- `.address-form-block__field` / `__field-row` / `__input`
+- `.address-form-block__settings` — elevated bg, kompakt
+- `.address-form-block__settings-grid` — 2x2 grid (mobile 1 oszlop)
+- `.address-form-block__checkbox` — explicit `text-transform: none`, 
+  `font-weight: 400`, `letter-spacing: normal`
+- `.address-form-block__actions` — jobbra align (mobile-on column-reverse)
+
+### Eltávolítva
+
+`.address-modal*` osztályok TÖRÖLVE (nincs többé modal).
+
+### Fájlok (3)
+- `package.json` — `0.9.8` → `0.9.9`
+- `src/pages/profil/cimek.astro` — teljes újraírás inline expand-del
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 
