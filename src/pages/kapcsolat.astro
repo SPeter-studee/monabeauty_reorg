@@ -344,4 +344,35 @@ import ContactForm from "@/components/common/ContactForm.astro";
   padding: var(--space-2) var(--space-4);
   border: 0.5px solid var(--mona-border);
 }
+
+/* ─── v0.9.22 — Mobile responsive (Sprint 4.6 ZIP 2) ─────────── */
+@media (max-width: 600px) {
+  /* Grid gap kisebb mobile-on */
+  .contact__grid {
+    gap: var(--space-6);
+  }
+
+  .contact__info {
+    gap: var(--space-4);
+  }
+
+  .contact__block {
+    padding-bottom: var(--space-3);
+  }
+
+  .contact__block p {
+    font-size: 14px;
+  }
+
+  .contact__hours li {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Hours rows kicsit kompaktabb */
+  .contact__hours li {
+    font-size: 12px;
+  }
+}
 </style>

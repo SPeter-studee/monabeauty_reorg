@@ -677,4 +677,67 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     color: var(--mona-text-3);
     margin: 0;
   }
+
+  /* ─── v0.9.22 — Mobile responsive bővítés (Sprint 4.6 ZIP 2) ────────── */
+  @media (max-width: 600px) {
+    /* Title kisebb mobile-on (volt: 36px ami túl nagy 375px viewport-on) */
+    .profile-page__title {
+      font-size: 28px;
+    }
+
+    .profile-page__subtitle {
+      font-size: 13px;
+    }
+
+    .profile-page__section-title {
+      font-size: 10px;
+      margin-bottom: var(--space-3);
+    }
+
+    /* Form actions full-width mobile-on */
+    .profile-page__form-actions {
+      justify-content: stretch;
+    }
+
+    .profile-page__form-actions > .btn {
+      width: 100%;
+    }
+
+    /* Provider rows kompaktabb mobile-on */
+    .profile-page__provider {
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+    }
+
+    .profile-page__provider-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .profile-page__provider-name {
+      font-size: 13px;
+    }
+
+    .profile-page__provider-status {
+      font-size: 11px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Extra small: még kisebb hero */
+    .profile-page__title {
+      font-size: 24px;
+    }
+
+    /* Email status badge új sorba kerül a label után */
+    .profile-page__email-status {
+      margin-top: 4px;
+      width: 100%;
+    }
+
+    /* Touch target ≥44px input mezőkre */
+    .profile-page__input {
+      min-height: var(--touch-target);
+    }
+  }
 </style>

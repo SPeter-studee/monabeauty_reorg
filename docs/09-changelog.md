@@ -18,6 +18,108 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.22] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 2 (profil + kapcsolat) ⭐
+
+### Folytatás a ZIP 1 után
+
+Sprint 4.6 mobile audit második fázis. ZIP 1 (v0.9.21) a vendég-flow oldalakat
+javította (kosár, köszönjük, bejelentkezés, regisztráció). Most a profil-terület
++ kapcsolat oldalt kezeljük.
+
+### `profil/index.astro` — 2 → 4 @media
+
+A meglévő 600px banner + form-row breakpoint mellé új mobile szabályok:
+
+#### Mobile (< 600px):
+- **Title responsive**: 36px → 28px (mert 36px 375px viewport-ra túl nagy)
+- Subtitle 14px → 13px
+- Section-title (SZEMÉLYES ADATOK) 11px → 10px
+- **Form actions full-width**: a "Mentés" gomb teljes szélességet kap
+- **Provider rows kompaktabb**: 36px → 32px ikon, font-méretek finomítva
+
+#### Extra small (< 480px):
+- Title 28px → 24px
+- Email status badge **új sorba kerül** a label után (nem fut túl)
+- **Touch target ≥44px** input mezőkre (Apple HIG)
+
+### `profil/rendelesek.astro` — 1 → 3 @media
+
+A meglévő 600px @media szabály bővítve.
+
+#### Mobile (< 600px):
+- Title 36px → 28px
+- **Order card summary padding**: var(--space-4) → var(--space-3)
+- **Detail expand padding**: var(--space-3) (volt nagyobb)
+- **"Részletek és nyomtatás" link full-width** mobile-on (volt: jobbra align)
+
+#### Extra small (< 480px):
+- Title 28px → 24px
+- Order total 18px → 14px (a kártya jobb szélén nem fut túl)
+- Items count 13px → 11px
+
+### `profil/rendelesek/[orderNumber].astro` — 2 → 4 @media
+
+A print-friendly oldal **mobile-on** csak az info-grid-et kezelte. **Bővítve**.
+
+#### Mobile (< 600px):
+- **Header column-layout**: title + back-link + print-gomb egymás alatt
+  (volt: egy sorban, ami 375px-en kifutott)
+- **Print gomb full-width** mobile-on
+- Title 32px → 22px, subtitle 14px → 12px
+- **Items table**: 12px font, kisebb image (48→36px), kompakt padding
+- **Status row**: flex-wrap (status badge új sorba kerülhet)
+- Section padding kompaktabb
+
+#### Extra small (< 380px):
+- Title 22px → 19px
+- **Items table simplification**: a "Egységár" oszlop **elrejtve** (csak Termék + Db + Részösszeg látszik)
+- Még mindig olvasható, nem fut túl
+
+### `kapcsolat.astro` — 2 → 3 @media
+
+A meglévő 1024px (info + form 2-oszlop) breakpoint mellé mobile szabályok.
+
+#### Mobile (< 600px):
+- Grid gap 64px → 32px
+- Contact-info gap kisebb
+- Block padding kompaktabb
+- Body font 16px → 14px
+
+#### Extra small (< 480px):
+- Hours rows 13px → 12px
+
+### Hatás
+
+A profil-terület most **teljesen reszponzív**. A vendég:
+- ✅ Mobile-on jól használható "Profilom" oldal (form, banner, providers)
+- ✅ Mobile-on átlátható "Rendelések" lista (kártyák egymás alatt, totals jobbra)
+- ✅ Mobile-on olvasható részletes rendelés-nézet (table 3 oszlopos extra small-on)
+- ✅ Mobile-on egyszerű "Kapcsolat" oldal (info + form egymás alatt)
+
+### Fájlok (5)
+- `src/pages/profil/index.astro` — 2 → 4 @media
+- `src/pages/profil/rendelesek.astro` — 1 → 3 @media
+- `src/pages/profil/rendelesek/[orderNumber].astro` — 2 → 4 @media
+- `src/pages/kapcsolat.astro` — 2 → 3 @media
+- `package.json` — `0.9.21` → `0.9.22`
+- `docs/09-changelog.md`
+
+### Sprint 4.6 következő ZIP-ek
+
+#### ZIP 3 — Marketing oldalak (most kell)
+- `rolam.astro`, `szalon.astro`, `szallitas.astro`, `velemenyek.astro`
+- `aszf.astro`, `adatvedelem.astro`, `cookies.astro`, `404.astro`
+- `szolgaltatasok/[slug].astro`, `blog/index.astro`
+
+#### ZIP 4 — Komponensek
+- `auth/UserMenu.astro` (dropdown mobile-on)
+- `home/AboutMonikaTeaser.astro`, `home/TrustindexReviews.astro`
+- `shop/SaleCountdown.astro`, `services/ServiceCard.astro`
+
+---
+
+
+
 ## [0.9.21] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 1 (kritikus vendég-flow) ⭐
 
 ### Háttér

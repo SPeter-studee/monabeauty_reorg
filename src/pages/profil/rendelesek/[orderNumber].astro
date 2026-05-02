@@ -586,8 +586,103 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   }
 
   @media (max-width: 600px) {
+    /* v0.9.22 — kibővített mobile responsive */
+
+    /* Header — title + back-link kompaktabb */
+    .order-detail__header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-3);
+    }
+
+    .order-detail__title {
+      font-size: 22px;
+    }
+
+    .order-detail__subtitle {
+      font-size: 12px;
+    }
+
+    /* Print gomb full-width mobile-on */
+    .order-detail__header-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Status row */
+    .order-detail__status-row {
+      flex-wrap: wrap;
+      padding: var(--space-2) var(--space-3);
+    }
+
+    /* Section padding kisebb */
+    .order-detail__section {
+      padding: var(--space-3);
+    }
+
+    .order-detail__section-title {
+      font-size: 16px;
+    }
+
+    /* Items table — mobile-on overflow scroll, mert oszlopos table nehezen olvasható */
+    .order-detail__items {
+      font-size: 12px;
+    }
+
+    .order-detail__items thead th {
+      padding: var(--space-1) var(--space-1) var(--space-2);
+      font-size: 10px;
+    }
+
+    .order-detail__items tbody td {
+      padding: var(--space-2) var(--space-1);
+    }
+
+    .order-detail__items-td-product {
+      gap: var(--space-2);
+    }
+
+    .order-detail__items-img {
+      width: 36px;
+      height: 36px;
+    }
+
+    .order-detail__items-name {
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    /* Two-column info-grid → 1 oszlop mobile-on */
     .order-detail__info-grid {
       grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+
+    /* Summary kompaktabb */
+    .order-detail__summary-row {
+      font-size: 12px;
+    }
+
+    .order-detail__summary-row--total {
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* Extra small — table item kétsoros ha kell */
+    .order-detail__title {
+      font-size: 19px;
+    }
+
+    /* Items: csak név + ár (qty és egységár átfedi a totalt) */
+    .order-detail__items thead th:nth-child(3),
+    .order-detail__items tbody td:nth-child(3) {
+      display: none;
+    }
+
+    .order-detail__items thead th:nth-child(2),
+    .order-detail__items tbody td:nth-child(2) {
+      text-align: center;
     }
   }
 

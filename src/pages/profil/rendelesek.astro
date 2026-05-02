@@ -691,9 +691,19 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
   /* ─── Mobile responsive ──────────────────────────────────────────────── */
   @media (max-width: 600px) {
+    /* v0.9.22 — Title responsive */
+    .orders-page__title {
+      font-size: 28px;
+    }
+
+    .orders-page__subtitle {
+      font-size: 13px;
+    }
+
     .order-card__summary {
       grid-template-columns: 1fr auto;
       gap: var(--space-3);
+      padding: var(--space-3);
     }
 
     .order-card__summary-meta {
@@ -730,6 +740,36 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     .order-card__item-img {
       width: 50px;
       height: 62px;
+    }
+
+    /* v0.9.22: Részletek és nyomtatás link mobile-on full-width */
+    .order-card__detail-actions {
+      justify-content: stretch;
+    }
+
+    .order-card__detail-link {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Detail expand padding kisebb mobile-on */
+    .order-card__detail {
+      padding: var(--space-3);
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Extra small — még kompaktabb */
+    .orders-page__title {
+      font-size: 24px;
+    }
+
+    .order-card__total {
+      font-size: 14px;
+    }
+
+    .order-card__items-count {
+      font-size: 11px;
     }
   }
 </style>
