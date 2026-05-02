@@ -18,7 +18,67 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.0] — 2026-04-27 — Sprint 4.5.1 — Profil oldalak alapozó (D1 + sidebar layout) ⭐
+## [0.9.1] — 2026-04-27 — Sprint 4.5.1 hotfix — Profil oldal vizuális logika
+
+### Változott
+
+#### 1. Verifikációs banner — kompakt eyebrow stílusú, header-en belülre
+
+**Probléma**: a banner külön blokk-ban jelent meg a header és a form között, 
+és átfedte a "SZEMÉLYES ADATOK" szekció címet. **Az üzenete** is félrevezető 
+volt: *"Email cím verifikálása szükséges"* — a "szükséges" szó hibásan azt 
+sugallta hogy **kötelező** a használathoz.
+
+**Új viselkedés**:
+- A banner **a `<header>` blokkon belülre** került (a subtitle után)
+- **Kompakt egysoros design**: ikon + üzenet + akció gomb egy sorban
+- **Patina arany** finom háttérrel (`rgb(192 154 80 / 0.06)`) — invitáló, 
+  nem zaklatott
+- **Új üzenet**: *"Email cím még nem verifikálva — Verifikáld az email címedet, 
+  és <strong>-10% kedvezményt</strong> kapsz az első rendelésedre."*
+- **Akció gomb**: "Küldj verifikációs linket" (most disabled, Sprint 4.5.5-ben 
+  aktiválódik)
+- **Mobile-on**: a gomb teljes szélességűre tördelődik
+
+#### 2. Form mező háttér logika — fordítva (`mona-elevated` ↔ `mona-bg`) ⭐
+
+**Probléma**: a v0.9.0-ban a **szerkeszthető** mezők háttere fehér (`--mona-bg`) 
+volt, a **readonly** mezőé szürkés (`--mona-elevated`). Vizuálisan a fehér háttér 
+sugallja hogy "ide írj", de a readonly mezőben **mégsem lehet írni** — ez a 
+vendégnek **félrevezető**.
+
+**Új viselkedés** (logika megfordítva):
+- **Szerkeszthető mezők**: `background: var(--mona-elevated)` + folytonos border
+  → vizuálisan "interaktív felület"
+- **Readonly mezők**: `background: var(--mona-bg)` + **szaggatott border** 
+  (`border-style: dashed`)
+  → vizuálisan "papír", nem szerkeszthető
+- **Fókuszban a szerkeszthető**: a háttér `--mona-bg`-re vált — finom natural
+  progression ("most ezt írom")
+
+**Indok**: a brand-design rendszerében a `--mona-elevated` már most is "interaktív 
+jelzés" a többi UI-elemen (cart drawer item bg, hover state-ek). A profil 
+form-on ennek a szabálynak az érvényesítése konzisztenciát ad.
+
+### Tanulság
+
+**Form mező háttér konvenciók**:
+- **Szerkeszthető** = visszafogott "interaktív" jel (hovered, elevated, 
+  finom mélységi jel)
+- **Readonly** = "lapos papír" jel (azonos a page bg-vel, esetleg dashed border)
+
+Ezt **alapelvként rögzítjük** a `docs/02-design-system.md`-be (ha lesz Sprint 5+ 
+frissítés). Minden Sprint 5+ form-on (admin felület, password reset, profil 
+egyéb oldalak) ezt a konvenciót követjük.
+
+### Fájlok (3)
+- `package.json` — verzió `0.9.0` → `0.9.1`
+- `src/pages/profil/index.astro` — banner refactor + input bg fordítás
+- `docs/09-changelog.md`
+
+---
+
+
 
 **MINOR bump** — Sprint 4.5 első csomagja. A `/profil` oldal mostantól élő, 
 a sidebar layout készen áll a többi profil oldal befogadására.

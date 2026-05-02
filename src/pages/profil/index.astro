@@ -20,19 +20,36 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     <header class="profile-page__header">
       <h1 class="profile-page__title">Profilom</h1>
       <p class="profile-page__subtitle">Itt kezelheted a fiókod alapadatait.</p>
-    </header>
 
-    {/* Verifikáció státusz banner — Sprint 4.5.5 töltese fel */}
-    <div class="profile-page__banner profile-page__banner--unverified" data-verify-banner hidden>
-      <div class="profile-page__banner-content">
-        <strong>Email cím verifikálása szükséges</strong>
-        <p>Verifikáld az email címedet a regisztrációkor kapott linken,
-           hogy elérhesd a -10% kedvezményt és más bónuszokat.</p>
+      {/* Verifikációs banner — kompakt, eyebrow stílusú, csak ha nem verifikált.
+          Sprint 4.5.5-ben a "Küldjünk verifikációs linket" gomb aktiválódik. */}
+      <div class="profile-page__verify-banner" data-verify-banner hidden>
+        <div class="profile-page__verify-banner-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16v10H4z"/>
+            <path d="M4 7l8 7 8-7"/>
+          </svg>
+        </div>
+        <div class="profile-page__verify-banner-content">
+          <strong class="profile-page__verify-banner-title">
+            Email cím még nem verifikálva
+          </strong>
+          <p class="profile-page__verify-banner-text">
+            Verifikáld az email címedet, és <strong>-10% kedvezményt</strong>
+            kapsz az első rendelésedre.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="profile-page__verify-banner-btn"
+          data-resend-verify
+          disabled
+          title="Verifikációs email küldés — Sprint 4.5.5-ben aktiválódik"
+        >
+          Küldj verifikációs linket
+        </button>
       </div>
-      <button type="button" class="btn-secondary" data-resend-verify hidden>
-        Verifikációs email újra küldése
-      </button>
-    </div>
+    </header>
 
     {/* Profil adatok form */}
     <form class="profile-page__form" data-profile-form novalidate>
@@ -397,23 +414,28 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
   .profile-page__input {
     padding: 10px var(--space-3);
-    background: var(--mona-bg);
+    /* Szerkeszthető mező: kiemelt háttér, vizuálisan "interaktív" */
+    background: var(--mona-elevated);
     border: 0.5px solid var(--mona-border);
     color: var(--mona-text);
     font-family: var(--mona-sans);
     font-size: 14px;
-    transition: border-color var(--motion-fast) var(--ease);
+    transition: border-color var(--motion-fast) var(--ease),
+                background var(--motion-fast) var(--ease);
   }
 
   .profile-page__input:focus {
     outline: none;
     border-color: var(--mona-warm);
+    background: var(--mona-bg);
   }
 
   .profile-page__input[readonly] {
-    background: var(--mona-elevated);
+    /* Readonly: lapos, "papír" háttér — sugallja hogy nem szerkeszthető */
+    background: var(--mona-bg);
     color: var(--mona-text-2);
     cursor: not-allowed;
+    border-style: dashed;
   }
 
   .profile-page__hint {
