@@ -330,6 +330,11 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         (form!.querySelector("[name='setDefaultBilling']") as HTMLInputElement).checked = addr.isDefaultBilling;
       }
 
+      // FONTOS (v0.9.12): ha empty state-ben vagyunk, váltsunk container-be
+      // hogy a form-block (ami a container belsejében van) látszódjon
+      hideAll();
+      if (containerEl) containerEl.hidden = false;
+
       if (formBlock) formBlock.hidden = false;
       addButtons.forEach(btn => { btn.hidden = true; });
 
@@ -344,6 +349,12 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       editingAddressId = null;
       if (formBlock) formBlock.hidden = true;
       addButtons.forEach(btn => { btn.hidden = false; });
+
+      // FONTOS (v0.9.12): ha üres lista, vissza az empty state-be
+      // (különben üres container marad látszik egy magányos add gombbal)
+      if (addresses.length === 0) {
+        showEmpty();
+      }
     }
 
     async function handleFormSubmit() {

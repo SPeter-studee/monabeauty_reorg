@@ -18,7 +18,78 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.11] — 2026-04-27 — Sprint 4.5.x — Banner pozíció fix #2 + email verifikációs badge
+## [0.9.12] — 2026-04-27 — Sprint 4.5.x — Címkönyv empty state bug fix
+
+### Probléma
+
+A v0.9.9 inline expand UX deploy után, az **empty state-ben** a 
+"+ Új cím hozzáadása" gomb **nem nyitotta meg a form-ot**. A vendég klikkelt, 
+de **semmi nem történt**.
+
+### Diagnózis
+
+A markup struktúra:
+```
+<div data-addresses-empty>           ← empty state (látszik amikor nincs cím)
+  <button data-add-address-btn>     ← gomb az empty state-ben
+</div>
+
+<div data-addresses-container hidden>  ← container (rejtve amikor empty)
+  <div data-form-block hidden>       ← form (a container BELSEJÉBEN)
+  <button data-add-address-btn>      ← gomb a container-ben (hidden)
+</div>
+```
+
+Az `openForm()` függvény:
+```javascript
+formBlock.hidden = false;  // A form mostantól nincs rejtve
+                           // DE a container még rejtve!
+                           // → így a form se látszik (a container-en belül van)
+```
+
+Klikkel az empty state gombján → a form **technikailag nem hidden**, **de** 
+a parent container `hidden`, így vizuálisan **semmi**.
+
+### Javítás
+
+#### `openForm()` — átállás container-be
+Az `openForm()` mostantól **mindenképp átállítja a container-t látható-ra**:
+```typescript
+hideAll();
+if (containerEl) containerEl.hidden = false;
+if (formBlock) formBlock.hidden = false;
+```
+
+Így az empty state-ben is működik a gomb — átugrik container-be, ahol a form 
+látszik.
+
+#### `closeForm()` — üres lista esetén vissza empty-re
+Ha a vendég Cancel-elés után **nulla mentett címe van**, a container 
+**üres marad** egy magányos "+ Új cím" gombbal. Most:
+```typescript
+if (addresses.length === 0) {
+  showEmpty();  // vissza az empty state-be
+}
+```
+
+### Tanulság
+
+**Több állapot egymást kizáró megjelenítésnél**: ha valamelyik közös elem 
+(form-block) **csak az egyik állapot belsejében van**, akkor a másik állapot 
+gombja **átvált-elnie kell** mielőtt megnyitja.
+
+Alternatíva lett volna: a `formBlock`-ot a containers-en kívülre helyezni 
+(test-vér), így bármelyik állapotból nyitható. **De** a current refactor 
+egyszerűbb és nem törött rétegezést igényel.
+
+### Fájlok (3)
+- `package.json` — `0.9.11` → `0.9.12`
+- `src/pages/profil/cimek.astro` — openForm + closeForm logika
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma 1 — Banner pozíció
 
