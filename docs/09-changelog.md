@@ -18,7 +18,95 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.10] — 2026-04-27 — Sprint 4.5.x — Rendelési visszaigazolás (print-friendly)
+## [0.9.11] — 2026-04-27 — Sprint 4.5.x — Banner pozíció fix #2 + email verifikációs badge
+
+### Probléma 1 — Banner pozíció
+
+A v0.9.7 deploy után a `.profile-page` flex container `gap: var(--space-7)` 
+szabályának ellenére **a banner és a "SZEMÉLYES ADATOK" cím átfedett** 
+(lásd v0.9.10 utáni screenshot).
+
+#### Diagnózis
+
+A `--space-7` CSS változó **valószínűleg nem definiált** vagy nagyon kis 
+értéket ad — emiatt a `gap` 0-ra esik vissza vagy túl kicsi. A `.profile-page` 
+flex container nem ad elég teret a banner és a következő szekció között.
+
+#### Javítás — explicit margin-bottom
+
+```css
+.profile-page__verify-banner {
+  /* ... */
+  margin-bottom: 1.5rem;  /* explicit, nem függ a CSS változótól */
+}
+```
+
+A `1.5rem` (24px) közvetlen érték biztosítja a távot, függetlenül a parent 
+flex gap-jétől.
+
+### Probléma 2 — Email státusz nem látható
+
+A vendég nem látja közvetlenül hogy az email-je verifikálva van-e vagy nem 
+— csak a banner megjelenése (vagy hiánya) jelzi.
+
+#### Javítás — verifikációs badge a label mellett
+
+A "EMAIL CÍM" label mellé egy kompakt badge:
+- ✓ **Verifikálva** — zöld háttér + zöld pipa SVG (csak ha `emailVerified === true`)
+- ⚠ **Nem verifikált** — patina arany háttér + figyelmeztető SVG (csak ha `false`)
+
+A két badge **egyszerre soha nem látszik** — a `[data-email-verified]` és 
+`[data-email-unverified]` flag-ek alapján a JS állítja a `hidden` attribútumot.
+
+A label `display: flex` + `gap` + `flex-wrap: wrap` szabályaival:
+- Mobile (keskeny): a badge új sorba kerül
+- Desktop: egy sorban, a label után
+
+### Hozzáadva (markup)
+
+```html
+<label>
+  Email cím
+  <span class="profile-page__email-status">
+    <span class="...badge--verified" data-email-verified hidden>✓ Verifikálva</span>
+    <span class="...badge--unverified" data-email-unverified hidden>⚠ Nem verifikált</span>
+  </span>
+</label>
+```
+
+### Hozzáadva (CSS)
+
+- `.profile-page__email-status-badge` — base
+- `.profile-page__email-status-badge--verified` — zöld (`#4a8a5e` szöveg, `rgb(80 160 100 / 0.12)` háttér)
+- `.profile-page__email-status-badge--unverified` — patina arany (`var(--mona-warm)`)
+- `[hidden]` override
+
+### Hozzáadva (JS)
+
+A `subscribeAuthState` callback-ben a `c.emailVerified` érték alapján:
+```typescript
+emailStatus.hidden = false;          // mindig látszik
+emailVerifiedBadge.hidden = !c.emailVerified;
+emailUnverifiedBadge.hidden = c.emailVerified;
+```
+
+### UX folyamat
+
+- **Most (vendég nem verifikált)**:
+  - Banner látszik felül: "Email verifikáció ─10% kedvezmény..."
+  - Email mező mellett: ⚠ "Nem verifikált" patina arany badge
+- **Sprint 4.5.5 után (verifikálás után)**:
+  - Banner eltűnik
+  - Email mező mellett: ✓ "Verifikálva" zöld badge
+
+### Fájlok (3)
+- `package.json` — `0.9.10` → `0.9.11`
+- `src/pages/profil/index.astro` — banner margin-bottom + email badge markup/CSS/JS
+- `docs/09-changelog.md`
+
+---
+
+
 
 A vendég mostantól letöltheti a rendelési visszaigazolást PDF-be (a böngésző
 natív "Save as PDF" funkciójával) vagy kinyomtathatja papírra.

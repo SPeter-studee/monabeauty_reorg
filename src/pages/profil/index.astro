@@ -83,7 +83,26 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       </div>
 
       <div class="profile-page__field">
-        <label class="profile-page__label" for="profile-email">Email cím</label>
+        <label class="profile-page__label" for="profile-email">
+          Email cím
+          {/* Verifikációs státusz — JS állítja a state alapján */}
+          <span class="profile-page__email-status" data-email-status hidden>
+            <span class="profile-page__email-status-badge profile-page__email-status-badge--verified" data-email-verified hidden>
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="3.5,8.5 6.5,11.5 12.5,5.5"/>
+              </svg>
+              Verifikálva
+            </span>
+            <span class="profile-page__email-status-badge profile-page__email-status-badge--unverified" data-email-unverified hidden>
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="8" cy="8" r="6.5"/>
+                <line x1="8" y1="5" x2="8" y2="8.5"/>
+                <circle cx="8" cy="11" r="0.5" fill="currentColor"/>
+              </svg>
+              Nem verifikált
+            </span>
+          </span>
+        </label>
         <input
           type="email"
           id="profile-email"
@@ -206,10 +225,18 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       if (email) email.value = c.email;
       if (phone) phone.value = c.phone || "";
 
-      // Verifikációs banner
+      // Verifikációs banner + email státusz badge
       if (verifyBanner) {
         verifyBanner.hidden = c.emailVerified;
       }
+
+      // Email státusz badge a label mellett
+      const emailStatus = document.querySelector<HTMLElement>("[data-email-status]");
+      const emailVerifiedBadge = document.querySelector<HTMLElement>("[data-email-verified]");
+      const emailUnverifiedBadge = document.querySelector<HTMLElement>("[data-email-unverified]");
+      if (emailStatus) emailStatus.hidden = false;
+      if (emailVerifiedBadge) emailVerifiedBadge.hidden = !c.emailVerified;
+      if (emailUnverifiedBadge) emailUnverifiedBadge.hidden = c.emailVerified;
 
       // Provider státusz
       if (providerStatuses.password) {
@@ -343,7 +370,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     border-bottom: 0.5px solid var(--mona-border);
   }
 
-  /* ─── Verification banner — Statement variáns (Opció 2, v0.9.5) ───── */
   /* ─── Verification banner — Statement variáns ─────────────────────────── */
   /* [hidden] override — display:flex felülírná a default display:none-t */
   .profile-page__verify-banner[hidden] {
@@ -354,7 +380,9 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    /* margin-top: nincs szükség, mert a .profile-page flex gap automatikusan ad teret */
+    /* margin-bottom explicit — biztonságos távolság a következő szekcióhoz,
+       nem függ a .profile-page flex gap-jétől (CSS változó kockázat) */
+    margin-bottom: 1.5rem;
     padding: var(--space-4) var(--space-5);
     background: rgb(192 154 80 / 0.10);
     border-left: 3px solid var(--mona-warm);
@@ -492,6 +520,46 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--mona-text-3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Email verifikáció státusz badge ─────────────────────────────────── */
+  .profile-page__email-status[hidden] {
+    display: none !important;
+  }
+
+  .profile-page__email-status-badge[hidden] {
+    display: none !important;
+  }
+
+  .profile-page__email-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-family: var(--mona-sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+
+  .profile-page__email-status-badge--verified {
+    background: rgb(80 160 100 / 0.12);
+    color: #4a8a5e;
+  }
+
+  .profile-page__email-status-badge--unverified {
+    background: rgb(192 154 80 / 0.12);
+    color: var(--mona-warm);
+  }
+
+  .profile-page__email-status-badge svg {
+    flex-shrink: 0;
   }
 
   .profile-page__input {
