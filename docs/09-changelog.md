@@ -18,7 +18,134 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.15] — 2026-04-27 — Sprint 4.5.x — Címkönyv form egyszerűsítés (4 → 2 checkbox)
+## [0.9.16] — 2026-04-27 — Sprint 4.5.3.x — Auto-mentés a checkout-ról + saved address selector ⭐
+
+A logged-in vendégek számára most már **automatikusan elmentődik** az első
+checkout-on megadott szállítási cím a fiókba, és későbbi rendelésekkor egy
+**radio-kártya selector**-ral választhatnak a meglévő címeik közül.
+
+### Architektúra döntések rögzítve
+
+- **Selector stílusa**: mini radio-kártyák (nem dropdown) — a vendég azonnal 
+  látja a teljes címét, 1 klikk-re fill-eli a mezőket
+- **Auto-mentés**: első cím esetén automatikus, vendég kérdése nélkül 
+  (sessionStorage-on át toast a köszönjük oldalon)
+- **Default címke**: értelmes, prioritási sorrend ("Otthon" → "Munkahely" → 
+  "Nyaraló" → "Cím #N")
+
+### Hozzáadva — Markup (`/penztar/index.astro`)
+
+#### "Korábbi címek" selector
+A "Szállítási cím" szekció elején, **csak ha logged-in + van legalább 1 mentett 
+szállítási cím** (`isShipping = true`):
+
+```html
+<div class="saved-addresses">
+  <p class="saved-addresses__label">Korábbi címek</p>
+  <div class="saved-addresses__list">
+    <label class="saved-address-card">
+      <input type="radio" name="savedAddress" value="123" checked />
+      <div class="saved-address-card__content">
+        <strong>Otthon</strong> <span class="...badge">Default</span>
+        <p>Peter Schittler<br/>2600 Vác, Zrínyi Miklós u. 3.</p>
+      </div>
+    </label>
+    <!-- ... további címek ... -->
+    <label class="saved-address-card saved-address-card--new">
+      <input type="radio" name="savedAddress" value="new" />
+      <strong>+ Új cím megadása</strong>
+    </label>
+  </div>
+</div>
+```
+
+#### "Mentsd a címet" checkbox
+A shipping address mezők alatt, **csak ha**:
+- "Új cím megadása" radio van kiválasztva
+- A vendég valamit beírt valamelyik mezőbe
+
+```html
+<label class="checkout-save-address">
+  <input type="checkbox" name="saveAddress" />
+  <span>Mentsd a címet a fiókomba a következő rendeléshez</span>
+</label>
+```
+
+### Hozzáadva — JS logika
+
+#### `loadSavedAddresses()`
+A `subscribeAuthState` callback-ben, authenticated state-en lefut. Lekéri a 
+`/api/profile/addresses`-ról a vendég címeit, szűri a `isShipping = true` 
+mezőre, és rendereli a kártyákat.
+
+#### `selectAddress(addressId)`
+Radio change event-re fut. Ha a vendég mentett címet választ, kitölti a form-ot.
+Ha "Új cím" → mezők ürítve.
+
+#### `checkIfNewAddressEntered()`
+A 3 shipping mező `input` event-jén fut. Ha "Új cím" mód aktív + valamit 
+beírtak → a "Mentsd a címet" checkbox megjelenik.
+
+#### `maybeSaveAddressAfterCheckout(payload)`
+A sikeres rendelés után fut, **a redirect előtt**. Logika:
+- Ha mentett cím lett kiválasztva → nem teszünk semmit (cím már megvan)
+- Ha "Új cím" + savedAddresses üres → **auto-mentés** (első cím + default)
+- Ha "Új cím" + checkbox bekattintva → **manuális mentés**
+- Egyéb → semmi
+
+#### `pickDefaultLabel(existing)`
+Címke generálás. Prioritás: "Otthon" → "Munkahely" → "Nyaraló" → "Cím #N".
+Ha az adott label már létezik, a következőt választja.
+
+### Hozzáadva — CSS
+
+- `.saved-addresses` + `__label` + `__list` (auto-fill grid: min 220px, 1fr)
+- `.saved-address-card` — mini kártya, hover patina arany border
+- `.saved-address-card:has(input:checked)` — patina arany akcentus
+- Custom radio-input stílus (kerek, telített arany ha checked)
+- `.saved-address-card--new` — szaggatott border, "Új cím megadása"
+- `.checkout-save-address` — a checkbox-os blokk, patina arany bal akcentussal
+
+### Mit NEM csinál még
+
+- ❌ Toast notification a sikeres mentés után — a `/penztar/koszonjuk` oldal 
+  jelenleg a tényleges repo-ban van (a sandbox-ban nem érhető el), Sprint 5+ 
+  -ban beleépítjük: a sessionStorage-on át "Új cím elmentve: Otthon" toast
+- ❌ Cím szerkesztés a checkout-on (csak választás) — Sprint 5+
+- ❌ "Új cím" mód-ban más címke választása (mindig auto label)
+
+### Vendég perspektíva
+
+#### Első rendelés (még nincs mentett cím):
+1. Vendég logged-in, a profil félig kész
+2. Kosárba tesz, megy a pénztárra
+3. **Nincs** "Korábbi címek" selector (mert üres a címkönyve)
+4. Beírja a szállítási címet
+5. **Nem** lát "Mentsd a címet" checkbox-ot (mert első cím = auto-mentés)
+6. "Megrendelem" → háttérben **auto-mentés** lefut, label = "Otthon"
+7. Redirect a köszönjük oldalra
+8. **Második rendeléskor**: most már látszik az "Otthon" kártya a selector-ban
+
+#### Második rendelés (van "Otthon" mentve):
+1. Pénztár oldalon megjelenik a "Korábbi címek" selector az "Otthon" kártyával
+2. Default szelektálva → mezők auto-filled
+3. Ha módosít a vendég → "Új cím megadása" radio választható
+4. Új címnél a "Mentsd a címet" checkbox megjelenik
+5. Ha bekattintja → új cím elmentődik (label = "Munkahely")
+
+### Fájlok (3)
+- `package.json` — `0.9.15` → `0.9.16`
+- `src/pages/penztar/index.astro` — markup + JS logika + CSS
+- `docs/09-changelog.md`
+
+### Sprint 4.5.3.y következik
+
+A B2B cégadatok modul: profil/Cégadatok szekció, D1 séma bővítés, 
+Magyar + EU adószám validáció.
+
+---
+
+
 
 ### Vendég visszajelzés
 

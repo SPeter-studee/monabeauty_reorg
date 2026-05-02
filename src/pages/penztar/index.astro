@@ -137,23 +137,37 @@ import PageHero from "@/components/common/PageHero.astro";
           <div class="checkout-section" data-shipping-address-section>
             <h3 class="checkout-section__title">Szállítási cím</h3>
 
+            {/* Sprint 4.5.3.x — Korábbi címek selector (csak ha logged-in és van mentett cím) */}
+            <div class="saved-addresses" data-saved-addresses-block hidden>
+              <p class="saved-addresses__label">Korábbi címek</p>
+              <div class="saved-addresses__list" data-saved-addresses-list>
+                {/* JS-ben renderelve */}
+              </div>
+            </div>
+
             <div class="form-row">
               <label class="form-field">
                 <span class="form-field__label">Utca, házszám <span class="required">*</span></span>
-                <input type="text" name="shippingAddress" autocomplete="street-address" />
+                <input type="text" name="shippingAddress" autocomplete="street-address" data-shipping-address-input />
               </label>
             </div>
 
             <div class="form-row form-row--two">
               <label class="form-field">
                 <span class="form-field__label">Irányítószám <span class="required">*</span></span>
-                <input type="text" name="shippingZip" pattern="[0-9]{4}" autocomplete="postal-code" />
+                <input type="text" name="shippingZip" pattern="[0-9]{4}" autocomplete="postal-code" data-shipping-zip-input />
               </label>
               <label class="form-field">
                 <span class="form-field__label">Város <span class="required">*</span></span>
-                <input type="text" name="shippingCity" autocomplete="address-level2" />
+                <input type="text" name="shippingCity" autocomplete="address-level2" data-shipping-city-input />
               </label>
             </div>
+
+            {/* Sprint 4.5.3.x — Mentsd a címet checkbox (csak ha logged-in + új cím) */}
+            <label class="checkout-save-address" data-save-address-block hidden>
+              <input type="checkbox" name="saveAddress" data-save-address-checkbox />
+              <span>Mentsd a címet a fiókomba a következő rendeléshez</span>
+            </label>
 
             <p class="form-hint">
               <strong>FoxPost címválasztás</strong>: a rendelés feldolgozása után
@@ -275,6 +289,19 @@ import PageHero from "@/components/common/PageHero.astro";
     const inputEmail = document.querySelector<HTMLInputElement>("[data-checkout-email]");
     const inputPhone = document.querySelector<HTMLInputElement>("[data-checkout-phone]");
 
+    // Sprint 4.5.3.x — Saved addresses (logged-in vendég korábbi címei)
+    const savedAddressesBlock = document.querySelector<HTMLElement>("[data-saved-addresses-block]");
+    const savedAddressesList = document.querySelector<HTMLElement>("[data-saved-addresses-list]");
+    const saveAddressBlock = document.querySelector<HTMLElement>("[data-save-address-block]");
+    const saveAddressCheckbox = document.querySelector<HTMLInputElement>("[data-save-address-checkbox]");
+    const shippingAddressInput = document.querySelector<HTMLInputElement>("[data-shipping-address-input]");
+    const shippingZipInput = document.querySelector<HTMLInputElement>("[data-shipping-zip-input]");
+    const shippingCityInput = document.querySelector<HTMLInputElement>("[data-shipping-city-input]");
+
+    // State a saved addresses-szel (a render funkciókban használjuk)
+    let savedAddresses: any[] = [];
+    let selectedAddressId: number | null = null;
+
     // ── Auth state subscribe — auto-fill + chip kezelés ─────────────────
     subscribeAuthState((state) => {
       if (state.status === "authenticated" && state.customer) {
@@ -307,6 +334,9 @@ import PageHero from "@/components/common/PageHero.astro";
           checkoutWelcome.hidden = false;
           if (checkoutWelcomeName) checkoutWelcomeName.textContent = c.firstName || fullName;
         }
+
+        // Sprint 4.5.3.x — Saved addresses lekérés
+        loadSavedAddresses();
       } else {
         // Anonymous — minden chip rejtve
         if (checkoutChip) checkoutChip.hidden = true;
@@ -315,8 +345,126 @@ import PageHero from "@/components/common/PageHero.astro";
           inputEmail.readOnly = false;
         }
         if (checkoutEmailLocked) checkoutEmailLocked.hidden = true;
+        // Saved addresses elrejtése
+        if (savedAddressesBlock) savedAddressesBlock.hidden = true;
+        if (saveAddressBlock) saveAddressBlock.hidden = true;
       }
     });
+
+    // ── Sprint 4.5.3.x — Saved addresses logika ─────────────────────────
+    async function loadSavedAddresses() {
+      try {
+        const res = await fetch("/api/profile/addresses", { credentials: "include" });
+        const data = await res.json();
+        if (!res.ok || !data.success) return;
+
+        savedAddresses = (data.addresses || []).filter((a: any) => a.isShipping);
+        renderSavedAddresses();
+      } catch (err) {
+        console.warn("[checkout] saved addresses load failed:", err);
+      }
+    }
+
+    function renderSavedAddresses() {
+      if (!savedAddressesList || !savedAddressesBlock) return;
+
+      if (savedAddresses.length === 0) {
+        // Nincs mentett cím — selector elrejtve, az auto-mentés majd első cím-tárolásnál
+        savedAddressesBlock.hidden = true;
+        return;
+      }
+
+      savedAddressesBlock.hidden = false;
+
+      // Default szállítási cím elsőként
+      const sorted = [...savedAddresses].sort((a, b) => {
+        if (a.isDefaultShipping && !b.isDefaultShipping) return -1;
+        if (!a.isDefaultShipping && b.isDefaultShipping) return 1;
+        return 0;
+      });
+
+      // Mini kártyák render
+      savedAddressesList.innerHTML = sorted.map(addr => `
+        <label class="saved-address-card">
+          <input type="radio" name="savedAddress" value="${addr.id}" ${addr.isDefaultShipping ? "checked" : ""} />
+          <div class="saved-address-card__content">
+            <div class="saved-address-card__head">
+              <strong class="saved-address-card__label">${escapeHtml(addr.label)}</strong>
+              ${addr.isDefaultShipping ? '<span class="saved-address-card__badge">Default</span>' : ""}
+            </div>
+            <p class="saved-address-card__body">
+              ${escapeHtml(addr.recipientName)}<br/>
+              ${escapeHtml(addr.postalCode)} ${escapeHtml(addr.city)}, ${escapeHtml(addr.street)}
+            </p>
+          </div>
+        </label>
+      `).join("") + `
+        <label class="saved-address-card saved-address-card--new">
+          <input type="radio" name="savedAddress" value="new" />
+          <div class="saved-address-card__content">
+            <strong class="saved-address-card__label">+ Új cím megadása</strong>
+            <p class="saved-address-card__body">A lent megadott cím használata</p>
+          </div>
+        </label>
+      `;
+
+      // Default selection: az első default cím auto-fill-elve
+      const defaultAddr = sorted.find(a => a.isDefaultShipping);
+      if (defaultAddr) {
+        selectAddress(defaultAddr.id);
+      }
+
+      // Bind radio change events
+      savedAddressesList.querySelectorAll<HTMLInputElement>("input[name='savedAddress']").forEach(radio => {
+        radio.addEventListener("change", () => {
+          const value = radio.value;
+          if (value === "new") {
+            selectAddress(null);
+          } else {
+            selectAddress(parseInt(value, 10));
+          }
+        });
+      });
+
+      // Watch for manual changes to address fields → check if "save" checkbox should appear
+      [shippingAddressInput, shippingZipInput, shippingCityInput].forEach(input => {
+        input?.addEventListener("input", checkIfNewAddressEntered);
+      });
+    }
+
+    function selectAddress(addressId: number | null) {
+      selectedAddressId = addressId;
+
+      if (addressId === null) {
+        // "Új cím" választva — mezők ürítése (a vendég írja be)
+        if (shippingAddressInput) shippingAddressInput.value = "";
+        if (shippingZipInput) shippingZipInput.value = "";
+        if (shippingCityInput) shippingCityInput.value = "";
+        // A "Mentsd a címet" checkbox csak akkor jelenik meg ha valamit beírtak
+        if (saveAddressBlock) saveAddressBlock.hidden = true;
+      } else {
+        // Mentett cím választva — mezők kitöltése + checkbox elrejtése
+        const addr = savedAddresses.find(a => a.id === addressId);
+        if (!addr) return;
+        if (shippingAddressInput) shippingAddressInput.value = addr.street;
+        if (shippingZipInput) shippingZipInput.value = addr.postalCode;
+        if (shippingCityInput) shippingCityInput.value = addr.city;
+        if (saveAddressBlock) saveAddressBlock.hidden = true;
+      }
+    }
+
+    function checkIfNewAddressEntered() {
+      // Ha "Új cím" mód aktív + valamit írt be → checkbox megjelenítés
+      if (selectedAddressId !== null) return;
+      if (!saveAddressBlock || !shippingAddressInput || !shippingZipInput || !shippingCityInput) return;
+
+      const hasContent =
+        shippingAddressInput.value.trim().length > 0 ||
+        shippingZipInput.value.trim().length > 0 ||
+        shippingCityInput.value.trim().length > 0;
+
+      saveAddressBlock.hidden = !hasContent;
+    }
 
     // ── Logout a chip-ről ───────────────────────────────────────────────
     checkoutLogout?.addEventListener("click", async () => {
@@ -459,6 +607,11 @@ import PageHero from "@/components/common/PageHero.astro";
 
         // Sikeres! Ürítjük a kosarat és átirányítunk
         clearCart();
+
+        // Sprint 4.5.3.x — Cím auto-mentés a fiókba (logged-in + új cím esetén)
+        // Háttérben fut, nem blokkolja a redirect-et — ha sikertelen, csendben elnyeljük
+        await maybeSaveAddressAfterCheckout(payload);
+
         window.location.href = data.redirectUrl || `/penztar/koszonjuk?rendeles=${data.orderNumber}`;
       } catch (err: any) {
         console.error("[checkout] error:", err);
@@ -467,6 +620,74 @@ import PageHero from "@/components/common/PageHero.astro";
         submitText.textContent = "Megrendelem";
       }
     });
+
+    // Sprint 4.5.3.x — Cím auto-mentés/manuális mentés a sikeres rendelés után
+    async function maybeSaveAddressAfterCheckout(payload: any) {
+      // Csak akkor próbáljuk, ha:
+      // 1. Logged-in vendég (van address-list)
+      // 2. Mentett cím nem lett kiválasztva (selectedAddressId === null)
+      // 3. Van shipping address adat
+      // 4. ÉS: vagy üres a savedAddresses (auto-mentés első cím), vagy a checkbox bekattintva
+
+      if (selectedAddressId !== null) return;
+      if (!payload.shippingAddress || !payload.shippingCity || !payload.shippingZip) return;
+
+      const isFirstAddress = savedAddresses.length === 0;
+      const checkboxChecked = saveAddressCheckbox?.checked === true;
+
+      if (!isFirstAddress && !checkboxChecked) return;
+
+      // Címke logika — értelmes default
+      const label = pickDefaultLabel(savedAddresses);
+
+      // Recipient név: a guestName alapján
+      const recipientName = String(payload.guestName || "Vendég");
+
+      try {
+        const res = await fetch("/api/profile/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            label,
+            recipientName,
+            phone: null,  // a profil telefonja használt — nem duplikáljuk
+            street: payload.shippingAddress,
+            city: payload.shippingCity,
+            postalCode: payload.shippingZip,
+            country: "HU",
+            isShipping: true,
+            isBilling: true,
+            // Első cím: mindkét default automatikusan
+            setDefaultShipping: isFirstAddress,
+            setDefaultBilling: isFirstAddress,
+          }),
+        });
+
+        if (res.ok) {
+          // Diszkrét toast notification — a köszönjük oldalra is átvisszük
+          // sessionStorage-on át (a köszönjük oldal megjeleníti)
+          sessionStorage.setItem("checkout:addressSaved", JSON.stringify({
+            label,
+            timestamp: Date.now(),
+          }));
+        }
+      } catch (err) {
+        console.warn("[checkout] address auto-save failed:", err);
+        // Csendben elnyeljük — nem blokkoljuk a sikeres rendelést
+      }
+    }
+
+    function pickDefaultLabel(existing: any[]): string {
+      const labels = new Set(existing.map(a => a.label.toLowerCase()));
+      if (!labels.has("otthon")) return "Otthon";
+      if (!labels.has("munkahely")) return "Munkahely";
+      if (!labels.has("nyaraló")) return "Nyaraló";
+      // Fallback: numerikus
+      let n = existing.length + 1;
+      while (labels.has(`cím #${n}`)) n++;
+      return `Cím #${n}`;
+    }
 
     function showError(message: string) {
       if (!errorContainer) return;
@@ -636,6 +857,170 @@ import PageHero from "@/components/common/PageHero.astro";
 
 .checkout-input--prefilled:focus {
   background: var(--mona-bg);
+}
+
+/* ─── Sprint 4.5.3.x — Saved addresses selector ───────────────────────── */
+.saved-addresses[hidden] {
+  display: none !important;
+}
+
+.saved-addresses {
+  margin-bottom: var(--space-4);
+}
+
+.saved-addresses__label {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mona-text-3);
+  margin: 0 0 var(--space-2);
+}
+
+.saved-addresses__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-2);
+}
+
+@media (max-width: 600px) {
+  .saved-addresses__list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mini cím-kártya */
+.saved-address-card {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 0.5px solid var(--mona-border);
+  background: var(--mona-bg);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease),
+              background var(--motion-fast) var(--ease);
+}
+
+.saved-address-card:hover {
+  border-color: var(--mona-warm);
+}
+
+.saved-address-card:has(input:checked) {
+  border-color: var(--mona-warm);
+  background: rgb(192 154 80 / 0.06);
+}
+
+.saved-address-card > input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 2px 0 0;
+  border: 1px solid var(--mona-border);
+  border-radius: 50%;
+  background: var(--mona-bg);
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+.saved-address-card > input[type="radio"]:checked {
+  border-color: var(--mona-warm);
+  border-width: 5px;
+  background: var(--mona-bg);
+}
+
+.saved-address-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.saved-address-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.saved-address-card__label {
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mona-text);
+}
+
+.saved-address-card__badge {
+  display: inline-block;
+  padding: 1px 6px;
+  background: rgb(192 154 80 / 0.18);
+  color: var(--mona-warm);
+  font-family: var(--mona-sans);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.saved-address-card__body {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-2);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.saved-address-card--new {
+  border-style: dashed;
+}
+
+.saved-address-card--new .saved-address-card__body {
+  font-style: italic;
+}
+
+/* ─── Sprint 4.5.3.x — "Mentsd a címet" checkbox ─────────────────────── */
+.checkout-save-address[hidden] {
+  display: none !important;
+}
+
+.checkout-save-address {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: rgb(192 154 80 / 0.05);
+  border-left: 2px solid var(--mona-warm);
+  cursor: pointer;
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  color: var(--mona-text-2);
+}
+
+.checkout-save-address > input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 0;
+  border: 1px solid var(--mona-border);
+  background: var(--mona-bg);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+}
+
+.checkout-save-address > input[type="checkbox"]:checked {
+  background: var(--mona-warm);
+  border-color: var(--mona-warm);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='3.5,8.5 6.5,11.5 12.5,5.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
 }
 
 /* Email mező readonly logged-in állapotban */
