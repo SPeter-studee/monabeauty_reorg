@@ -18,6 +18,24 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.19] — 2026-05-02 — ZIP→város auto-fill HOTFIX
+
+### Probléma (v0.9.18)
+- A `hu-zip-cities.json` első ~17 sora JS-komment volt → **nem volt érvényes JSON**.
+- `fetch()` + `res.json()` **csendben üres** lookup/datalist eredmény.
+
+### Megoldás
+- **`src/lib/utils/hu-zip-cities.json`** — komment nélküli, valid JSON (build része).
+- **TypeScript import** (`resolveJsonModule`) a fetch helyett.
+- **Szinkron API**: `lookupCityByZip`, `getAllCities` — a datalist azonnal feltöltődik.
+- **`console.log`** `[zip-city]` prefix-szel — dataset méret debug-hoz.
+- A korábbi **`public/data/hu-zip-cities.json`** eltávolítva (invalid tartalom + nem kell CDN fetch).
+
+### Következő lépés
+- Sprint 4.5.3.x (B2B Cégadatok).
+
+---
+
 ## [0.9.18] — 2026-04-27 — Sprint 4.5.3.x — Saved address kártyák tisztítás + ZIP-város auto-fill ⭐
 
 ### Vendég visszajelzés

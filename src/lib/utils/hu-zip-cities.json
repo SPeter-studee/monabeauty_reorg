@@ -1,20 +1,3 @@
-// public/data/hu-zip-cities.json
-// Magyar irányítószám → város mapping (Sprint 4.5.3.x v0.9.18)
-//
-// Forrás: a Magyar Posta nyilvános ZIP-listája alapján kompakt verzió.
-// Top ~250 magyar település, ~95%-os népességlefedettség.
-// Sprint 5+ -ban automatizált updater script kibővíti a teljes ~3200 településre.
-//
-// Formátum:
-// {
-//   "exact": { "ZIP": "Város", ... },        // pontos egyezés
-//   "ranges": [{ from, to, city }, ...]      // tartomány (pl. Budapest)
-// }
-//
-// A frontend lookupja:
-// 1. Először az exact-ban keres
-// 2. Ha nincs, a ranges-ben (Budapest pl. 1011-1239)
-// 3. Ha még mindig nincs, üres → vendég írja be manuálisan
 {
   "ranges": [
     { "from": 1011, "to": 1239, "city": "Budapest" }
@@ -111,3 +94,4 @@
     "9751": "Vép", "9800": "Vasvár", "9900": "Körmend", "9970": "Szentgotthárd"
   }
 }
+
