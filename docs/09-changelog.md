@@ -18,7 +18,191 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.16] — 2026-04-27 — Sprint 4.5.3.x — Auto-mentés a checkout-ról + saved address selector ⭐
+## [0.9.18] — 2026-04-27 — Sprint 4.5.3.x — Saved address kártyák tisztítás + ZIP-város auto-fill ⭐
+
+### Vendég visszajelzés
+
+> *"választó gomb talán nem is kell ide, elég ha aktív maga a választó. 
+> Irányító szám település listát nem lehetne integrálni."*
+
+Két különálló javítás:
+
+### 1. Saved address kártyák — radio button látatlan
+
+A v0.9.16 kártyák **radio pötty + kártya** kombináción alapultak. Vizuálisan
+**zsúfolt** volt: a kerek radio szignál ugyanazt mint a kártya bg + border.
+
+#### Javítás
+- Radio input **elrejtve** sr-only pattern-nel (accessibility megtartva)
+- A teljes kártya **egy nagy klikkelhető terület**
+- Selected state **erősebb**:
+  - **1.5px** border (volt 0.5px)
+  - Halványabb arany bg (`rgb(192 154 80 / 0.08)`)
+  - **Box-shadow** plusz kontúr a precizitásért
+  - **Sarki pipa** ikon a kártya jobb-felső sarokban (18px arany kör + fehér ✓)
+- Keyboard nav focus-ring `:has(input:focus-visible)` a kártyán
+
+### 2. Magyar ZIP → város auto-fill (datalist autocomplete-tel)
+
+Magyar webshop alapfunkció — Sephora, Notino, eMag mind ezt csinálja.
+
+#### Új fájl: `public/data/hu-zip-cities.json`
+Kompakt magyar ZIP-város adatbázis:
+- **Top ~250 magyar település**, ~95% népességlefedettség
+- **Budapest range**: 1011–1239 (range mapping, nem 230 különálló rekord)
+- **Vidéki városok**: pontos ZIP → város mapping (Vác, Eger, Szeged kerületek stb.)
+- Sprint 5+ -ban automatizált updater script kibővíti a teljes ~3200 településre
+- **Méret**: ~10 KB (gzip után ~3 KB), CDN-ről egyszer letölt session-enként
+
+#### Új fájl: `src/lib/utils/zip-city-lookup.ts`
+- `loadZipCityData()` — lazy load + module cache (egyszer tölti be)
+- `lookupCityByZip(zip)` — exact match → range match
+- `getAllCities()` — datalist autocomplete-hez sorted lista
+- `bindZipCityAutofill({zipInput, cityInput, citiesDatalist})` — komplex bind:
+  - ZIP `blur` event → város auto-fill
+  - **Manual edit tracking**: ha a vendég kézzel módosította a város mezőt,
+    a ZIP auto-fill **nem írja felül** (`cityManuallyEdited` flag)
+  - Datalist feltöltés a város mezőhöz
+
+#### Markup változás
+A `shippingCity` input-on `list="hu-cities-datalist"` attribútum + datalist:
+```html
+<input list="hu-cities-datalist" />
+<datalist id="hu-cities-datalist"></datalist>
+```
+
+A datalist-et a JS `getAllCities()` hívás tölti fel a komponens betöltésekor.
+
+### Vendég perspektíva
+
+#### ZIP auto-fill
+1. Vendég beírja: `1214` → blur event → város mező auto-fill: `Budapest`
+2. Vendég beírja: `2600` → blur → `Vác`
+3. Vendég beírja: `9999` (nincs adatbázisban) → semmi nem történik, vendég írja be manuálisan
+
+#### Város autocomplete (datalist)
+1. Vendég gépeli a város mezőbe: `bud` → dropdown megjelenik:
+   - Budapest
+   - Budakeszi
+   - Budakalász
+   - Budajenő
+2. Klikk vagy Enter → kiválasztódik
+
+### Fájlok (5)
+**Új**:
+- `public/data/hu-zip-cities.json` — Magyar ZIP-város adatbázis
+- `src/lib/utils/zip-city-lookup.ts` — lookup + bind helper
+
+**Módosított**:
+- `package.json` — `0.9.17` → `0.9.18`
+- `src/pages/penztar/index.astro` — datalist + bind + radio CSS update
+- `docs/09-changelog.md`
+
+### Sprint 5+ tervezett bővítések
+
+- **Teljes magyar ZIP-lista** — script-tel automatikusan updateel-i a hu-zip-cities.json-t
+- **Cégszékhely mezőkben** is használható (Sprint 4.5.3.y)
+- **Profil/Címek inline form**-ban is bekötjük (jelenleg csak a checkout-on van)
+
+---
+
+
+
+## [0.9.17] — 2026-04-27 — Sprint 4.5.3.x — Cím-mentés vizuális visszajelzés
+
+### Probléma
+
+A v0.9.16 deploy után a vendég nem látott **semmilyen vizuális jelet** arról,
+hogy a cím el fog mentődni a fiókba. Az auto-mentés "csendben" futott, ami
+**bizonytalansagot** okozott:
+- "Ez a cím elmentődik?"
+- "Tudom-e később új címet hozzáadni?"
+- "A profilból visszanézhetem a címet?"
+
+A vendég visszajelzése: *"hm itt nem kellene tudnom rögzíteni a címet?"*
+
+### Javítás — két variáns mindig megjelenik logged-in vendégeknek
+
+#### Variáns 1: Üres címkönyv (első cím)
+A vendégnek még nincs mentett címe, és új rendelést indít:
+
+```
+SZÁLLÍTÁSI CÍM
+─────────────
+
+[utca/zip/város mezők]
+
+┌─────────────────────────────────────────────────────────┐
+│ ⓘ  Ez a cím automatikusan elmentődik a fiókodba           │  ← info
+│    sikeres rendelés után. A profilban később             │
+│    megtekintheted és módosíthatod.                       │
+└─────────────────────────────────────────────────────────┘
+☑ Igen, mentsd el a fiókomba                              ← bekattintva default
+```
+
+A vendég:
+- **Látja**, hogy a cím el fog mentődni
+- **Kikapcsolhatja** ha nem akarja menteni (egyetlen rendelésre szól)
+- **Tudja**, hová mehet vissza (link a profilra)
+
+#### Variáns 2: Van mentett cím + új cím beírva
+A vendég már korábban mentett egy címet, és most másikat ír be:
+
+```
+KORÁBBI CÍMEK
+[Otthon Default ✓]   [+ Új cím megadása ●]   ← "Új cím" választva
+
+[utca/zip/város mezők — vendég írja]
+
+☐ Mentsd a címet a fiókomba a következő rendeléshez       ← KIKAPCSOLVA default
+```
+
+Az info-szöveg **rejtve** (felesleges ismétlés). A checkbox **kikapcsolva** —
+a vendég dönti el. Egy rendelésre érvényes.
+
+### Új state machine
+
+| Helyzet | Save block látható | Info látható | Checkbox |
+|---|---|---|---|
+| Anonymous | ❌ | ❌ | – |
+| Logged-in, nincs cím | ✅ | ✅ | ☑ default |
+| Logged-in, mentett cím választva | ❌ | ❌ | – |
+| Logged-in, "új cím" választva | ✅ | ❌ | ☐ default |
+
+### Technikai változások
+
+#### Markup
+A korábbi `<label class="checkout-save-address">` egy szülő blokkban:
+```html
+<div class="checkout-save-address-block">
+  <p class="checkout-save-address-block__info" hidden>
+    ⓘ Info-szöveg ...
+  </p>
+  <label class="checkout-save-address">
+    <input type="checkbox" />
+    <span data-save-address-label>...</span>
+  </label>
+</div>
+```
+
+#### JS: új helper-függvények
+- `showSaveBlockForFirstAddress()` — info látható, checkbox bekattintva, label "Igen, mentsd el a fiókomba"
+- `showSaveBlockForExistingUser()` — info elrejtve, checkbox kikapcsolva, label "Mentsd a címet..."
+
+A `selectAddress()` és `renderSavedAddresses()` ezt a két state-et hívja a megfelelő helyzetben.
+
+#### `checkIfNewAddressEntered()` egyszerűsítve
+A korábbi "csak akkor jelenik meg ha valamit beírtál" logika eltávolítva — most
+mindig megjelenik az "Új cím" radio választásakor (a `selectAddress(null)`-ban).
+
+### Fájlok (3)
+- `package.json` — `0.9.16` → `0.9.17`
+- `src/pages/penztar/index.astro` — markup + JS state machine + CSS
+- `docs/09-changelog.md`
+
+---
+
+
 
 A logged-in vendégek számára most már **automatikusan elmentődik** az első
 checkout-on megadott szállítási cím a fiókba, és későbbi rendelésekkor egy

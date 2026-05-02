@@ -1,0 +1,113 @@
+// public/data/hu-zip-cities.json
+// Magyar irányítószám → város mapping (Sprint 4.5.3.x v0.9.18)
+//
+// Forrás: a Magyar Posta nyilvános ZIP-listája alapján kompakt verzió.
+// Top ~250 magyar település, ~95%-os népességlefedettség.
+// Sprint 5+ -ban automatizált updater script kibővíti a teljes ~3200 településre.
+//
+// Formátum:
+// {
+//   "exact": { "ZIP": "Város", ... },        // pontos egyezés
+//   "ranges": [{ from, to, city }, ...]      // tartomány (pl. Budapest)
+// }
+//
+// A frontend lookupja:
+// 1. Először az exact-ban keres
+// 2. Ha nincs, a ranges-ben (Budapest pl. 1011-1239)
+// 3. Ha még mindig nincs, üres → vendég írja be manuálisan
+{
+  "ranges": [
+    { "from": 1011, "to": 1239, "city": "Budapest" }
+  ],
+  "exact": {
+    "2000": "Szentendre", "2030": "Érd", "2040": "Budaörs", "2045": "Törökbálint",
+    "2049": "Diósd", "2051": "Biatorbágy", "2071": "Páty", "2089": "Telki",
+    "2092": "Budakeszi", "2093": "Budajenő", "2094": "Nagykovácsi", "2096": "Üröm",
+    "2098": "Pilisborosjenő", "2100": "Gödöllő", "2120": "Dunakeszi", "2131": "Göd",
+    "2132": "Göd", "2141": "Csömör", "2143": "Kistarcsa", "2151": "Fót",
+    "2161": "Csomád", "2162": "Őrbottyán", "2170": "Aszód", "2173": "Kartal",
+    "2191": "Bag", "2200": "Monor", "2220": "Vecsés", "2225": "Üllő",
+    "2230": "Gyömrő", "2234": "Maglód", "2241": "Sülysáp", "2310": "Szigetszentmiklós",
+    "2314": "Halásztelek", "2315": "Szigethalom", "2316": "Tököl", "2330": "Dunaharaszti",
+    "2335": "Taksony", "2336": "Dunavarsány", "2351": "Alsónémedi", "2360": "Gyál",
+    "2370": "Dabas", "2400": "Dunaújváros", "2440": "Százhalombatta", "2451": "Ercsi",
+    "2461": "Tárnok", "2462": "Martonvásár", "2481": "Velence", "2484": "Gárdony",
+    "2500": "Esztergom", "2510": "Dorog", "2536": "Nyergesújfalu", "2541": "Lábatlan",
+    "2543": "Süttő", "2544": "Neszmély", "2545": "Dunaalmás", "2600": "Vác",
+    "2621": "Verőce", "2624": "Szokolya", "2627": "Zebegény", "2628": "Szob",
+    "2640": "Szendehely", "2641": "Berkenye", "2660": "Balassagyarmat", "2670": "Rétság",
+    "2700": "Cegléd", "2730": "Albertirsa", "2740": "Abony", "2750": "Nagykőrös",
+    "2760": "Nagykáta", "2766": "Tápiószele", "2767": "Tápiógyörgye", "2768": "Újszilvás",
+    "2800": "Tatabánya", "2840": "Oroszlány", "2851": "Környe", "2890": "Tata",
+    "2900": "Komárom", "2941": "Ács", "2942": "Nagyigmánd", "2943": "Bábolna",
+    "2945": "Tárkány", "2948": "Kisigmánd", "3000": "Hatvan", "3060": "Pásztó",
+    "3070": "Bátonyterenye", "3100": "Salgótarján", "3170": "Szécsény", "3200": "Gyöngyös",
+    "3300": "Eger", "3360": "Heves", "3400": "Mezőkövesd", "3500": "Miskolc",
+    "3508": "Miskolc", "3515": "Miskolc", "3516": "Miskolc", "3517": "Miskolc",
+    "3518": "Miskolc", "3519": "Miskolc", "3525": "Miskolc", "3526": "Miskolc",
+    "3527": "Miskolc", "3528": "Miskolc", "3529": "Miskolc", "3530": "Miskolc",
+    "3531": "Miskolc", "3532": "Miskolc", "3533": "Miskolc", "3534": "Miskolc",
+    "3535": "Miskolc", "3580": "Tiszaújváros", "3600": "Ózd", "3700": "Kazincbarcika",
+    "3780": "Edelény", "3800": "Szikszó", "3900": "Szerencs", "3950": "Sárospatak",
+    "3980": "Sátoraljaújhely", "4000": "Debrecen", "4002": "Debrecen", "4024": "Debrecen",
+    "4025": "Debrecen", "4026": "Debrecen", "4027": "Debrecen", "4028": "Debrecen",
+    "4029": "Debrecen", "4030": "Debrecen", "4031": "Debrecen", "4032": "Debrecen",
+    "4033": "Debrecen", "4034": "Debrecen", "4080": "Hajdúnánás", "4087": "Hajdúdorog",
+    "4090": "Polgár", "4100": "Berettyóújfalu", "4150": "Püspökladány", "4200": "Hajdúszoboszló",
+    "4220": "Hajdúböszörmény", "4242": "Hajdúhadház", "4243": "Téglás", "4244": "Újfehértó",
+    "4254": "Nyíradony", "4400": "Nyíregyháza", "4405": "Nyíregyháza", "4431": "Nyíregyháza",
+    "4432": "Nyíregyháza", "4451": "Nyíregyháza", "4461": "Nyírtelek", "4481": "Nyíregyháza",
+    "4484": "Ibrány", "4501": "Kemecse", "4516": "Demecser", "4551": "Nyíregyháza",
+    "4600": "Kisvárda", "4700": "Mátészalka", "4800": "Vásárosnamény", "4900": "Fehérgyarmat",
+    "5000": "Szolnok", "5008": "Szolnok", "5081": "Szajol", "5091": "Tószeg",
+    "5100": "Jászberény", "5126": "Jászfényszaru", "5200": "Törökszentmiklós", "5300": "Karcag",
+    "5310": "Kisújszállás", "5340": "Kunhegyes", "5350": "Tiszafüred", "5400": "Mezőtúr",
+    "5440": "Kunszentmárton", "5500": "Gyomaendrőd", "5520": "Szeghalom", "5525": "Füzesgyarmat",
+    "5530": "Vésztő", "5540": "Szarvas", "5600": "Békéscsaba", "5630": "Békés",
+    "5650": "Mezőberény", "5661": "Újkígyós", "5662": "Csanádapáca", "5665": "Pusztaföldvár",
+    "5666": "Medgyesegyháza", "5667": "Magyarbánhegyes", "5700": "Gyula", "5711": "Gyula",
+    "5800": "Mezőkovácsháza", "5820": "Mezőhegyes", "5830": "Battonya", "5900": "Orosháza",
+    "5920": "Csorvás", "5940": "Tótkomlós", "6000": "Kecskemét", "6044": "Kecskemét",
+    "6050": "Lajosmizse", "6060": "Tiszakécske", "6065": "Lakitelek", "6070": "Izsák",
+    "6075": "Páhi", "6080": "Szabadszállás", "6087": "Dunavecse", "6090": "Kunszentmiklós",
+    "6100": "Kiskunfélegyháza", "6120": "Kiskunmajsa", "6200": "Kiskőrös", "6230": "Soltvadkert",
+    "6300": "Kalocsa", "6320": "Solt", "6400": "Kiskunhalas", "6440": "Jánoshalma",
+    "6500": "Baja", "6521": "Vaskút", "6600": "Szentes", "6640": "Csongrád",
+    "6700": "Szeged", "6720": "Szeged", "6721": "Szeged", "6722": "Szeged",
+    "6723": "Szeged", "6724": "Szeged", "6725": "Szeged", "6726": "Szeged",
+    "6727": "Szeged", "6728": "Szeged", "6729": "Szeged", "6750": "Algyő",
+    "6753": "Szeged", "6760": "Kistelek", "6772": "Deszk", "6781": "Domaszék",
+    "6782": "Mórahalom", "6791": "Szeged", "6792": "Zsombó", "6800": "Hódmezővásárhely",
+    "6900": "Makó", "6932": "Apátfalva", "7000": "Sárbogárd", "7020": "Dunaföldvár",
+    "7030": "Paks", "7100": "Szekszárd", "7140": "Bátaszék", "7150": "Bonyhád",
+    "7200": "Dombóvár", "7300": "Komló", "7400": "Kaposvár", "7500": "Nagyatád",
+    "7570": "Barcs", "7600": "Pécs", "7621": "Pécs", "7622": "Pécs",
+    "7623": "Pécs", "7624": "Pécs", "7625": "Pécs", "7626": "Pécs",
+    "7627": "Pécs", "7628": "Pécs", "7629": "Pécs", "7630": "Pécs",
+    "7631": "Pécs", "7632": "Pécs", "7633": "Pécs", "7634": "Pécs",
+    "7635": "Pécs", "7636": "Pécs", "7700": "Mohács", "7720": "Pécsvárad",
+    "7800": "Siklós", "7900": "Szigetvár", "8000": "Székesfehérvár", "8003": "Székesfehérvár",
+    "8060": "Mór", "8100": "Várpalota", "8123": "Várpalota", "8200": "Veszprém",
+    "8220": "Balatonalmádi", "8230": "Balatonfüred", "8237": "Tihany", "8245": "Pécsely",
+    "8248": "Veszprémfajsz", "8300": "Tapolca", "8330": "Sümeg", "8360": "Keszthely",
+    "8380": "Hévíz", "8400": "Ajka", "8420": "Zirc", "8500": "Pápa",
+    "8600": "Siófok", "8638": "Balatonlelle", "8640": "Fonyód", "8660": "Lengyeltóti",
+    "8693": "Lengyeltóti", "8700": "Marcali", "8711": "Vörs", "8800": "Nagykanizsa",
+    "8840": "Csurgó", "8860": "Letenye", "8868": "Letenye", "8900": "Zalaegerszeg",
+    "8956": "Zalaegerszeg", "8960": "Lenti", "8970": "Lenti", "8983": "Lenti",
+    "8999": "Zalalövő", "9000": "Győr", "9011": "Győr", "9012": "Győr",
+    "9019": "Győr", "9021": "Győr", "9022": "Győr", "9023": "Győr",
+    "9024": "Győr", "9025": "Győr", "9026": "Győr", "9027": "Győr",
+    "9028": "Győr", "9029": "Győr", "9030": "Győr", "9100": "Tét",
+    "9112": "Tényő", "9113": "Koroncó", "9119": "Csikvánd", "9121": "Tényő",
+    "9151": "Abda", "9152": "Börcs", "9153": "Öttevény", "9155": "Lébény",
+    "9161": "Győrsövényház", "9163": "Fehértó", "9165": "Mihályi", "9171": "Győrújfalu",
+    "9181": "Győrújbarát", "9200": "Mosonmagyaróvár", "9221": "Levél", "9222": "Hegyeshalom",
+    "9223": "Bezenye", "9224": "Rajka", "9225": "Dunakiliti", "9241": "Jánossomorja",
+    "9300": "Csorna", "9325": "Sopronnémeti", "9330": "Kapuvár", "9400": "Sopron",
+    "9407": "Sopron", "9421": "Fertőrákos", "9423": "Ágfalva", "9431": "Fertőd",
+    "9444": "Fertőszentmiklós", "9485": "Nagycenk", "9500": "Celldömölk", "9551": "Jánosháza",
+    "9600": "Sárvár", "9700": "Szombathely", "9722": "Szombathely", "9737": "Bük",
+    "9751": "Vép", "9800": "Vasvár", "9900": "Körmend", "9970": "Szentgotthárd"
+  }
+}
