@@ -18,7 +18,72 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.4] — 2026-04-27 — Sprint 4.5.x — Checkout logged-in UX ⭐
+## [0.9.5] — 2026-04-27 — Sprint 4.5.x — Verifikációs banner Statement + cleanup ⭐
+
+### Probléma
+
+A v0.9.1 ZIP nem érkezett tisztán a Cursor-on keresztül a lokális kódbázisba.
+A markup-ot átneveztem `.profile-page__banner*` → `.profile-page__verify-banner*`
+osztályokra, **de a CSS** a régi nevén maradt. Eredmény: a v0.9.3 deploy után
+a banner CSS-e **nem alkalmazódott** — flex layout szétesett, ikon árva,
+"Küldj verifikációs linket" gomb plain szövegként folyt a "SZEMÉLYES ADATOK"
+szekció alá.
+
+### Javítás
+
+#### 1. Banner CSS teljes felülírás — Statement variáns (Opció 2)
+
+A `/profil/banner-preview` oldal 3 változatából a **Statement** lett kiválasztva:
+- 3px bal oldali patina arany akcentus + 12% háttér
+- 44×44 px kerek arany doboz az ikonnak
+- **Eyebrow style cím**: "EMAIL VERIFIKÁCIÓ" (uppercase, kis font, arany szín)
+- **Serif heading szöveg**: 15px, "Verifikáld az email címed, és kapsz
+  **−10% kedvezmény** az első rendelésre."
+- **Telített arany CTA gomb**: "Küldj linket"
+
+#### 2. Banner markup átszerkesztés
+
+A korábbi struktúra (`<strong>` title + `<p>` text) most:
+```
+<p class="...title">Email verifikáció</p>      ← eyebrow
+<p class="...text">
+  Verifikáld..., és kapsz <strong>−10% kedvezmény</strong> az első rendelésre.
+</p>                                            ← heading
+```
+
+Ez illeszkedik a Statement variáns vizuális hierarchiájához.
+
+#### 3. Banner-preview oldal törlése
+
+A `src/pages/profil/banner-preview.astro` (v0.9.3-ban hozzáadott IDEIGLENES
+preview) **eltávolításra került**, miután a választás megszületett.
+
+### Mobile responsive
+
+- A banner `flex-wrap: wrap` mobil-on
+- Az ikon 36×36 (volt 44×44)
+- A "Küldj linket" gomb teljes szélességű
+
+### Tanulság (Sprint workflow)
+
+A "patch-csomag → Cursor másolja át" workflow akkor problémás amikor:
+- Egy fájl markup-ja és CSS-je egyszerre változik
+- A patch nem tisztán érkezik
+- Eredmény: markup új osztályneveket, CSS régi osztályneveket használ
+
+**Megoldás Sprint 5+ workflow-ban**: nagyobb refactor csomagoknál a teljes
+fájl ZIP-je menjen, ne részletes diff/patch.
+
+### Fájlok
+
+- `package.json` — `0.9.4` → `0.9.5`
+- `src/pages/profil/index.astro` — banner markup + CSS Statement variáns
+- `src/pages/profil/banner-preview.astro` — **TÖRÖLVE**
+- `docs/09-changelog.md`
+
+---
+
+
 
 A pénztár oldal mostantól érzékelhető módon másképp néz ki logged-in 
 vendégeknek: chip a fejlécben, welcome blokk, és **automatikus auto-fill** 
