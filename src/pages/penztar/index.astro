@@ -164,6 +164,15 @@ import PageHero from "@/components/common/PageHero.astro";
               </label>
             </div>
 
+            {/* Sprint 4.5.3.x v0.9.20 — Megye mező (auto-fill ZIP-ből) */}
+            <div class="form-row">
+              <label class="form-field">
+                <span class="form-field__label">Megye <span class="form-field__label-hint">(automatikusan kitöltjük)</span></span>
+                <input type="text" name="shippingCounty" autocomplete="address-level1" data-shipping-county-input list="hu-counties-datalist" />
+                <datalist id="hu-counties-datalist"></datalist>
+              </label>
+            </div>
+
             {/* Sprint 4.5.3.x — Címmentés blokk (logged-in vendégeknek)
                 Két variáns:
                 - Üres címkönyv (első cím): info + checkbox bekattintva default
@@ -315,6 +324,7 @@ import PageHero from "@/components/common/PageHero.astro";
     const shippingAddressInput = document.querySelector<HTMLInputElement>("[data-shipping-address-input]");
     const shippingZipInput = document.querySelector<HTMLInputElement>("[data-shipping-zip-input]");
     const shippingCityInput = document.querySelector<HTMLInputElement>("[data-shipping-city-input]");
+    const shippingCountyInput = document.querySelector<HTMLInputElement>("[data-shipping-county-input]");
 
     // State a saved addresses-szel (a render funkciókban használjuk)
     let savedAddresses: any[] = [];
@@ -673,6 +683,7 @@ import PageHero from "@/components/common/PageHero.astro";
         shippingAddress: formData.get("shippingAddress") || undefined,
         shippingCity: formData.get("shippingCity") || undefined,
         shippingZip: formData.get("shippingZip") || undefined,
+        shippingCounty: formData.get("shippingCounty") || undefined,  // v0.9.20
         paymentMethod: formData.get("paymentMethod"),
         customerNote: formData.get("customerNote") || undefined,
         items: summary.items.map(i => ({
@@ -793,11 +804,13 @@ import PageHero from "@/components/common/PageHero.astro";
     // Initial render
     renderSummary();
 
-    // Sprint 4.5.3.x v0.9.18 — ZIP → város auto-fill bind
+    // Sprint 4.5.3.x v0.9.18-20 — ZIP → város + megye auto-fill bind
     bindZipCityAutofill({
       zipInput: shippingZipInput,
       cityInput: shippingCityInput,
+      countyInput: shippingCountyInput,
       citiesDatalist: document.querySelector<HTMLDataListElement>("#hu-cities-datalist"),
+      countiesDatalist: document.querySelector<HTMLDataListElement>("#hu-counties-datalist"),
     });
   </script>
 </BaseLayout>
@@ -958,6 +971,17 @@ import PageHero from "@/components/common/PageHero.astro";
 
 .checkout-input--prefilled:focus {
   background: var(--mona-bg);
+}
+
+/* Sprint 4.5.3.x v0.9.20 — Form field label hint (pl. "automatikusan kitöltjük") */
+.form-field__label-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--mona-text-3);
+  text-transform: none;
+  letter-spacing: normal;
+  font-style: italic;
+  margin-left: 6px;
 }
 
 /* ─── Sprint 4.5.3.x — Saved addresses selector ───────────────────────── */

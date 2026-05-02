@@ -18,25 +18,263 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.19] — 2026-05-02 — ZIP→város auto-fill HOTFIX
+## [0.9.20] — 2026-04-27 — Sprint 4.5.3.x — Megye mező + bővített ZIP-adatbázis ⭐
 
-### Probléma (v0.9.18)
-- A `hu-zip-cities.json` első ~17 sora JS-komment volt → **nem volt érvényes JSON**.
-- `fetch()` + `res.json()` **csendben üres** lookup/datalist eredmény.
+### Vendég kérés
 
-### Megoldás
-- **`src/lib/utils/hu-zip-cities.json`** — komment nélküli, valid JSON (build része).
-- **TypeScript import** (`resolveJsonModule`) a fetch helyett.
-- **Szinkron API**: `lookupCityByZip`, `getAllCities` — a datalist azonnal feltöltődik.
-- **`console.log`** `[zip-city]` prefix-szel — dataset méret debug-hoz.
-- A korábbi **`public/data/hu-zip-cities.json`** eltávolítva (invalid tartalom + nem kell CDN fetch).
+> *"Megye mezőre is szükség van"*
 
-### Következő lépés
-- Sprint 4.5.3.x (B2B Cégadatok).
+A B2B / hivatalos számlázás miatt is fontos lesz (Sprint 4.5.3.y) — érdemes
+most az alapot lerakni.
+
+### Bővített adatbázis (3074 ZIP, 20 megye)
+
+A vendég két fájlt töltött fel:
+
+1. **`Iranyitoszam-Internet_uj.xlsx`** (Magyar Posta hivatalos friss lista, 2024)
+   - 3324 sor, **csak ZIP + Település**, megye nélkül
+   - Hiányzik a Budapest (külön kezeli a Posta)
+   - Hiányoznak a nagyobb városok kerületi sub-ZIP-jei (pl. Szeged 6720-6729)
+
+2. **`iranyitoszamok.xls`** (régi Magyar Posta, 2003)
+   - 3576 sor, ZIP + Település + **Megye** (3 oszlop)
+   - 19 megye (Csongrád, ami 2020-tól Csongrád-Csanád)
+   - Tartalmazza Budapest 162 ZIP-jét
+
+### Build pipeline (egyszer futott)
+
+```python
+# 1. Friss xlsx alapadatok
+df_new = pd.read_excel("Iranyitoszam-Internet_uj.xlsx", skiprows=1)
+
+# 2. Régi xls megye-mapping (város → megye)
+city_to_county = {...}  # 3136 város
+
+# 3. Combine: friss xlsx priority, város→megye lookup, fallback ZIP-range,
+#    plusz Budapest backfill a régi xls-ből (162 ZIP)
+
+# Eredmény: 3074 unique ZIP, 20 megye (Budapest is!)
+```
+
+### Új JSON struktúra
+
+```json
+{
+  "counties": ["Baranya", "Borsod-Abaúj-Zemplén", "Budapest", ...],
+  "zips": {
+    "1011": ["Budapest", 2],
+    "2600": ["Vác", 13],
+    "6720": ["Szeged", 5]
+  }
+}
+```
+
+A 2. érték a `counties` array indexe — **62%-kal kompaktabb** mint a verbose
+`{"city":"...","county":"..."}` forma. Méret: **72 KB** (gzip-ben ~18 KB).
+
+### TypeScript helper bővítés
+
+#### Új `lookupZipInfo()` függvény
+```typescript
+export function lookupZipInfo(zip: string): { city: string; county: string } | null
+```
+Egy lookup → mindkettő. Sokkal **gyorsabb** mint külön hívás.
+
+#### `getAllCounties()` új
+Megye dropdown / datalist autocomplete-hez (Sprint 4.5.3.y B2B form,
+checkout, profil-cégadatok).
+
+#### `bindZipCityAutofill` bővítés
+Új opcionális paraméterek:
+- `countyInput` — a megye mező (ha van), auto-fill ZIP-ből
+- `countiesDatalist` — megye datalist autocomplete-hez
+
+A bind:
+- ZIP `blur` → város **+ megye** auto-fill
+- Manuális edit tracking mindkét mezőre (külön `cityManuallyEdited` /
+  `countyManuallyEdited` flag)
+
+### Markup változás (`/penztar/index.astro`)
+
+Új mező a Szállítási cím szekcióban, az Irányítószám/Város sor alatt:
+
+```html
+<div class="form-row">
+  <label class="form-field">
+    <span class="form-field__label">
+      Megye <span class="form-field__label-hint">(automatikusan kitöltjük)</span>
+    </span>
+    <input type="text" name="shippingCounty" autocomplete="address-level1"
+           list="hu-counties-datalist" />
+    <datalist id="hu-counties-datalist"></datalist>
+  </label>
+</div>
+```
+
+### Új CSS
+
+```css
+.form-field__label-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--mona-text-3);
+  text-transform: none;
+  font-style: italic;
+}
+```
+
+A "(automatikusan kitöltjük)" hint jelzi a vendégnek, hogy a mezőt nem kell
+manuálisan kitöltenie.
+
+### Vendég perspektíva
+
+```
+SZÁLLÍTÁSI CÍM
+─────────────
+
+UTCA, HÁZSZÁM *
+[Kossuth Lajos utca 134]
+
+IRÁNYÍTÓSZÁM *  VÁROS *
+[2600         ]  [Vác         ]   ← v0.9.18 ZIP→város auto-fill
+
+MEGYE (automatikusan kitöltjük)
+[Pest                     ]        ← v0.9.20 ZIP→megye auto-fill (új!)
+                                      a vendég átírhatja vagy datalist-ből választhat
+```
+
+### Sprint 4.5.3.y előkészítés
+
+A bővített adatbázis és a `getAllCounties()` függvény **kulcsfontosságú** a
+B2B Cégadatok modulhoz:
+- Cégszékhely megye dropdown
+- A cég ZIP/város/megye auto-fill ugyanolyan mintával
+
+### Fájlok (3)
+- `src/lib/utils/hu-zip-cities.json` — új struktúra (counties array + ZIP map)
+  - 3074 ZIP, 20 megye, ~72 KB
+- `src/lib/utils/zip-city-lookup.ts` — bővített API (`lookupZipInfo`,
+  `getAllCounties`, `bindZipCityAutofill` countyInput-tal)
+- `package.json` — `0.9.19` → `0.9.20`
+- `src/pages/penztar/index.astro` — Megye mező markup + bind + payload + CSS
+- `docs/09-changelog.md`
+
+### Backend megjegyzés (Sprint 4.5.3.x v0.9.20.1?)
+
+A `payload.shippingCounty` mostantól odamegy a `/api/checkout`-ra. A backend
+**még nem dolgozza fel** — Sprint 5+ -ban az `orders` táblába `shipping_county`
+mező hozzáadás (migráció `0007_add_shipping_county.sql`). Most csak a frontend
+küldi, a backend ignorálja (nem törik el).
 
 ---
 
-## [0.9.18] — 2026-04-27 — Sprint 4.5.3.x — Saved address kártyák tisztítás + ZIP-város auto-fill ⭐
+
+
+## [0.9.19] — 2026-04-27 — Sprint 4.5.3.x — ZIP-város auto-fill HOTFIX
+
+### A v0.9.18 nem működött
+
+Vendég visszajelzés: *"ok de nem megy a dropdown list, meg az automatikus vác sem"*
+
+### Diagnózis
+
+A v0.9.18 `public/data/hu-zip-cities.json` fájl **első 17 sora JS-stílusú 
+kommentet** tartalmazott:
+
+```
+// public/data/hu-zip-cities.json
+// Magyar irányítószám → város mapping ...
+// ...
+{
+  "ranges": [...]
+}
+```
+
+A JSON szabvány **nem támogat kommenteket**. Ezért:
+- `JSON.parse()` → `SyntaxError: Unexpected token /`
+- A `loadZipCityData()` **csendben** üres adatra esett vissza (`{ ranges: [], exact: {} }`)
+- Sem a ZIP-város lookup, sem a datalist nem kapott adatot → **vendég nem látott semmit**
+
+### Gyökér-megoldás — JSON import (build-time inline)
+
+A `fetch + public/data/` megközelítés helyett a JSON-t **TypeScript import**-tal:
+
+```typescript
+import zipCityData from "./hu-zip-cities.json";
+const data: ZipCityData = zipCityData as ZipCityData;
+```
+
+Előnyei:
+- **Build-time inline** — Astro/Vite közvetlenül a JS bundle-be teszi
+- **Nincs HTTP request** — nincs 404 kockázat, nincs network fail
+- **Szinkrón API** — a `lookupCityByZip()` és `getAllCities()` mostantól sync
+  (egyszerűbb használat, gyorsabb)
+- **TypeScript validáció** — az IDE figyelmeztet ha a JSON formátum változik
+- **Vite figyelmeztet** ha a JSON érvénytelen (build-time error, nem runtime)
+
+### Fájl változások
+
+#### Áthelyezve
+- `public/data/hu-zip-cities.json` **TÖRÖLVE**
+- Az új helye: `src/lib/utils/hu-zip-cities.json` (kommentek nélkül, valid JSON)
+
+#### `zip-city-lookup.ts` átírva
+- `loadZipCityData()` → szinkrón `data` konstans
+- `lookupCityByZip()` → szinkrón (volt async)
+- `getAllCities()` → szinkrón (volt async)
+- `bindZipCityAutofill()` → datalist azonnal feltöltődik (volt: 100-200ms várakozás)
+- Plusz: `console.log` a `[zip-city]` prefix-szel a debug-hoz
+- Plusz: `cityInput.dispatchEvent(new Event("input"))` az auto-fill után — 
+  más listenerek (form validation stb.) is reagálhatnak rá
+
+#### `bindZipCityAutofill` hívás változatlan a checkout-on
+A `penztar/index.astro` JS hívása nem változott — a régi API kompatibilis.
+
+### Tanulság
+
+**JSON ne tartalmazzon kommentet**. Ha dokumentáció kell, `.md` fájlba 
+tegyük (mint pl. `src/lib/utils/README-zip-cities.md` Sprint 5+ -ban).
+
+**Ha JSON adatot importálunk a build-be**, az `import` mindig megbízhatóbb 
+mint a `fetch` — kevesebb hibalehetőség, jobb DX.
+
+### Fájlok (4)
+- `src/lib/utils/hu-zip-cities.json` — tiszta JSON, kommentek nélkül (új helyen)
+- `src/lib/utils/zip-city-lookup.ts` — átírva import-tal
+- `package.json` — `0.9.18` → `0.9.19`
+- `docs/09-changelog.md`
+
+**Eltávolítva**:
+- `public/data/hu-zip-cities.json` — már nem szükséges (a régi build-en lehet még)
+
+---
+
+## [0.9.18] — 2026-04-27 — Sprint 4.5.3.x — Saved address radio látatlan + ZIP-város auto-fill (TÖRÖTT — lásd v0.9.19)
+
+### Mit szándékoztam csinálni
+
+1. **Saved address kártyák**: radio button látatlan (sr-only pattern), 
+   selected state erősebb (1.5px border + arany bg + sarki pipa)
+2. **ZIP-város auto-fill**: `public/data/hu-zip-cities.json` (~250 magyar 
+   település) + `zip-city-lookup.ts` helper
+
+### Mi tört el
+
+A JSON fájl **első 17 sora JS-stílusú kommentet tartalmazott** — `JSON.parse()` 
+csendben elhasalt. A v0.9.19 hotfix javítja.
+
+### Mi maradt működőképesen
+
+A **saved address radio látatlan** rész **CSS only** volt és **működött** — 
+ez nem érintett.
+
+A `penztar/index.astro` markup (datalist + `bindZipCityAutofill` hívás) is 
+**helyes volt** — csak az adat hiányzott. v0.9.19 deploy után **azonnal** 
+működni fog (mert a JS hívás már be van kötve).
+
+---
+
+
 
 ### Vendég visszajelzés
 
