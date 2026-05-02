@@ -1,0 +1,686 @@
+---
+// src/pages/profil/rendelesek.astro
+// Sprint 4.5.2 — Rendelési előzmények
+//
+// Funkcionalitás:
+//   - Rendelések listája dátum szerint csökkenően
+//   - Mindegyik összecsukva: dátum + szám + státusz badge + összeg
+//   - Klikk → kibomlik (accordion): tételek, szállítás, fizetés, megjegyzés
+//   - Empty state: "Még nincsenek rendeléseid" + CTA "Webshop megnézése"
+//
+// Loading state: spinner a kezdetekben (a fetch-re várás közben)
+// Auth: a ProfileLayout maga kezeli (guard component)
+
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+---
+
+<ProfileLayout currentSection="orders" title="Rendelési előzmények">
+  <div class="orders-page">
+    <header class="orders-page__header">
+      <h1 class="orders-page__title">Rendelések</h1>
+      <p class="orders-page__subtitle">Itt látod a Mona Studio webshopjában leadott korábbi rendeléseidet.</p>
+    </header>
+
+    {/* Loading state */}
+    <div class="orders-page__loading" data-orders-loading>
+      <div class="orders-page__spinner"></div>
+      <p>Rendelések betöltése...</p>
+    </div>
+
+    {/* Empty state */}
+    <div class="orders-page__empty" data-orders-empty hidden>
+      <div class="orders-page__empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="1"/>
+          <path d="M8 9h8M8 13h8M8 17h5"/>
+        </svg>
+      </div>
+      <h2>Még nincsenek rendeléseid</h2>
+      <p>Fedezd fel a webshopunkat és találd meg a számodra ideális termékeket.</p>
+      <a href="/webshop" class="btn btn-primary">Webshop megnézése</a>
+    </div>
+
+    {/* Error state */}
+    <div class="orders-page__error" data-orders-error hidden>
+      <p class="orders-page__error-text" data-orders-error-text>—</p>
+      <button type="button" class="btn-secondary" data-orders-retry>Újrapróbálás</button>
+    </div>
+
+    {/* Orders list — dynamically populated */}
+    <ul class="orders-page__list" data-orders-list hidden></ul>
+  </div>
+</ProfileLayout>
+
+<script>
+  // ── Rendelés-lista logika ───────────────────────────────────────────────
+  import { subscribeAuthState } from "@/lib/auth-state";
+  import type { OrderPublic, OrderItemPublic } from "@/lib/types/orders";
+
+  (() => {
+    const loadingEl = document.querySelector<HTMLElement>("[data-orders-loading]");
+    const emptyEl = document.querySelector<HTMLElement>("[data-orders-empty]");
+    const errorEl = document.querySelector<HTMLElement>("[data-orders-error]");
+    const errorText = document.querySelector<HTMLElement>("[data-orders-error-text]");
+    const retryBtn = document.querySelector<HTMLButtonElement>("[data-orders-retry]");
+    const listEl = document.querySelector<HTMLUListElement>("[data-orders-list]");
+
+    if (!listEl) return;
+
+    let initialized = false;
+
+    // Várj amíg az auth state autentikált — akkor töltsd be a rendeléseket
+    subscribeAuthState((state) => {
+      if (state.status === "authenticated" && !initialized) {
+        initialized = true;
+        loadOrders();
+      }
+    });
+
+    retryBtn?.addEventListener("click", () => {
+      hideAll();
+      showLoading();
+      loadOrders();
+    });
+
+    async function loadOrders() {
+      try {
+        const res = await fetch("/api/profile/orders", {
+          credentials: "include",
+        });
+
+        const text = await res.text();
+        let data: any = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          console.error("[orders] non-JSON response:", text);
+        }
+
+        if (!res.ok || !data.success) {
+          showError(data.message || `Sikertelen betöltés (HTTP ${res.status}).`);
+          return;
+        }
+
+        const orders: OrderPublic[] = data.orders || [];
+        if (orders.length === 0) {
+          showEmpty();
+          return;
+        }
+
+        renderOrders(orders);
+      } catch (err) {
+        console.error("[orders] load error:", err);
+        showError("Hálózati hiba a rendelések betöltésekor.");
+      }
+    }
+
+    function renderOrders(orders: OrderPublic[]) {
+      listEl!.innerHTML = orders.map(orderToHtml).join("");
+      hideAll();
+      listEl!.hidden = false;
+
+      // Accordion toggle binding
+      listEl!.querySelectorAll<HTMLButtonElement>("[data-order-toggle]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const targetId = btn.dataset.orderToggle;
+          if (!targetId) return;
+          const detail = document.getElementById(targetId);
+          if (!detail) return;
+          const isOpen = detail.hasAttribute("data-open");
+          if (isOpen) {
+            detail.removeAttribute("data-open");
+            btn.setAttribute("aria-expanded", "false");
+          } else {
+            detail.setAttribute("data-open", "");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+    }
+
+    function orderToHtml(order: OrderPublic): string {
+      const detailId = `order-detail-${order.id}`;
+      const totalFormatted = formatPrice(order.totalFt);
+      const subtotalFormatted = formatPrice(order.subtotalFt);
+      const shippingFormatted = order.shippingFeeFt === 0 ? "Ingyen" : formatPrice(order.shippingFeeFt);
+
+      const discountRow = order.discountAmountFt > 0
+        ? `<div class="order-card__totals-row">
+             <span>Kedvezmény</span>
+             <span>−${formatPrice(order.discountAmountFt)}</span>
+           </div>`
+        : "";
+
+      const noteSection = order.customerNote
+        ? `<div class="order-card__note">
+             <p class="order-card__detail-label">Megjegyzés</p>
+             <p class="order-card__detail-value">${escape(order.customerNote)}</p>
+           </div>`
+        : "";
+
+      const shippingAddrSection = order.shippingAddress
+        ? `<p class="order-card__detail-value">
+             ${escape(order.shippingZip || "")} ${escape(order.shippingCity || "")}<br/>
+             ${escape(order.shippingAddress)}
+           </p>`
+        : `<p class="order-card__detail-value">${escape(order.shippingMethodLabel)}</p>`;
+
+      return `
+        <li class="order-card">
+          <button
+            type="button"
+            class="order-card__summary"
+            data-order-toggle="${detailId}"
+            aria-expanded="false"
+            aria-controls="${detailId}"
+          >
+            <div class="order-card__summary-meta">
+              <p class="order-card__date">${escape(order.createdAtFormatted)}</p>
+              <p class="order-card__number">${escape(order.orderNumber)}</p>
+            </div>
+            <div class="order-card__summary-status">
+              <span class="order-card__badge order-card__badge--${order.statusColor}">
+                ${escape(order.statusLabel)}
+              </span>
+            </div>
+            <div class="order-card__summary-totals">
+              <p class="order-card__total">${totalFormatted}</p>
+              <p class="order-card__items-count">${order.itemCount} termék</p>
+            </div>
+            <div class="order-card__summary-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+          </button>
+
+          <div id="${detailId}" class="order-card__detail">
+            <div class="order-card__items">
+              ${order.items.map(itemToHtml).join("")}
+            </div>
+
+            <div class="order-card__details-grid">
+              <div class="order-card__detail-block">
+                <p class="order-card__detail-label">Szállítási mód</p>
+                ${shippingAddrSection}
+              </div>
+              <div class="order-card__detail-block">
+                <p class="order-card__detail-label">Fizetés</p>
+                <p class="order-card__detail-value">${escape(order.paymentMethodLabel)}</p>
+              </div>
+              ${noteSection}
+            </div>
+
+            <div class="order-card__totals">
+              <div class="order-card__totals-row">
+                <span>Részösszeg</span>
+                <span>${subtotalFormatted}</span>
+              </div>
+              ${discountRow}
+              <div class="order-card__totals-row">
+                <span>Szállítás</span>
+                <span>${shippingFormatted}</span>
+              </div>
+              <div class="order-card__totals-row order-card__totals-row--final">
+                <span>Összesen</span>
+                <span>${totalFormatted}</span>
+              </div>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function itemToHtml(item: OrderItemPublic): string {
+      const imgHtml = item.productImageUrl
+        ? `<img src="${escape(item.productImageUrl)}" alt="" class="order-card__item-img" loading="lazy"/>`
+        : `<div class="order-card__item-img order-card__item-img--placeholder"></div>`;
+      return `
+        <div class="order-card__item">
+          ${imgHtml}
+          <div class="order-card__item-info">
+            <a href="/termek/${escape(item.productSlug)}" class="order-card__item-name">
+              ${escape(item.productName)}
+            </a>
+            <p class="order-card__item-meta">
+              ${item.qty} db × ${formatPrice(item.priceAtOrderFt)}
+            </p>
+          </div>
+          <p class="order-card__item-subtotal">${formatPrice(item.subtotalFt)}</p>
+        </div>
+      `;
+    }
+
+    function formatPrice(ft: number): string {
+      return `${ft.toLocaleString("hu-HU")} Ft`;
+    }
+
+    function escape(text: string): string {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ── State helpers ───────────────────────────────────────────────────
+    function hideAll() {
+      if (loadingEl) loadingEl.hidden = true;
+      if (emptyEl) emptyEl.hidden = true;
+      if (errorEl) errorEl.hidden = true;
+      if (listEl) listEl.hidden = true;
+    }
+
+    function showLoading() {
+      hideAll();
+      if (loadingEl) loadingEl.hidden = false;
+    }
+
+    function showEmpty() {
+      hideAll();
+      if (emptyEl) emptyEl.hidden = false;
+    }
+
+    function showError(msg: string) {
+      hideAll();
+      if (errorText) errorText.textContent = msg;
+      if (errorEl) errorEl.hidden = false;
+    }
+  })();
+</script>
+
+<style is:global>
+  /* ─── Orders page ────────────────────────────────────────────────────── */
+  .orders-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .orders-page__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .orders-page__title {
+    font-family: var(--mona-serif);
+    font-size: 36px;
+    line-height: 1.1;
+    color: var(--mona-text);
+    margin: 0;
+  }
+
+  .orders-page__subtitle {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    color: var(--mona-text-2);
+    margin: 0;
+  }
+
+  /* ─── Loading state ──────────────────────────────────────────────────── */
+  .orders-page__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-8) 0;
+    color: var(--mona-text-3);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+  }
+
+  .orders-page__spinner {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid var(--mona-border);
+    border-top-color: var(--mona-warm);
+    border-radius: 50%;
+    animation: orders-spin 0.7s linear infinite;
+  }
+
+  @keyframes orders-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── Empty state ────────────────────────────────────────────────────── */
+  .orders-page__empty {
+    text-align: center;
+    padding: var(--space-8) var(--space-4);
+    border: 0.5px dashed var(--mona-border);
+  }
+
+  .orders-page__empty-icon {
+    color: var(--mona-text-3);
+    margin-bottom: var(--space-4);
+    display: flex;
+    justify-content: center;
+  }
+
+  .orders-page__empty h2 {
+    font-family: var(--mona-serif);
+    font-size: 22px;
+    color: var(--mona-text);
+    margin: 0 0 var(--space-2);
+  }
+
+  .orders-page__empty p {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+    margin: 0 0 var(--space-5);
+  }
+
+  /* ─── Error state ────────────────────────────────────────────────────── */
+  .orders-page__error {
+    text-align: center;
+    padding: var(--space-6);
+    background: rgb(212 80 80 / 0.08);
+    border-left: 2px solid var(--mona-sale, #c84545);
+  }
+
+  .orders-page__error-text {
+    color: var(--mona-sale, #c84545);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    margin: 0 0 var(--space-3);
+  }
+
+  /* ─── Orders list ────────────────────────────────────────────────────── */
+  .orders-page__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* ─── Order card ─────────────────────────────────────────────────────── */
+  .order-card {
+    border: 0.5px solid var(--mona-border);
+    background: var(--mona-bg);
+    overflow: hidden;
+    transition: border-color var(--motion-fast) var(--ease);
+  }
+
+  .order-card:hover {
+    border-color: var(--mona-warm);
+  }
+
+  .order-card__summary {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4);
+    min-height: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--mona-sans);
+  }
+
+  .order-card__summary-meta {
+    min-width: 0;
+  }
+
+  .order-card__date {
+    font-size: 12px;
+    color: var(--mona-text-3);
+    margin: 0 0 2px;
+  }
+
+  .order-card__number {
+    font-size: 13px;
+    color: var(--mona-text);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .order-card__summary-status {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Status badge színek */
+  .order-card__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .order-card__badge--amber {
+    background: rgb(192 154 80 / 0.12);
+    color: var(--mona-warm);
+  }
+
+  .order-card__badge--blue {
+    background: rgb(80 130 180 / 0.12);
+    color: #4a7298;
+  }
+
+  .order-card__badge--green {
+    background: rgb(120 160 100 / 0.14);
+    color: #5a8a4a;
+  }
+
+  .order-card__badge--gray {
+    background: rgb(150 150 150 / 0.12);
+    color: var(--mona-text-3);
+  }
+
+  .order-card__badge--red {
+    background: rgb(200 70 70 / 0.1);
+    color: var(--mona-sale, #c84545);
+  }
+
+  .order-card__summary-totals {
+    text-align: right;
+    min-width: 0;
+  }
+
+  .order-card__total {
+    font-size: 14px;
+    color: var(--mona-text);
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+
+  .order-card__items-count {
+    font-size: 11px;
+    color: var(--mona-text-3);
+    margin: 0;
+  }
+
+  .order-card__summary-chevron {
+    color: var(--mona-text-3);
+    transition: transform var(--motion-base) var(--ease);
+  }
+
+  .order-card__summary[aria-expanded="true"] .order-card__summary-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* ─── Order detail (accordion) ───────────────────────────────────────── */
+  .order-card__detail {
+    display: none;
+    padding: var(--space-5) var(--space-4) var(--space-4);
+    border-top: 0.5px solid var(--mona-border);
+    background: var(--mona-elevated);
+  }
+
+  .order-card__detail[data-open] {
+    display: block;
+  }
+
+  .order-card__items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .order-card__item {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .order-card__item-img {
+    width: 60px;
+    height: 75px;
+    object-fit: cover;
+    background: var(--mona-bg);
+  }
+
+  .order-card__item-img--placeholder {
+    background: var(--mona-bg);
+  }
+
+  .order-card__item-info {
+    min-width: 0;
+  }
+
+  .order-card__item-name {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mona-text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .order-card__item-name:hover {
+    color: var(--mona-warm);
+    text-decoration: underline;
+  }
+
+  .order-card__item-meta {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    color: var(--mona-text-3);
+    margin: 0;
+  }
+
+  .order-card__item-subtotal {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* ─── Detail grid (szállítás/fizetés/megjegyzés) ───────────────────── */
+  .order-card__details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 0.5px solid var(--mona-border);
+  }
+
+  .order-card__detail-block {
+    min-width: 0;
+  }
+
+  .order-card__note {
+    grid-column: 1 / -1;
+  }
+
+  .order-card__detail-label {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    margin: 0 0 var(--space-1);
+  }
+
+  .order-card__detail-value {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ─── Totals (alul az árbontás) ──────────────────────────────────────── */
+  .order-card__totals {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 0.5px solid var(--mona-border);
+  }
+
+  .order-card__totals-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+  }
+
+  .order-card__totals-row--final {
+    color: var(--mona-text);
+    font-weight: 600;
+    font-size: 14px;
+    padding-top: var(--space-2);
+    border-top: 0.5px solid var(--mona-border);
+  }
+
+  /* ─── Mobile responsive ──────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .order-card__summary {
+      grid-template-columns: 1fr auto;
+      gap: var(--space-3);
+    }
+
+    .order-card__summary-meta {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .order-card__summary-status {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .order-card__summary-totals {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      text-align: right;
+      align-self: center;
+    }
+
+    .order-card__summary-chevron {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: end;
+    }
+
+    .order-card__details-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .order-card__item {
+      grid-template-columns: 50px 1fr auto;
+    }
+
+    .order-card__item-img {
+      width: 50px;
+      height: 62px;
+    }
+  }
+</style>

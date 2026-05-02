@@ -18,7 +18,103 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.1] — 2026-04-27 — Sprint 4.5.1 hotfix — Profil oldal vizuális logika
+## [0.9.2] — 2026-04-27 — Sprint 4.5.2 — Rendelési előzmények ⭐
+
+A vendég profil területén megjelenik a rendelési előzmények oldal: 
+összes korábbi rendelés dátum szerint csökkenően, accordion-szerűen 
+kibontható részletekkel.
+
+### Hozzáadva — TS típusok
+
+- **`src/lib/types/orders.ts`** (~180 sor):
+  - `OrderRow`, `OrderItemRow` — D1 shape-ek (Sprint 3.4 séma + Sprint 4.5.1 
+    `discount_code_id`, `discount_amount_ft`)
+  - `OrderPublic`, `OrderItemPublic` — frontend-friendly view (snake_case → 
+    camelCase, magyar címkék, dátum formázás)
+  - `OrderStatus` — 7 állapot: pending, paid, preparing, shipped, delivered, 
+    cancelled, refunded
+  - `STATUS_LABELS` — magyar nyelvű címkék + színek (amber, blue, green, 
+    gray, red)
+  - `SHIPPING_LABELS`, `PAYMENT_LABELS` — szállítási és fizetési mód címkék
+  - `formatDateHu()` — dátum: "2026. január 15." formátum
+  - `orderRowToPublic(order, items)` — kompozit konverzió (qty összesítés, stb.)
+
+### Hozzáadva — API endpoint
+
+- **`src/pages/api/profile/orders.ts`** (~100 sor):
+  - `GET /api/profile/orders`
+  - Auth required (`getCurrentCustomer` — 401 ha nincs cookie)
+  - **BATCH lookup**: rendelések → `IN (...)` query az összes order_items-re 
+    egyszerre (nem N+1 lekérés)
+  - Csoportosítás `Map<order_id, items[]>` szerint
+  - Vissza `OrderPublic[]` — dátum DESC sorrendben
+  - Outer try/catch: minden exception strukturált 500 JSON
+  - Nincs pagination: várhatóan 0-50 rendelés vendégenként, egy lekérés elég
+
+### Hozzáadva — `/profil/rendelesek` oldal
+
+- **`src/pages/profil/rendelesek.astro`** (~600 sor):
+  - **Page header**: "Rendelések" + alcím
+  - **3 állapot dinamikusan**:
+    - **Loading**: spinner + "Rendelések betöltése..."
+    - **Empty**: SVG ikon + *"Még nincsenek rendeléseid"* + CTA "Webshop megnézése"
+    - **Error**: piros panel + "Újrapróbálás" gomb
+  - **Order card** (accordion):
+    - **Summary** (összecsukva): dátum, rendelés szám, **státusz badge** 
+      (színes), összeg, termékszám, chevron lefelé
+    - **Detail** (kibontva, klikk után): 
+      - **Tételek lista**: kép (60×75 px), név (link a termékre), 
+        qty × egységár, részösszeg
+      - **Szállítási cím** (FoxPost vagy személyes átvétel)
+      - **Fizetési mód** (átutalás / utánvét / SimplePay)
+      - **Megjegyzés** (ha van)
+      - **Totals**: részösszeg, kedvezmény (ha van), szállítás, **összesen**
+  - **Mobile responsive**: a summary 4-oszlopból 2-oszlopra alakul, a chevron 
+    átmegy a 2. oszlop aljára
+
+### Vizuális részletek
+
+- **Status badge színek**:
+  - 🟡 Amber: `pending` (Fizetésre vár)
+  - 🔵 Blue: `paid`, `preparing`, `shipped` (folyamatban)
+  - 🟢 Green: `delivered` (leszállítva)
+  - ⚪ Gray: `cancelled`, `refunded`
+  - 🔴 Red: (nincs használatban most, jövőbeli flag-ekhez)
+- **Hover effect**: a card border patina aranyra vált
+- **Accordion ikon**: chevron lefelé, kibontva 180°-os forgatás (smooth)
+- **Detail bg**: `--mona-elevated` (a paletta szürkéje) — vizuálisan elkülöníti 
+  a summary-tól
+
+### UX részletek
+
+- **A termék-link a rendelésben** a `/termek/{slug}` oldalra mutat — ha a vendég 
+  újra akarja venni vagy megnézni a termék részleteit
+- **Termék kép placeholder**: ha `product_image_url IS NULL`, üres szürke doboz 
+  (nem hibázik a `<img src="">`)
+- **Termék snapshot adatok**: `product_name`, `product_image_url`, 
+  `price_at_order_ft` a rendeléskor "lefagyasztott" — még akkor is helyesen 
+  mutat ha azóta megváltozott a termék
+
+### Mit NEM csinál még (Sprint 4.5.x)
+
+- ❌ Pagination (jelenleg az összes rendelés egyben)
+- ❌ Szűrés (státusz / dátum tartomány / termék)
+- ❌ "Számla letöltése PDF-ben" — Sprint 5+
+- ❌ "Reklamáció / visszaküldés" gomb — Sprint 6+ (return management)
+- ❌ "Újra megrendelés" gomb (egy klikkel ugyanazokat a termékeket kosárba) — 
+  Sprint 5+
+
+### Fájlok (3 új)
+
+- `src/lib/types/orders.ts`
+- `src/pages/api/profile/orders.ts`
+- `src/pages/profil/rendelesek.astro`
+- `package.json` — `0.9.1` → `0.9.2`
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Változott
 
