@@ -18,7 +18,82 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.14] — 2026-04-27 — Sprint 4.5.x — Címkönyv form UX finomítások
+## [0.9.15] — 2026-04-27 — Sprint 4.5.x — Címkönyv form egyszerűsítés (4 → 2 checkbox)
+
+### Vendég visszajelzés
+
+> *"szerintem nem kell 4 választási opció csak az alsó kettő, nem láttam sehol 
+> ilyet. Ezek szerintem törölhetők, nem?"*
+
+Igaza van. **A "Szállításra használható" + "Számlázásra használható" 
+checkbox-ok feleslegesek**:
+
+- A vendég **összezavarodik** ("mit jelent ez egyáltalán?")
+- **Sephora, Amazon, Aliexpress** sem kérdezi ezt — minden cím alapból mindkettőre
+  használható
+- A valós használati eset hogy "csak számlázási" és "csak szállítási" cím külön —
+  **ritka**, és a vendéget **nem szabad** a saját kényelméért megterhelni
+
+### Javítás
+
+#### Markup
+A felső két checkbox **TÖRÖLVE**. Csak az alsó kettő marad:
+- Alapértelmezett szállítási cím
+- Alapértelmezett számlázási cím
+
+#### Frontend logika
+A `body.isShipping` és `body.isBilling` mindig `true` küldve a backend-nek
+(implicit, nem a felhasználótól). A szerkesztésnél már nem prefilling-eljük
+őket (mert nincs is checkbox).
+
+#### Footer linkek a kártyákon
+```javascript
+${!addr.isDefaultShipping && addr.isShipping ? "..." : ""}
+                              ^^^^^^^^^^^^^^^
+                              mostantól mindig true → felesleges
+```
+
+Egyszerűsítve:
+```javascript
+${!addr.isDefaultShipping ? "..." : ""}
+```
+
+### Backend változatlan
+
+A `customer_addresses.is_shipping` és `is_billing` mezők **megmaradnak** a D1
+sémában (későbbi visszahelyezhető rugalmasság), de a frontend **mindig 1-et**
+küld nekik. **Backwards-compat**: a Sprint 5+ admin felület esetleg
+visszakapcsolhatja a kettő közti különbséget, ha valós igény jelentkezik
+(pl. Mónika vendégeinek).
+
+### Vizuális változás
+
+```
+Most (v0.9.14, 4 checkbox):
+┌──────────────────────────────────────┐
+│ BEÁLLÍTÁSOK                           │
+│ ☑ Szállításra használható  ☑ Számlázásra használható │
+│ ☐ Alap. szállítási cím      ☐ Alap. számlázási cím    │
+└──────────────────────────────────────┘
+
+v0.9.15 után (2 checkbox):
+┌──────────────────────────────────────┐
+│ BEÁLLÍTÁSOK                           │
+│ ☐ Alapértelmezett szállítási cím    │
+│ ☐ Alapértelmezett számlázási cím    │
+└──────────────────────────────────────┘
+```
+
+Tisztább, **kevésbé túltechnizált**. Az átlagos vendég **azonnal** érti.
+
+### Fájlok (3)
+- `package.json` — `0.9.14` → `0.9.15`
+- `src/pages/profil/cimek.astro` — markup + JS egyszerűsítés
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### 3 problémát javítva (vendég visszajelzés alapján)
 

@@ -107,16 +107,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
             <div class="address-form-block__settings-grid">
               <label class="address-form-block__checkbox">
-                <input type="checkbox" name="isShipping" checked />
-                <span>Szállításra használható</span>
-              </label>
-
-              <label class="address-form-block__checkbox">
-                <input type="checkbox" name="isBilling" checked />
-                <span>Számlázásra használható</span>
-              </label>
-
-              <label class="address-form-block__checkbox">
                 <input type="checkbox" name="setDefaultShipping" data-default-shipping />
                 <span>Alapértelmezett szállítási cím</span>
               </label>
@@ -296,8 +286,8 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
             <p class="address-card__address">${escape(addr.postalCode)} ${escape(addr.city)}, ${escape(addr.street)}</p>
           </div>
           <div class="address-card__footer">
-            ${!addr.isDefaultShipping && addr.isShipping ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="shipping">Tedd szállítási default-tá</button>` : ""}
-            ${!addr.isDefaultBilling && addr.isBilling ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="billing">Tedd számlázási default-tá</button>` : ""}
+            ${!addr.isDefaultShipping ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="shipping">Tedd szállítási default-tá</button>` : ""}
+            ${!addr.isDefaultBilling ? `<button type="button" class="address-card__set-default" data-default-id="${addr.id}" data-default-type="billing">Tedd számlázási default-tá</button>` : ""}
           </div>
         </li>
       `;
@@ -341,8 +331,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         (form!.querySelector("[name='street']") as HTMLInputElement).value = addr.street;
         (form!.querySelector("[name='postalCode']") as HTMLInputElement).value = addr.postalCode;
         (form!.querySelector("[name='city']") as HTMLInputElement).value = addr.city;
-        (form!.querySelector("[name='isShipping']") as HTMLInputElement).checked = addr.isShipping;
-        (form!.querySelector("[name='isBilling']") as HTMLInputElement).checked = addr.isBilling;
         (form!.querySelector("[name='setDefaultShipping']") as HTMLInputElement).checked = addr.isDefaultShipping;
         (form!.querySelector("[name='setDefaultBilling']") as HTMLInputElement).checked = addr.isDefaultBilling;
 
@@ -391,8 +379,9 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         city: String(formData.get("city") || ""),
         postalCode: String(formData.get("postalCode") || ""),
         country: "HU",
-        isShipping: formData.get("isShipping") === "on",
-        isBilling: formData.get("isBilling") === "on",
+        // v0.9.15: minden cím alapból mindkettőre használható (egyszerűbb UX)
+        isShipping: true,
+        isBilling: true,
         setDefaultShipping: formData.get("setDefaultShipping") === "on",
         setDefaultBilling: formData.get("setDefaultBilling") === "on",
       };
