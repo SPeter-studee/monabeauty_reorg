@@ -7,10 +7,99 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Hozzáadás tervezett
-- _Sprint 4.3 — Google OAuth integráció_
-- _Sprint 4.4 — Facebook Login_
-- _Sprint 4.5 — Profil oldalak + email verifikáció + password reset_
+- _Sprint 4.5.2 — `/profil/rendelesek` (rendelési előzmények)_
+- _Sprint 4.5.3 — `/profil/cimek` (címkönyv CRUD)_
+- _Sprint 4.5.4 — `/profil/kivansaglista` (wishlist)_
+- _Sprint 4.5.5 — Email verifikáció + welcome email + discount code generálás_
+- _Sprint 4.5.6 — Password reset flow_
+- _Sprint 4.5.7 — Discount code validation a checkout-on_
+- _Sprint 4.4 — Facebook Login (most átugorva, Sprint 5 utánra halasztva)_
 - _Sprint 5 — Admin (Mónika) + termékkártya finomítás_
+
+---
+
+## [0.9.0] — 2026-04-27 — Sprint 4.5.1 — Profil oldalak alapozó (D1 + sidebar layout) ⭐
+
+**MINOR bump** — Sprint 4.5 első csomagja. A `/profil` oldal mostantól élő, 
+a sidebar layout készen áll a többi profil oldal befogadására.
+
+### Architektúra döntések (rögzítve)
+
+- **Profil layout**: **C — Sidebar layout** (luxury, hosszú távú). Bal oldali 
+  fix nav desktop-on, horizontális scroll-os tab nav mobile-on. Glossier / 
+  Net-a-Porter inspiráció.
+- **Email verifikáció**: **C — soft, csak a -10% bónuszhoz kötelező**. 
+  A vendég rendelhet anélkül is, de a kedvezmény csak verifikált fióknál.
+- **Mailchimp -10% bónusz**: **A — discount code email-ben**. Egyedi 
+  `WELCOME-XXXXXX` formátumú kód, a checkout-on beírható.
+
+### Hozzáadva — Adatbázis (D1)
+
+- **`migrations/0004_sprint4_5_profile.sql`**:
+  - `discount_codes` tábla (vendég-specifikus + általános kuponkódok)
+  - `customers.welcome_discount_issued_at` flag
+  - `orders.discount_code_id` (FK) + `orders.discount_amount_ft`
+
+### Hozzáadva — TS típusok
+
+- **`src/lib/types/profile.ts`** — `ProfileUpdateRequest`, `DiscountCodeRow`, 
+  `DiscountValidationResult`
+
+### Hozzáadva — Layout
+
+- **`src/layouts/ProfileLayout.astro`** (~430 sor):
+  - 2-oszlopos grid desktop-on (240px sidebar + 1fr content)
+  - Mobile-on: horizontális scroll-os tab nav
+  - Üdvözlő blokk + 4 nav link + Kijelentkezés
+  - Bal oldali patina arany akcentus az aktív tab-on (luxury)
+  - Auth védelem (kliens oldali): "Belépés szükséges" panel ha nem logged-in
+  - Auto-feltöltés a `subscribeAuthState` callback-en
+
+### Hozzáadva — `/profil` oldal
+
+- **`src/pages/profil/index.astro`** (~480 sor):
+  - Adatszerkesztő form (keresztnév, vezetéknév, telefon)
+  - Email mező readonly + hint
+  - Verifikációs banner (most rejtett, Sprint 4.5.5-ben aktív)
+  - Bejelentkezési módok overview (jelszó / Google / Facebook státusz)
+  - Mentés gomb loading állapottal
+  - Magyar nyelvű siker- és hibaüzenetek
+
+### Hozzáadva — API
+
+- **`src/pages/api/profile/update.ts`**:
+  - POST endpoint, auth required
+  - UPDATE customers (csak first_name, last_name, phone)
+  - Outer try/catch + struktúrált JSON 500
+  - Vissza a frissített `CustomerPublic`
+
+### Migráció
+
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0004_sprint4_5_profile.sql
+
+# Ellenőrzés:
+npx wrangler d1 execute monastudio-v2-db --remote --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+# Várt: ..., discount_codes, ...
+```
+
+### Mit NEM csinál még
+
+- ❌ A többi 3 sidebar link (Rendelések, Címeim, Kívánságlista) **404-be vezet** 
+  — Sprint 4.5.2-4 tölti fel
+- ❌ Verifikációs banner most **mindig rejtett** (a logika fent van, de a 
+  banner gomb-ot Sprint 4.5.5-ben kötjük be)
+- ❌ Welcome email, password reset, discount code beváltás — Sprint 4.5.5-7
+
+### Fájlok (5 új + 2 módosított)
+
+- `migrations/0004_sprint4_5_profile.sql`
+- `src/lib/types/profile.ts`
+- `src/layouts/ProfileLayout.astro`
+- `src/pages/profil/index.astro`
+- `src/pages/api/profile/update.ts`
+- `package.json` — `0.8.9` → `0.9.0` (MINOR)
+- `docs/09-changelog.md`
 
 ---
 

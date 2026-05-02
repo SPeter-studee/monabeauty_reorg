@@ -1,0 +1,393 @@
+---
+// src/layouts/ProfileLayout.astro
+// Sprint 4.5.1 — Profil oldalak közös sidebar layout
+//
+// Használat (egy konkrét profil oldalon):
+//   ---
+//   import ProfileLayout from "@/layouts/ProfileLayout.astro";
+//   ---
+//   <ProfileLayout currentSection="profile" title="Profilom">
+//     <h1>Adatok</h1>
+//     <form>...</form>
+//   </ProfileLayout>
+//
+// A ProfileLayout maga belül a BaseLayout-ot használja (ami a header / footer / 
+// CartDrawer / AuthModal-ot adja). Erre épül a 2-oszlopos profil rész:
+//   - Bal oldal: sidebar nav + üdvözlő
+//   - Jobb oldal: az átadott <slot> (az adott oldal tartalma)
+//
+// Mobile-on a sidebar átalakul:
+//   - Üdvözlés blokk fent
+//   - Horizontális scroll-os tab nav
+//   - Tartalom alatta
+//
+// A logged-in védelem KLIENS oldali (a header subscribeAuthState ellenőrzi):
+// ha a vendég nincs bejelentkezve, a /profil oldal megnyílik egy "Belépés szükséges"
+// üzenettel, és a login modal automatikusan megnyílik. Server-side védelmet 
+// Sprint 5+-ban adhatunk a Cloudflare Access vagy custom middleware révén.
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+interface Props {
+  /** A jelenlegi szekció kulcsa — vezérli a sidebar aktív tab-ját */
+  currentSection: "profile" | "orders" | "addresses" | "wishlist";
+  /** A page title a <head>-be */
+  title: string;
+  /** Opcionális SEO description (a Sprint 5+ admin-os oldalakra) */
+  description?: string;
+}
+
+const { currentSection, title, description } = Astro.props;
+
+// Sidebar nav elemek — egyetlen forrásból, hogy könnyű legyen módosítani
+const navItems = [
+  { key: "profile", label: "Profilom", href: "/profil", icon: "user" },
+  { key: "orders", label: "Rendelések", href: "/profil/rendelesek", icon: "orders" },
+  { key: "addresses", label: "Címeim", href: "/profil/cimek", icon: "address" },
+  { key: "wishlist", label: "Kívánságlista", href: "/profil/kivansaglista", icon: "heart" },
+];
+---
+
+<BaseLayout title={`${title} — Mona Studio`} description={description}>
+  <div class="profile-layout" data-profile-layout>
+    {/* ── Védelem placeholder — JS-ben aktiválódik ─────────────────────── */}
+    <div class="profile-layout__guard" data-profile-guard hidden>
+      <div class="profile-layout__guard-inner">
+        <h2>Belépés szükséges</h2>
+        <p>Ez az oldal csak bejelentkezett vendégeknek elérhető.</p>
+        <button type="button" class="btn btn-primary" data-open-login>
+          Bejelentkezés
+        </button>
+      </div>
+    </div>
+
+    {/* ── Tényleges profil tartalom ──────────────────────────────────────── */}
+    <div class="profile-layout__container" data-profile-container hidden>
+      {/* Bal oldal: sidebar (desktop) / felső blokk (mobile) */}
+      <aside class="profile-layout__sidebar">
+        <div class="profile-layout__greeting">
+          <p class="profile-layout__greeting-eyebrow">Üdv,</p>
+          <p class="profile-layout__greeting-name" data-profile-name>—</p>
+          <p class="profile-layout__greeting-email" data-profile-email>—</p>
+        </div>
+
+        <nav class="profile-layout__nav" aria-label="Profil menü">
+          {navItems.map((item) => (
+            <a
+              href={item.href}
+              class={`profile-layout__nav-link ${item.key === currentSection ? "profile-layout__nav-link--active" : ""}`}
+              aria-current={item.key === currentSection ? "page" : undefined}
+            >
+              {item.icon === "user" && (
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+                </svg>
+              )}
+              {item.icon === "orders" && (
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="1"/>
+                  <path d="M8 9h8M8 13h8M8 17h5"/>
+                </svg>
+              )}
+              {item.icon === "address" && (
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/>
+                  <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+              )}
+              {item.icon === "heart" && (
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 21l-1.5-1.4C5 14.5 2 11.7 2 8.2 2 5.5 4.1 3.5 6.7 3.5c1.5 0 3 .7 3.9 1.8l1.4 1.7 1.4-1.7c.9-1.1 2.4-1.8 3.9-1.8 2.6 0 4.7 2 4.7 4.7 0 3.5-3 6.3-8.5 11.4L12 21z"/>
+                </svg>
+              )}
+              <span>{item.label}</span>
+            </a>
+          ))}
+
+          <hr class="profile-layout__divider"/>
+
+          <button type="button" class="profile-layout__nav-link profile-layout__nav-link--logout" data-logout-btn>
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span>Kijelentkezés</span>
+          </button>
+        </nav>
+      </aside>
+
+      {/* Jobb oldal: az adott profil oldal tartalma */}
+      <main class="profile-layout__content">
+        <slot />
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ── Auth védelem + adatok feltöltés ─────────────────────────────────────
+    import {
+      refreshAuthState,
+      subscribeAuthState,
+      openAuthModal,
+      setAnonymous,
+      getAuthState,
+    } from "@/lib/auth-state";
+
+    (() => {
+      const guard = document.querySelector<HTMLElement>("[data-profile-guard]");
+      const container = document.querySelector<HTMLElement>("[data-profile-container]");
+      const profileName = document.querySelector<HTMLElement>("[data-profile-name]");
+      const profileEmail = document.querySelector<HTMLElement>("[data-profile-email]");
+      const openLoginBtn = document.querySelector<HTMLButtonElement>("[data-open-login]");
+      const logoutBtn = document.querySelector<HTMLButtonElement>("[data-logout-btn]");
+
+      if (!guard || !container) return;
+
+      // Initial state lookup
+      refreshAuthState();
+
+      subscribeAuthState((state) => {
+        if (state.status === "loading") {
+          // Ne mutass semmit amíg nem tudjuk az állapotot
+          guard.hidden = true;
+          container.hidden = true;
+          return;
+        }
+
+        if (state.status === "authenticated" && state.customer) {
+          guard.hidden = true;
+          container.hidden = false;
+
+          const greetingName = state.customer.firstName || "Vendég";
+          if (profileName) profileName.textContent = greetingName;
+          if (profileEmail) profileEmail.textContent = state.customer.email;
+        } else {
+          // Anonymous — mutass guard-ot és nyiss login modalt
+          guard.hidden = false;
+          container.hidden = true;
+        }
+      });
+
+      // "Bejelentkezés" gomb a guard-on
+      openLoginBtn?.addEventListener("click", () => {
+        openAuthModal("login");
+      });
+
+      // Sidebar logout gomb
+      logoutBtn?.addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (err) {
+          console.warn("[profile] logout request failed:", err);
+        }
+        setAnonymous();
+        // Visszaterelés a főoldalra
+        window.location.href = "/";
+      });
+    })();
+  </script>
+
+  <style is:global>
+    /* ─── PROFILE LAYOUT ────────────────────────────────────────────────── */
+    .profile-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4);
+    }
+
+    /* Guard (logged-out állapot) ─────────────────────────────────────────── */
+    .profile-layout__guard {
+      max-width: 480px;
+      margin: var(--space-8) auto;
+      padding: var(--space-8) var(--space-6);
+      text-align: center;
+    }
+
+    .profile-layout__guard-inner h2 {
+      font-family: var(--mona-serif);
+      font-size: 28px;
+      color: var(--mona-text);
+      margin: 0 0 var(--space-3);
+    }
+
+    .profile-layout__guard-inner p {
+      font-family: var(--mona-sans);
+      font-size: 14px;
+      color: var(--mona-text-2);
+      margin: 0 0 var(--space-5);
+    }
+
+    /* Container (logged-in 2-oszlopos) ───────────────────────────────────── */
+    .profile-layout__container {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: var(--space-8);
+    }
+
+    /* Sidebar ─────────────────────────────────────────────────────────────── */
+    .profile-layout__sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    .profile-layout__greeting {
+      padding: var(--space-4) 0 var(--space-4);
+      border-bottom: 0.5px solid var(--mona-border);
+    }
+
+    .profile-layout__greeting-eyebrow {
+      font-family: var(--mona-sans);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mona-text-3);
+      margin: 0;
+    }
+
+    .profile-layout__greeting-name {
+      font-family: var(--mona-serif);
+      font-size: 24px;
+      color: var(--mona-text);
+      margin: var(--space-1) 0 var(--space-1);
+    }
+
+    .profile-layout__greeting-email {
+      font-family: var(--mona-sans);
+      font-size: 12px;
+      color: var(--mona-text-3);
+      margin: 0;
+      word-break: break-all;
+    }
+
+    /* Nav links ──────────────────────────────────────────────────────────── */
+    .profile-layout__nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .profile-layout__nav-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-3);
+      min-height: 0;
+      border: none;
+      background: transparent;
+      color: var(--mona-text-2);
+      font-family: var(--mona-sans);
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: background var(--motion-fast) var(--ease),
+                  color var(--motion-fast) var(--ease);
+    }
+
+    .profile-layout__nav-link:hover {
+      background: var(--mona-elevated);
+      color: var(--mona-text);
+    }
+
+    .profile-layout__nav-link--active {
+      color: var(--mona-text);
+      background: var(--mona-elevated);
+      font-weight: 500;
+      /* Bal oldali arany akcentus a luxury-érzéshez */
+      box-shadow: inset 2px 0 0 0 var(--mona-warm);
+    }
+
+    .profile-layout__nav-link svg {
+      flex-shrink: 0;
+      color: var(--mona-text-3);
+    }
+
+    .profile-layout__nav-link:hover svg,
+    .profile-layout__nav-link--active svg {
+      color: var(--mona-warm);
+    }
+
+    .profile-layout__nav-link--logout {
+      color: var(--mona-text-3);
+    }
+
+    .profile-layout__nav-link--logout:hover {
+      color: var(--mona-sale, #c84545);
+      background: transparent;
+    }
+
+    .profile-layout__nav-link--logout:hover svg {
+      color: var(--mona-sale, #c84545);
+    }
+
+    .profile-layout__divider {
+      border: none;
+      border-top: 0.5px solid var(--mona-border);
+      margin: var(--space-3) 0;
+    }
+
+    /* Content (jobb oldal) ───────────────────────────────────────────────── */
+    .profile-layout__content {
+      min-width: 0; /* flex/grid overflow védelem */
+    }
+
+    /* ─── MOBILE responsive ─────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .profile-layout {
+        padding: var(--space-4) var(--space-3);
+      }
+
+      .profile-layout__container {
+        grid-template-columns: 1fr;
+        gap: var(--space-5);
+      }
+
+      .profile-layout__greeting {
+        padding-top: 0;
+      }
+
+      .profile-layout__greeting-name {
+        font-size: 22px;
+      }
+
+      /* Mobile nav: horizontális scroll */
+      .profile-layout__nav {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0;
+        padding-bottom: var(--space-2);
+        border-bottom: 0.5px solid var(--mona-border);
+      }
+
+      .profile-layout__nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .profile-layout__nav-link {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: var(--space-3) var(--space-4);
+      }
+
+      .profile-layout__nav-link--active {
+        /* Mobile-on alulra kerül az akcentus, nem balra */
+        box-shadow: inset 0 -2px 0 0 var(--mona-warm);
+      }
+
+      .profile-layout__nav-link--logout {
+        margin-left: auto;
+      }
+
+      .profile-layout__divider {
+        display: none;
+      }
+    }
+  </style>
+</BaseLayout>

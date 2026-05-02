@@ -1,0 +1,508 @@
+---
+// src/pages/profil/index.astro
+// Sprint 4.5.1 — Profil adatok szerkesztés
+//
+// Mit jelenít meg:
+//   - Keresztnév + Vezetéknév (szerkeszthető)
+//   - Telefon (szerkeszthető)
+//   - Email (csak olvasható — Sprint 4.5.5-ben lesz email-csere flow)
+//   - Login providerek (jelszó / Google / Facebook) — vizuális overview
+//   - Verifikáció státusz (✓ verifikált / ⚠ még nem verifikálva)
+//   - "Jelszó megváltoztatása" link → Sprint 4.5.6-ban
+//
+// A "Mentés" gomb POST /api/profile/update-ra küld.
+
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+---
+
+<ProfileLayout currentSection="profile" title="Profilom">
+  <div class="profile-page">
+    <header class="profile-page__header">
+      <h1 class="profile-page__title">Profilom</h1>
+      <p class="profile-page__subtitle">Itt kezelheted a fiókod alapadatait.</p>
+    </header>
+
+    {/* Verifikáció státusz banner — Sprint 4.5.5 töltese fel */}
+    <div class="profile-page__banner profile-page__banner--unverified" data-verify-banner hidden>
+      <div class="profile-page__banner-content">
+        <strong>Email cím verifikálása szükséges</strong>
+        <p>Verifikáld az email címedet a regisztrációkor kapott linken,
+           hogy elérhesd a -10% kedvezményt és más bónuszokat.</p>
+      </div>
+      <button type="button" class="btn-secondary" data-resend-verify hidden>
+        Verifikációs email újra küldése
+      </button>
+    </div>
+
+    {/* Profil adatok form */}
+    <form class="profile-page__form" data-profile-form novalidate>
+      <h2 class="profile-page__section-title">Személyes adatok</h2>
+
+      <div class="profile-page__field-row">
+        <div class="profile-page__field">
+          <label class="profile-page__label" for="profile-firstname">Keresztnév</label>
+          <input
+            type="text"
+            id="profile-firstname"
+            name="firstName"
+            class="profile-page__input"
+            autocomplete="given-name"
+            maxlength="50"
+          />
+        </div>
+
+        <div class="profile-page__field">
+          <label class="profile-page__label" for="profile-lastname">Vezetéknév</label>
+          <input
+            type="text"
+            id="profile-lastname"
+            name="lastName"
+            class="profile-page__input"
+            autocomplete="family-name"
+            maxlength="50"
+          />
+        </div>
+      </div>
+
+      <div class="profile-page__field">
+        <label class="profile-page__label" for="profile-email">Email cím</label>
+        <input
+          type="email"
+          id="profile-email"
+          class="profile-page__input"
+          readonly
+          data-profile-email-input
+        />
+        <p class="profile-page__hint">
+          Az email cím megváltoztatásához vedd fel a kapcsolatot a Mona Studioval.
+        </p>
+      </div>
+
+      <div class="profile-page__field">
+        <label class="profile-page__label" for="profile-phone">Telefonszám</label>
+        <input
+          type="tel"
+          id="profile-phone"
+          name="phone"
+          class="profile-page__input"
+          autocomplete="tel"
+          placeholder="+36 30 123 4567"
+          maxlength="20"
+        />
+      </div>
+
+      <p class="profile-page__error" data-profile-error hidden></p>
+      <p class="profile-page__success" data-profile-success hidden></p>
+
+      <div class="profile-page__actions">
+        <button type="submit" class="btn btn-primary" data-profile-submit>
+          <span class="profile-page__submit-text">Mentés</span>
+          <span class="profile-page__submit-loading" hidden>Mentés...</span>
+        </button>
+      </div>
+    </form>
+
+    {/* Bejelentkezési módok overview */}
+    <section class="profile-page__providers">
+      <h2 class="profile-page__section-title">Bejelentkezési módok</h2>
+
+      <ul class="profile-page__providers-list">
+        <li class="profile-page__provider" data-provider="password">
+          <div class="profile-page__provider-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div class="profile-page__provider-info">
+            <p class="profile-page__provider-name">Email + jelszó</p>
+            <p class="profile-page__provider-status" data-provider-status="password">—</p>
+          </div>
+          <a href="#" class="profile-page__provider-action" data-provider-action="password">
+            <!-- Sprint 4.5.6-ban élő -->
+          </a>
+        </li>
+
+        <li class="profile-page__provider" data-provider="google">
+          <div class="profile-page__provider-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+            </svg>
+          </div>
+          <div class="profile-page__provider-info">
+            <p class="profile-page__provider-name">Google fiók</p>
+            <p class="profile-page__provider-status" data-provider-status="google">—</p>
+          </div>
+        </li>
+
+        <li class="profile-page__provider" data-provider="facebook">
+          <div class="profile-page__provider-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#1877F2" aria-hidden="true">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </div>
+          <div class="profile-page__provider-info">
+            <p class="profile-page__provider-name">Facebook fiók</p>
+            <p class="profile-page__provider-status" data-provider-status="facebook">—</p>
+          </div>
+        </li>
+      </ul>
+    </section>
+  </div>
+</ProfileLayout>
+
+<script>
+  // ── Profil oldal logika ─────────────────────────────────────────────────
+  import { subscribeAuthState } from "@/lib/auth-state";
+
+  (() => {
+    const form = document.querySelector<HTMLFormElement>("[data-profile-form]");
+    const firstName = document.querySelector<HTMLInputElement>("#profile-firstname");
+    const lastName = document.querySelector<HTMLInputElement>("#profile-lastname");
+    const email = document.querySelector<HTMLInputElement>("[data-profile-email-input]");
+    const phone = document.querySelector<HTMLInputElement>("#profile-phone");
+    const submitBtn = document.querySelector<HTMLButtonElement>("[data-profile-submit]");
+    const errorEl = document.querySelector<HTMLElement>("[data-profile-error]");
+    const successEl = document.querySelector<HTMLElement>("[data-profile-success]");
+    const verifyBanner = document.querySelector<HTMLElement>("[data-verify-banner]");
+
+    // Provider státusz elements
+    const providerStatuses = {
+      password: document.querySelector<HTMLElement>('[data-provider-status="password"]'),
+      google: document.querySelector<HTMLElement>('[data-provider-status="google"]'),
+      facebook: document.querySelector<HTMLElement>('[data-provider-status="facebook"]'),
+    };
+
+    if (!form) return;
+
+    // Auth state subscribe — feltöltjük az adatokat
+    subscribeAuthState((state) => {
+      if (state.status !== "authenticated" || !state.customer) return;
+
+      const c = state.customer;
+      if (firstName) firstName.value = c.firstName || "";
+      if (lastName) lastName.value = c.lastName || "";
+      if (email) email.value = c.email;
+      if (phone) phone.value = c.phone || "";
+
+      // Verifikációs banner
+      if (verifyBanner) {
+        verifyBanner.hidden = c.emailVerified;
+      }
+
+      // Provider státusz
+      if (providerStatuses.password) {
+        providerStatuses.password.textContent = c.hasPassword
+          ? "Aktív"
+          : "Nincs jelszó beállítva";
+      }
+      if (providerStatuses.google) {
+        providerStatuses.google.textContent = c.oauthProviders.includes("google")
+          ? "Összekapcsolva"
+          : "Nincs összekapcsolva";
+      }
+      if (providerStatuses.facebook) {
+        providerStatuses.facebook.textContent = c.oauthProviders.includes("facebook")
+          ? "Összekapcsolva"
+          : "Nincs összekapcsolva";
+      }
+    });
+
+    // Form submit
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await handleSubmit();
+    });
+
+    async function handleSubmit() {
+      hideMessage(errorEl);
+      hideMessage(successEl);
+      setLoading(true);
+
+      const body = {
+        firstName: firstName?.value.trim() || null,
+        lastName: lastName?.value.trim() || null,
+        phone: phone?.value.trim() || null,
+      };
+
+      try {
+        const res = await fetch("/api/profile/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        const text = await res.text();
+        let data: any = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          console.error("[profile] non-JSON response:", text);
+        }
+
+        if (!res.ok || !data.success) {
+          let msg = data.message || `Mentés sikertelen (HTTP ${res.status}).`;
+          if (data.debug) msg += ` [debug: ${data.debug}]`;
+          showMessage(errorEl, msg);
+          setLoading(false);
+          return;
+        }
+
+        showMessage(successEl, "Adatok sikeresen mentve.");
+        setLoading(false);
+      } catch (err) {
+        console.error("[profile] update error:", err);
+        showMessage(errorEl, "Hálózati hiba. Próbáld újra.");
+        setLoading(false);
+      }
+    }
+
+    function setLoading(loading: boolean) {
+      if (!submitBtn) return;
+      const text = submitBtn.querySelector<HTMLElement>(".profile-page__submit-text");
+      const loadingEl = submitBtn.querySelector<HTMLElement>(".profile-page__submit-loading");
+      if (text) text.hidden = loading;
+      if (loadingEl) loadingEl.hidden = !loading;
+      submitBtn.disabled = loading;
+    }
+
+    function showMessage(el: HTMLElement | null, msg: string) {
+      if (!el) return;
+      el.textContent = msg;
+      el.hidden = false;
+    }
+
+    function hideMessage(el: HTMLElement | null) {
+      if (!el) return;
+      el.textContent = "";
+      el.hidden = true;
+    }
+  })();
+</script>
+
+<style is:global>
+  /* ─── PROFILE PAGE (általános — minden /profil/* oldal használja) ─── */
+  .profile-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+  }
+
+  .profile-page__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .profile-page__title {
+    font-family: var(--mona-serif);
+    font-size: 36px;
+    line-height: 1.1;
+    color: var(--mona-text);
+    margin: 0;
+  }
+
+  .profile-page__subtitle {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    color: var(--mona-text-2);
+    margin: 0;
+  }
+
+  .profile-page__section-title {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  /* ─── Verification banner ───────────────────────────────────────────── */
+  .profile-page__banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border: 0.5px solid var(--mona-border);
+    background: var(--mona-elevated);
+  }
+
+  .profile-page__banner--unverified {
+    border-left: 3px solid var(--mona-warm);
+  }
+
+  .profile-page__banner-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .profile-page__banner-content strong {
+    display: block;
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mona-text);
+    margin-bottom: var(--space-1);
+  }
+
+  .profile-page__banner-content p {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-2);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ─── Form ───────────────────────────────────────────────────────────── */
+  .profile-page__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .profile-page__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .profile-page__field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 600px) {
+    .profile-page__field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .profile-page__label {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+  }
+
+  .profile-page__input {
+    padding: 10px var(--space-3);
+    background: var(--mona-bg);
+    border: 0.5px solid var(--mona-border);
+    color: var(--mona-text);
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    transition: border-color var(--motion-fast) var(--ease);
+  }
+
+  .profile-page__input:focus {
+    outline: none;
+    border-color: var(--mona-warm);
+  }
+
+  .profile-page__input[readonly] {
+    background: var(--mona-elevated);
+    color: var(--mona-text-2);
+    cursor: not-allowed;
+  }
+
+  .profile-page__hint {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    color: var(--mona-text-3);
+    margin: 0;
+    font-style: italic;
+  }
+
+  .profile-page__error {
+    background: rgb(212 80 80 / 0.08);
+    border-left: 2px solid var(--mona-sale, #c84545);
+    color: var(--mona-sale, #c84545);
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .profile-page__success {
+    background: rgb(120 180 120 / 0.1);
+    border-left: 2px solid #5a8a4a;
+    color: #4a7a3a;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .profile-page__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+  }
+
+  .profile-page__submit-text[hidden] {
+    display: none;
+  }
+
+  /* ─── Providers ──────────────────────────────────────────────────────── */
+  .profile-page__providers-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .profile-page__provider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-bottom: 0.5px solid var(--mona-border);
+  }
+
+  .profile-page__provider:last-child {
+    border-bottom: none;
+  }
+
+  .profile-page__provider-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mona-text-2);
+  }
+
+  .profile-page__provider-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .profile-page__provider-name {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mona-text);
+    margin: 0 0 2px;
+  }
+
+  .profile-page__provider-status {
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-text-3);
+    margin: 0;
+  }
+</style>
