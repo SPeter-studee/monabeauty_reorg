@@ -40,23 +40,57 @@ import PageHero from "@/components/common/PageHero.astro";
 
           {/* Vendég adatok */}
           <div class="checkout-section">
-            <h3 class="checkout-section__title">Vásárlói adatok</h3>
+            <div class="checkout-section__header">
+              <h3 class="checkout-section__title">Vásárlói adatok</h3>
+              {/* Sprint 4.5.x — Logged-in chip a fejlécben */}
+              <div class="checkout-loggedin-chip" data-checkout-chip hidden>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+                </svg>
+                <span data-checkout-chip-email>—</span>
+                <button type="button" class="checkout-loggedin-chip__logout" data-checkout-logout title="Kijelentkezés">
+                  Kijelentkezés
+                </button>
+              </div>
+            </div>
+
+            {/* Welcome blokk — csak logged-in vendégeknek */}
+            <div class="checkout-welcome" data-checkout-welcome hidden>
+              <div class="checkout-welcome__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 12l2 2 4-4"/>
+                  <circle cx="12" cy="12" r="10"/>
+                </svg>
+              </div>
+              <div class="checkout-welcome__content">
+                <strong class="checkout-welcome__title">
+                  Üdv újra, <span data-checkout-welcome-name>—</span>!
+                </strong>
+                <p class="checkout-welcome__text">
+                  Az adatokat átvettük a fiókodból. Ha másik címre szeretnéd, alább módosítsd.
+                </p>
+              </div>
+            </div>
 
             <div class="form-row">
               <label class="form-field">
                 <span class="form-field__label">Teljes név <span class="required">*</span></span>
-                <input type="text" name="guestName" required autocomplete="name" />
+                <input type="text" name="guestName" required autocomplete="name" data-checkout-name />
               </label>
             </div>
 
             <div class="form-row form-row--two">
               <label class="form-field">
-                <span class="form-field__label">Email <span class="required">*</span></span>
-                <input type="email" name="guestEmail" required autocomplete="email" />
+                <span class="form-field__label">
+                  Email <span class="required">*</span>
+                  <span class="form-field__hint" data-checkout-email-locked hidden>(fiókod email-je)</span>
+                </span>
+                <input type="email" name="guestEmail" required autocomplete="email" data-checkout-email />
               </label>
               <label class="form-field">
                 <span class="form-field__label">Telefon <span class="required">*</span></span>
-                <input type="tel" name="guestPhone" required autocomplete="tel" placeholder="+36 ..." />
+                <input type="tel" name="guestPhone" required autocomplete="tel" placeholder="+36 ..." data-checkout-phone />
               </label>
             </div>
 
@@ -219,6 +253,7 @@ import PageHero from "@/components/common/PageHero.astro";
   <script>
     import { getCartSummary, clearCart, setShippingMethod } from "@/lib/cart";
     import type { CartItem, ShippingMethod } from "@/lib/types/shop";
+    import { subscribeAuthState, setAnonymous } from "@/lib/auth-state";
 
     const form = document.querySelector<HTMLFormElement>("[data-checkout-form]");
     const emptyContainer = document.querySelector<HTMLElement>("[data-checkout-empty]");
@@ -228,6 +263,75 @@ import PageHero from "@/components/common/PageHero.astro";
     const submitText = document.querySelector<HTMLElement>("[data-submit-text]");
     const errorContainer = document.querySelector<HTMLElement>("[data-checkout-error]");
     const shippingAddressSection = document.querySelector<HTMLElement>("[data-shipping-address-section]");
+
+    // Sprint 4.5.x — Logged-in checkout UX
+    const checkoutChip = document.querySelector<HTMLElement>("[data-checkout-chip]");
+    const checkoutChipEmail = document.querySelector<HTMLElement>("[data-checkout-chip-email]");
+    const checkoutLogout = document.querySelector<HTMLButtonElement>("[data-checkout-logout]");
+    const checkoutWelcome = document.querySelector<HTMLElement>("[data-checkout-welcome]");
+    const checkoutWelcomeName = document.querySelector<HTMLElement>("[data-checkout-welcome-name]");
+    const checkoutEmailLocked = document.querySelector<HTMLElement>("[data-checkout-email-locked]");
+    const inputName = document.querySelector<HTMLInputElement>("[data-checkout-name]");
+    const inputEmail = document.querySelector<HTMLInputElement>("[data-checkout-email]");
+    const inputPhone = document.querySelector<HTMLInputElement>("[data-checkout-phone]");
+
+    // ── Auth state subscribe — auto-fill + chip kezelés ─────────────────
+    subscribeAuthState((state) => {
+      if (state.status === "authenticated" && state.customer) {
+        const c = state.customer;
+        const fullName = [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
+
+        // Auto-fill — csak ha az adott mező még üres (ne írjuk felül a vendég módosítását)
+        if (inputName && !inputName.value && fullName) {
+          inputName.value = fullName;
+          inputName.classList.add("checkout-input--prefilled");
+        }
+        if (inputEmail && !inputEmail.value && c.email) {
+          inputEmail.value = c.email;
+          inputEmail.classList.add("checkout-input--prefilled");
+          // Email mező: readonly logged-in vendégeknek (ne tudjon változtatni)
+          inputEmail.readOnly = true;
+          if (checkoutEmailLocked) checkoutEmailLocked.hidden = false;
+        }
+        if (inputPhone && !inputPhone.value && c.phone) {
+          inputPhone.value = c.phone;
+          inputPhone.classList.add("checkout-input--prefilled");
+        }
+
+        // Chip megjelenítés
+        if (checkoutChip) checkoutChip.hidden = false;
+        if (checkoutChipEmail) checkoutChipEmail.textContent = c.email;
+
+        // Welcome blokk megjelenítés (csak akkor ha van név)
+        if (checkoutWelcome && fullName) {
+          checkoutWelcome.hidden = false;
+          if (checkoutWelcomeName) checkoutWelcomeName.textContent = c.firstName || fullName;
+        }
+      } else {
+        // Anonymous — minden chip rejtve
+        if (checkoutChip) checkoutChip.hidden = true;
+        if (checkoutWelcome) checkoutWelcome.hidden = true;
+        if (inputEmail) {
+          inputEmail.readOnly = false;
+        }
+        if (checkoutEmailLocked) checkoutEmailLocked.hidden = true;
+      }
+    });
+
+    // ── Logout a chip-ről ───────────────────────────────────────────────
+    checkoutLogout?.addEventListener("click", async () => {
+      if (!confirm("Biztosan kijelentkezel? A megadott adatok megmaradnak a form-on.")) return;
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (err) {
+        console.warn("[checkout] logout request failed:", err);
+      }
+      setAnonymous();
+      // Az adatokat hagyjuk a form-on (vendég úgy is továbbmehet)
+    });
 
     function formatPrice(ft: number): string {
       return `${ft.toLocaleString("hu-HU")} Ft`;
@@ -415,6 +519,20 @@ import PageHero from "@/components/common/PageHero.astro";
   margin: 0;
 }
 
+/* Sprint 4.5.x — section header (cím + chip mellette) */
+.checkout-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.checkout-section__header .checkout-section__title {
+  margin: 0;
+}
+
 .checkout-section__title {
   font-family: var(--mona-serif);
   font-size: 20px;
@@ -431,6 +549,125 @@ import PageHero from "@/components/common/PageHero.astro";
   color: var(--mona-text-3);
   font-weight: 400;
   font-style: normal;
+}
+
+/* ─── Sprint 4.5.x — Logged-in chip a "Vásárlói adatok" cím mellett ─── */
+.checkout-loggedin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  background: var(--mona-bg);
+  border: 0.5px solid var(--mona-border);
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-2);
+}
+
+.checkout-loggedin-chip svg {
+  flex-shrink: 0;
+  color: var(--mona-warm);
+}
+
+.checkout-loggedin-chip__logout {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--mona-text-3);
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: var(--space-2);
+  min-height: 0;
+  transition: color var(--motion-fast) var(--ease);
+}
+
+.checkout-loggedin-chip__logout:hover {
+  color: var(--mona-text);
+}
+
+/* ─── Sprint 4.5.x — Welcome blokk a form-en belül ─── */
+.checkout-welcome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: rgb(192 154 80 / 0.08);
+  border-left: 2px solid var(--mona-warm);
+  margin-bottom: var(--space-4);
+}
+
+.checkout-welcome__icon {
+  flex-shrink: 0;
+  color: var(--mona-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkout-welcome__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-welcome__title {
+  display: block;
+  font-family: var(--mona-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mona-text);
+  margin: 0 0 2px;
+}
+
+.checkout-welcome__text {
+  font-family: var(--mona-sans);
+  font-size: 12px;
+  color: var(--mona-text-2);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ─── Sprint 4.5.x — Prefilled input vizuális jelzés ─── */
+.checkout-input--prefilled {
+  background: rgb(192 154 80 / 0.04);
+}
+
+.checkout-input--prefilled:focus {
+  background: var(--mona-bg);
+}
+
+/* Email mező readonly logged-in állapotban */
+.form-field input[readonly] {
+  background: var(--mona-elevated);
+  color: var(--mona-text-2);
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.form-field__hint {
+  font-family: var(--mona-sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--mona-text-3);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-left: var(--space-2);
+}
+
+/* Mobile — chip új sorba */
+@media (max-width: 600px) {
+  .checkout-section__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .checkout-loggedin-chip {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .form-row {

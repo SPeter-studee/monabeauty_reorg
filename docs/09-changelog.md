@@ -18,6 +18,88 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.4] — 2026-04-27 — Sprint 4.5.x — Checkout logged-in UX ⭐
+
+A pénztár oldal mostantól érzékelhető módon másképp néz ki logged-in 
+vendégeknek: chip a fejlécben, welcome blokk, és **automatikus auto-fill** 
+a fiók-adatokból.
+
+### Hozzáadva
+
+#### 1. Logged-in chip a "Vásárlói adatok" fejlécben
+- Mini avatar SVG ikon (arany)
+- Vendég email-je
+- "Kijelentkezés" link
+
+#### 2. Welcome blokk a form-on
+A "Vásárlói adatok" cím alatt patina arany blokk: *"Üdv újra, Peter! Az 
+adatokat átvettük a fiókodból. Ha másik címre szeretnéd, alább módosítsd."*
+
+Bal oldali 2px arany akcentussal — vizuálisan visszaköszön a profil oldal 
+verifikációs banner-stílusából.
+
+#### 3. Auto-fill a 3 mezőre
+A `subscribeAuthState` callback alapján:
+- **Teljes név**: `firstName + lastName` összerakva
+- **Email**: customer email (és **readonly** logged-in vendégeknek)
+- **Telefon**: customer telefon
+
+A logika: csak akkor ír át, ha az adott mező **még üres**. A kitöltött mezők 
+finom patina arany háttérszínt kapnak (`.checkout-input--prefilled`).
+
+#### 4. Email mező readonly logged-in állapotban
+Vizuális jel: szaggatott border + elevated bg + cursor not-allowed. Hint a 
+label után: *"(fiókod email-je)"*. A logged-in account email-je egyedi 
+azonosító, nem módosítható itt (Sprint 4.5.5-ben lesz email csere flow).
+
+#### 5. Logout chip-ről
+"Kijelentkezés" link megerősítést kér: *"Biztosan kijelentkezel? A megadott 
+adatok megmaradnak a form-on."* A form adatok megmaradnak, a vendég 
+továbbmehet anonymous-ként.
+
+### Mit halasztunk Sprint 4.5.3-ra (címkönyv)
+
+Címbeállítások: a vendég "Korábbi rendelési címedre szállítsuk?" gombbal 
+kiválaszthatja a meglévő címet. Csak Sprint 4.5.3 (címkönyv backend) után 
+kivitelezhető.
+
+### Fájlok (3)
+- `package.json` — `0.9.3` → `0.9.4`
+- `src/pages/penztar/index.astro` — markup + JS auto-fill + CSS
+- `docs/09-changelog.md`
+
+---
+
+## [0.9.3] — 2026-04-27 — Sprint 4.5.x — Banner preview oldal (IDEIGLENES)
+
+**Ideiglenes preview oldal** a verifikációs banner 3 variánsának élő 
+összehasonlításához. A választás után törlés.
+
+### Hozzáadva
+
+- **`src/pages/profil/banner-preview.astro`** (~500 sor):
+  - **Opció 1 — Subtle plus**: 12% háttér, 1px border, 14px/700 cím, "−10%" arany
+  - **Opció 2 — Statement**: 3px bal oldali arany akcentus, kerek arany ikon, 
+    16px arany "−10%" highlight, arany CTA gomb
+  - **Opció 3 — Inverted**: sötét `--mona-text` háttér, fehér szöveg, arany 
+    akcent — premium notification banner stílus
+  - "Mit gondolsz?" döntési szekció alul
+
+A profil layout-on belül jelenik meg, valódi vizuális kontextusban (sidebar, 
+padding, brand-vonal).
+
+### Várja
+
+A választás után az opció bekerül az éles `/profil/index.astro`-ba, és 
+ez a fájl **törlésre kerül**.
+
+### Fájlok (1 új)
+
+- `src/pages/profil/banner-preview.astro`
+- `package.json` — `0.9.2` → `0.9.3`
+
+---
+
 ## [0.9.2] — 2026-04-27 — Sprint 4.5.2 — Rendelési előzmények ⭐
 
 A vendég profil területén megjelenik a rendelési előzmények oldal: 
