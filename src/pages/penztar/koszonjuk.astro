@@ -532,4 +532,134 @@ const paymentLabel = order?.payment_method === "transfer"
   color: var(--mona-text);
   border-bottom-color: var(--mona-text);
 }
+
+/* ─── v0.9.21 — Mobile responsive (mobile audit Sprint 4.6) ─────────── */
+@media (max-width: 640px) {
+  .thanks {
+    padding-block: var(--space-5);
+  }
+
+  /* Hero — kompaktabb mobile-on */
+  .thanks-hero {
+    padding: var(--space-5) var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .thanks-hero__icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--space-3);
+  }
+
+  .thanks-hero__icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .thanks-hero__title {
+    font-size: 24px;
+  }
+
+  .thanks-hero__lead {
+    font-size: 14px;
+  }
+
+  .thanks-hero__order {
+    width: 100%;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .thanks-hero__order-number {
+    font-size: 18px;
+  }
+
+  /* Sections — kevesebb padding */
+  .thanks-section {
+    padding: var(--space-4);
+  }
+
+  .thanks-section__title {
+    font-size: 16px;
+  }
+
+  /* Items — kisebb image, jobban olvasható */
+  .thanks-item {
+    grid-template-columns: 48px 1fr auto;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+  }
+
+  .thanks-item__image-wrap {
+    width: 48px;
+  }
+
+  .thanks-item__name {
+    font-size: 14px;
+  }
+
+  .thanks-item__qty {
+    font-size: 11px;
+  }
+
+  .thanks-item__total {
+    font-size: 14px;
+  }
+
+  /* Totals */
+  .thanks-totals__row {
+    font-size: 13px;
+  }
+
+  .thanks-totals__row--total {
+    font-size: 17px;
+  }
+
+  /* Info blokkok */
+  .thanks-info {
+    font-size: 14px;
+  }
+
+  /* Actions — full width gombok mobile-on */
+  .thanks-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .thanks-actions > * {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Hibás állapot */
+  .thanks-error {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .thanks-error__title {
+    font-size: 22px;
+  }
+
+  .thanks-error__text {
+    font-size: 14px;
+  }
+}
+
+/* ─── Extra small screens (320px) ────────────────────────────── */
+@media (max-width: 360px) {
+  .thanks-hero__title {
+    font-size: 20px;
+  }
+
+  .thanks-item {
+    grid-template-columns: 40px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .thanks-item__total {
+    grid-column: 2;
+    text-align: right;
+  }
+}
 </style>

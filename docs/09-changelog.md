@@ -18,6 +18,116 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.21] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 1 (kritikus vendég-flow) ⭐
+
+### Háttér
+
+A vendég kérése: *"Az összes felhasználói oldalt át kellene nézni a mezők kilógnak, stb."*
+
+A teljes kódbázis audit-ja után megállapítottam:
+- A `tokens.css` és `layout.css` **mobile-first** alapon épül (excellent!)
+- 28 oldalból **13 oldalon nincs egyetlen `@media` szabály sem**
+- Web shop és Sprint 4.5.x oldalak már jó @media lefedettséggel rendelkeznek
+
+### Sprint 4.6 — Mobile audit & fix
+
+A javításokat **4 ZIP-be** szerveztem priority alapján. Ez a **ZIP 1**:
+a kritikus vendég-flow oldalak (rendelési folyamat).
+
+### `tokens.css` — `--space-7` hozzáadás
+
+A v0.9.x alatt használtam `var(--space-7)`-et, **de** a tokens.css-ben hiányzott:
+```css
+--space-1, 2, 3, 4, 5, 6, _, 8, 10, 12, 16
+                          ↑ skipped
+```
+
+Hozzáadtam:
+```css
+--space-7: 2.5rem;  /* 40px */
+```
+
+### `penztar/koszonjuk.astro` — 0 → 2 @media
+
+A vendég **a sikeres rendelés után** ezt az oldalt látja — kritikus pillanat.
+
+#### Mobile (< 640px) javítások:
+- **Hero blokk**: kompaktabb padding, kisebb ikon (80→64px), kisebb cím (32→24px)
+- **Items lista**: 60px → 48px termékkép, kisebb font-méretek
+- **Order number badge**: full-width mobile-on, jobb olvashatóság
+- **Actions**: column layout mobile-on, full-width gombok
+
+#### Extra small (< 360px):
+- Item layout 2 sor: `[kép | név]` + `[ár jobbra]`
+- Hero title 20px
+
+### `bejelentkezes.astro` — 0 → 1 @media
+
+Form-oldal — **kritikus** mobile-on (vendég bejelentkezés).
+
+#### Mobile (< 480px) javítások:
+- Card padding csökkentve, body-margin hozzáadva (mindenkép térköz)
+- "Maradjak bejelentkezve" + "Elfelejtett jelszó" sor: oszlopos elrendezés
+- **Touch target**: input mezők `min-height: var(--touch-target)` (44px Apple HIG)
+
+### `regisztracio.astro` — 1 → 2 @media
+
+Már volt mobile-szabály a `auth__row-2`-re (480px breakpoint). Bővítve:
+
+#### Mobile (< 480px) javítások:
+- Card padding csökkentve
+- Touch target ≥44px input mezőkre
+- Footer margin csökkentve
+
+### `kosar.astro` — 2 → 4 @media
+
+Már volt 1024px (sticky summary) és 640px (item grid) breakpoint. Bővítve.
+
+#### Mobile (< 480px) javítások:
+- **Termékkép**: 100px → 80px (több hely a szövegre)
+- **Item layout**: két sor — `[kép | info]` felül, `[qty]` és `[total]` alul
+- Total row: `flex-direction: row` between (ár + remove)
+- **Summary nem sticky** mobile-on (kis viewport-on zavaró volt)
+- Font-méretek finomítva
+
+#### Tablet portrait (481-639px):
+- Köztes layout: `[kép | info | total]`, qty alul
+
+### Hatás
+
+A vendég-flow oldalak (kosár → pénztár → köszönjük → bejelentkezés/regisztráció)
+**mostantól mobile-en is jól néznek ki**. Sephora, Notino szintű UX.
+
+### Fájlok (6)
+- `src/styles/tokens.css` — `--space-7: 2.5rem` hozzáadás
+- `src/pages/penztar/koszonjuk.astro` — 0 → 2 @media
+- `src/pages/bejelentkezes.astro` — 0 → 1 @media
+- `src/pages/regisztracio.astro` — 1 → 2 @media
+- `src/pages/kosar.astro` — 2 → 4 @media
+- `package.json` — `0.9.20` → `0.9.21`
+- `docs/09-changelog.md`
+
+### Sprint 4.6 tervezett további ZIP-ek
+
+#### ZIP 2 — Profil + Sprint 4.5.x finomítás (következő)
+- `profil/index.astro`, `profil/rendelesek.astro`
+- `profil/rendelesek/[orderNumber].astro` (print + mobile)
+- `kapcsolat.astro`
+
+#### ZIP 3 — Marketing oldalak
+- `rolam.astro`, `szalon.astro`, `szallitas.astro`, `velemenyek.astro`
+- `aszf.astro`, `adatvedelem.astro`, `cookies.astro`, `404.astro`
+- `szolgaltatasok/[slug].astro`, `blog/index.astro`
+
+#### ZIP 4 — Komponensek
+- `auth/UserMenu.astro` (dropdown mobile-on)
+- `home/AboutMonikaTeaser.astro`, `home/TrustindexReviews.astro`
+- `shop/SaleCountdown.astro`, `services/ServiceCard.astro`
+
+---
+
+
+
 ## [0.9.20] — 2026-04-27 — Sprint 4.5.3.x — Megye mező + bővített ZIP-adatbázis ⭐
 
 ### Vendég kérés

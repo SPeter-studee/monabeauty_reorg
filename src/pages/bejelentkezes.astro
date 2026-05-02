@@ -222,4 +222,31 @@ import PageHero from "@/components/common/PageHero.astro";
   text-underline-offset: 3px;
   margin-left: var(--space-2);
 }
+
+/* ─── v0.9.21 — Mobile responsive (Sprint 4.6) ──────────────── */
+@media (max-width: 480px) {
+  .auth__card {
+    padding: var(--space-5) var(--space-4);
+    margin-inline: var(--space-2);
+  }
+
+  .auth__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .auth__divider {
+    margin-block: var(--space-4);
+  }
+
+  .auth__footer {
+    margin-top: var(--space-5);
+  }
+
+  /* Touch target ≥44px input mezőkre is */
+  .auth__field input {
+    min-height: var(--touch-target);
+  }
+}
 </style>

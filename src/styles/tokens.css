@@ -60,6 +60,7 @@
   --space-4:   1rem;
   --space-5:   1.5rem;
   --space-6:   2rem;
+  --space-7:   2.5rem;  /* v0.9.21: hozzáadva (volt: undefined) */
   --space-8:   3rem;
   --space-10:  4rem;
   --space-12:  6rem;

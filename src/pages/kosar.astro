@@ -566,4 +566,82 @@ import PageHero from "@/components/common/PageHero.astro";
   color: var(--mona-success);
   font-weight: 500;
 }
+
+/* ─── v0.9.21 — Mobile responsive finomítás (Sprint 4.6) ──────── */
+@media (max-width: 480px) {
+  /* Kosár-page items kisebb képpel mobile-on */
+  .cart-page-item {
+    grid-template-columns: 80px 1fr;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+  }
+
+  .cart-page-item__image-link {
+    width: 80px;
+    height: 100px;
+    max-width: 80px;
+    max-height: 100px;
+  }
+
+  .cart-page-item__image,
+  .cart-page-item__image-placeholder {
+    max-width: 80px;
+    max-height: 100px;
+  }
+
+  .cart-page-item__name {
+    font-size: 16px;
+  }
+
+  /* qty + total egymás alatt mobile-on */
+  .cart-page-item__qty {
+    grid-column: 1 / -1;
+    margin-top: var(--space-2);
+  }
+
+  .cart-page-item__total {
+    grid-column: 1 / -1;
+    align-items: flex-end;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .cart-page-item__price {
+    font-size: 18px;
+  }
+
+  /* Items header */
+  .cart-page__items-title {
+    font-size: 20px;
+  }
+
+  /* Summary nem sticky mobile-on (kis viewport-on zavaró) */
+  .cart-page__summary {
+    position: static;
+    padding: var(--space-4);
+  }
+
+  .cart-page__summary-title {
+    font-size: 20px;
+  }
+
+  .cart-totals__row--total {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 639px) {
+  /* Tablet portrait - médium szint */
+  .cart-page-item {
+    grid-template-columns: 90px 1fr auto;
+    align-items: center;
+  }
+
+  .cart-page-item__qty {
+    grid-column: 1 / -1;
+    justify-self: end;
+    margin-top: var(--space-2);
+  }
+}
 </style>
