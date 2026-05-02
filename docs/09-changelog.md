@@ -18,6 +18,120 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.23] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 3 (marketing oldalak) ⭐
+
+### Folytatás a ZIP 2 után
+
+Sprint 4.6 mobile audit harmadik fázis. ZIP 1 (vendég-flow), ZIP 2 (profil + 
+kapcsolat) után most a **statikus marketing + tartalomoldalak** kerültek sorra.
+
+### 10 oldal javítva
+
+#### `rolam.astro` — 0 → 1 @media
+- Intro padding kompakt
+- Body font 17px → 15px
+- **CTA gombok column layout** mobile-on (full-width)
+
+#### `szalon.astro` — 0 → 1 @media
+- Body font 16px → 15px
+- Térkép iframe height 400px → 280px (mobile-on jobb)
+- Hours rows 14px → 13px
+- CTA gombok column layout
+
+#### `szallitas.astro` — 0 → 1 @media
+- Intro padding kompakt
+- **Option kártyák**: padding 32px → 16px
+- Section h2 24px → 20px
+- Body font 16px → 14px
+- CTA gombok column layout
+
+#### `velemenyek.astro` — 0 → 1 @media
+- Body font 16px → 14px
+- "Értékelés Google-on" + "Inkább nekem írok" gombok column layout
+
+#### `aszf.astro`, `adatvedelem.astro`, `cookies.astro` — 0 → 1 @media (legal)
+Mindhárom hasonló stílusú legal-text oldal, közös mobile pattern:
+- H2 25-30px → 20px, kompaktabb top margin
+- Body + list font 16px → 14px
+- Placeholder padding kisebb
+- "Utolsó frissítés" footer kompaktabb
+
+#### `404.astro` — 0 → 1 @media
+- Description font 17px → 15px
+- **Action gombok column layout**: "Vissza a főoldalra" + "Webshop" full-width
+- Suggestion list (linkek) column layout
+
+#### `szolgaltatasok/[slug].astro` — 0 → 1 @media
+- Meta blokk (időtartam, ár) column layout (volt: row, túlfutás kockázat)
+- Body content + list 16px → 15px
+- Blockquote padding kompakt
+- CTA gombok column layout
+
+#### `blog/index.astro` — 0 → 1 @media
+- Featured label margin kompaktabb (a `.grid-2` utility már mobile-first)
+
+### Közös pattern
+
+Minden CTA gomb-csoportra ugyanaz a recept mobile-on:
+```css
+@media (max-width: 600px) {
+  .[oldal]__cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+  }
+  .[oldal]__cta > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
+```
+
+### Hatás
+
+A teljes vendég-felé eső felület (Sprint 4.5.x oldalak + ZIP 1-3) **most már 
+reszponzív**. Mónika kozmetikai oldala mobile-on **professzionálisan** néz ki:
+- ✅ Vendég-flow (ZIP 1): kosár, köszönjük, bejelentkezés, regisztráció
+- ✅ Profil terület (ZIP 2): index, rendelések, részletes nézet, kapcsolat
+- ✅ Marketing + content (ZIP 3): rólam, szalon, szállítás, vélemények, 
+  szolgáltatások, blog, legal oldalak, 404
+
+### Mi maradt: ZIP 4 — Komponensek
+
+- `auth/UserMenu.astro` — dropdown mobile-on
+- `home/AboutMonikaTeaser.astro` — 0 @media (kép + szöveg)
+- `home/TrustindexReviews.astro` — 0 @media (külső widget)
+- `shop/SaleCountdown.astro` — 0 @media
+- `services/ServiceCard.astro` — 1 @media
+
+Plus **bonus**: a `BaseLayout.astro` és `Header.astro` 0 @media — de ezek a 
+külön CSS fájlokra (`header.css`, `layout.css`) támaszkodnak, ahol már sok @media van.
+
+### Fájlok (12)
+
+**Módosított oldalak (10)**:
+- `src/pages/rolam.astro`
+- `src/pages/szalon.astro`
+- `src/pages/szallitas.astro`
+- `src/pages/velemenyek.astro`
+- `src/pages/aszf.astro`
+- `src/pages/adatvedelem.astro`
+- `src/pages/cookies.astro`
+- `src/pages/404.astro`
+- `src/pages/szolgaltatasok/[slug].astro`
+- `src/pages/blog/index.astro`
+
+**Egyebek**:
+- `package.json` — `0.9.22` → `0.9.23`
+- `docs/09-changelog.md`
+
+
+
+---
+
+
+
 ## [0.9.22] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 2 (profil + kapcsolat) ⭐
 
 ### Folytatás a ZIP 1 után

@@ -214,4 +214,43 @@ import PageHero from "@/components/common/PageHero.astro";
   padding-top: var(--space-8);
   border-top: 0.5px solid var(--mona-border);
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .shipping__intro {
+    margin-bottom: var(--space-6);
+    padding-block: var(--space-4);
+    font-size: 1rem;
+  }
+
+  .shipping__option {
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+  }
+
+  .shipping__option h2 {
+    font-size: 1.25rem;
+  }
+
+  .shipping p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .shipping ul li {
+    font-size: 14px;
+  }
+
+  .shipping__cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+  }
+
+  .shipping__cta > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

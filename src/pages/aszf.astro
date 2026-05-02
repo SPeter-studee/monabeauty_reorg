@@ -208,4 +208,29 @@ const lastUpdated = "2026-04-26";
   color: var(--mona-text-3);
   text-align: center;
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .legal h2 {
+    font-size: 1.25rem;
+    margin-top: var(--space-6);
+  }
+
+  .legal p,
+  .legal li {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .legal__placeholder {
+    padding: var(--space-3);
+    font-size: 13px;
+  }
+
+  .legal__updated {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    font-size: 12px;
+  }
+}
 </style>

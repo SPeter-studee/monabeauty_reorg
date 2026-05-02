@@ -73,4 +73,16 @@ const otherPosts = sortedPosts.filter(p => p.slug !== featuredPost?.slug);
   max-width: var(--container-xl);
   margin-inline: auto;
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .blog-list__featured {
+    margin-bottom: var(--space-6);
+  }
+
+  .blog-list__featured-label {
+    font-size: 10px;
+    margin-bottom: var(--space-3);
+  }
+}
 </style>

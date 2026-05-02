@@ -110,4 +110,33 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   color: var(--mona-text);
   text-decoration: underline;
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .error-page__description {
+    font-size: 15px;
+    margin-bottom: var(--space-6);
+  }
+
+  .error-page__actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: var(--space-6);
+  }
+
+  .error-page__actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .error-page__list {
+    gap: var(--space-3);
+    flex-direction: column;
+  }
+
+  .error-page__list a {
+    text-align: center;
+    padding: var(--space-1);
+  }
+}
 </style>

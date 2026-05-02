@@ -74,4 +74,21 @@ const TRUSTINDEX_WIDGET_URL = ""; // pl. "https://cdn.trustindex.io/loader.js?XX
   justify-content: center;
   flex-wrap: wrap;
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .reviews-cta__text {
+    font-size: 14px;
+  }
+
+  .reviews-cta__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reviews-cta__actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

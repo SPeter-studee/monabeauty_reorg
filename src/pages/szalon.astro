@@ -181,4 +181,36 @@ import PageHero from "@/components/common/PageHero.astro";
   padding-top: var(--space-8);
   border-top: 0.5px solid var(--mona-border);
 }
+
+/* ─── v0.9.23 — Mobile responsive (Sprint 4.6 ZIP 3) ──────── */
+@media (max-width: 600px) {
+  .salon p {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .salon__map {
+    margin-block: var(--space-5);
+  }
+
+  .salon__map iframe {
+    height: 280px;
+  }
+
+  .salon__hours li {
+    font-size: 13px;
+  }
+
+  .salon__cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+  }
+
+  .salon__cta > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>
