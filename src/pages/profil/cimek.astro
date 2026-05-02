@@ -71,9 +71,12 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
           </div>
 
           <div class="address-form-block__field">
-            <label class="address-form-block__label" for="addr-phone">Telefon</label>
-            <input type="tel" id="addr-phone" name="phone" class="address-form-block__input" maxlength="20" autocomplete="tel" placeholder="+36 30 ..." />
-            <p class="address-form-block__hint">Opcionális — a futár hívja erre, ha gond van.</p>
+            <label class="address-form-block__label" for="addr-phone">Címzett telefonja</label>
+            <input type="tel" id="addr-phone" name="phone" class="address-form-block__input" maxlength="20" autocomplete="tel" placeholder="Üresen hagyhatod" />
+            <p class="address-form-block__hint">
+              Csak ha másik telefonszámon hívja a futár (pl. ha nem a tied a cím — anyu, munkahely).
+              Üresen hagyva a profilodban megadott telefonszámot használjuk.
+            </p>
           </div>
 
           <div class="address-form-block__field">
@@ -95,6 +98,12 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
           {/* Settings blokk — kompakt 2x2 grid */}
           <div class="address-form-block__settings">
             <p class="address-form-block__settings-label">Beállítások</p>
+
+            {/* Hint csak az első címnél */}
+            <p class="address-form-block__hint address-form-block__settings-hint" data-first-address-hint hidden>
+              Mivel ez az első címed, automatikusan alapértelmezett lesz mind szállításra, mind számlázásra.
+              Később a kártya alatt válthatsz másikra.
+            </p>
 
             <div class="address-form-block__settings-grid">
               <label class="address-form-block__checkbox">
@@ -122,8 +131,8 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
           <p class="address-form-block__error" data-form-error hidden></p>
 
           <div class="address-form-block__actions">
-            <button type="button" class="btn-secondary" data-form-cancel>Mégse</button>
-            <button type="submit" class="btn btn-primary" data-form-submit>
+            <button type="button" class="address-form-block__btn address-form-block__btn--secondary" data-form-cancel>Mégse</button>
+            <button type="submit" class="address-form-block__btn address-form-block__btn--primary" data-form-submit>
               <span data-submit-text>Cím mentése</span>
               <span data-submit-loading hidden>Mentés...</span>
             </button>
@@ -308,11 +317,19 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       if (addressId === null) {
         if (formTitle) formTitle.textContent = "Új cím hozzáadása";
         if (formIdInput) formIdInput.value = "";
+        // FONTOS: a default checkbox-ok ALAPBÓL KIKAPCSOLVA. Ha első cím,
+        // a backend automatikusan default-tá teszi (lásd POST endpoint).
+        // A UI-on viszont nem akarunk agresszív vizuális default-ot.
+        // Vizuális hint a "Beállítások" cím mellett értesít az automatizmusról.
         const isFirst = addresses.length === 0;
         const cbShip = form!.querySelector<HTMLInputElement>("[data-default-shipping]");
         const cbBill = form!.querySelector<HTMLInputElement>("[data-default-billing]");
-        if (cbShip) cbShip.checked = isFirst;
-        if (cbBill) cbBill.checked = isFirst;
+        if (cbShip) cbShip.checked = false;
+        if (cbBill) cbBill.checked = false;
+
+        // Első cím hint megjelenítés
+        const firstHint = document.querySelector<HTMLElement>("[data-first-address-hint]");
+        if (firstHint) firstHint.hidden = !isFirst;
       } else {
         const addr = addresses.find(a => a.id === addressId);
         if (!addr) return;
@@ -328,6 +345,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         (form!.querySelector("[name='isBilling']") as HTMLInputElement).checked = addr.isBilling;
         (form!.querySelector("[name='setDefaultShipping']") as HTMLInputElement).checked = addr.isDefaultShipping;
         (form!.querySelector("[name='setDefaultBilling']") as HTMLInputElement).checked = addr.isDefaultBilling;
+
+        // Szerkesztésnél: hint elrejtése (nem első cím szituáció)
+        const firstHint = document.querySelector<HTMLElement>("[data-first-address-hint]");
+        if (firstHint) firstHint.hidden = true;
       }
 
       // FONTOS (v0.9.12): ha empty state-ben vagyunk, váltsunk container-be
@@ -872,6 +893,21 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     margin: 0;
   }
 
+  .address-form-block__settings-hint {
+    background: rgb(192 154 80 / 0.08);
+    border-left: 2px solid var(--mona-warm);
+    padding: 8px 12px;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-style: normal !important;
+    color: var(--mona-text-2) !important;
+    line-height: 1.4;
+  }
+
+  .address-form-block__settings-hint[hidden] {
+    display: none !important;
+  }
+
   .address-form-block__settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -955,11 +991,53 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     border-top: 0.5px solid var(--mona-border);
   }
 
+  /* Egységes gombok: ugyanaz a padding, font, height — csak szín különbözik */
+  .address-form-block__btn {
+    padding: 10px 20px;
+    min-height: 0;
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease),
+                border-color var(--motion-fast) var(--ease),
+                opacity var(--motion-fast) var(--ease);
+  }
+
+  .address-form-block__btn--primary {
+    background: var(--mona-text);
+    color: var(--mona-bg);
+    border: 1px solid var(--mona-text);
+  }
+
+  .address-form-block__btn--primary:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  .address-form-block__btn--primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .address-form-block__btn--secondary {
+    background: transparent;
+    color: var(--mona-text-2);
+    border: 1px solid var(--mona-border);
+  }
+
+  .address-form-block__btn--secondary:hover {
+    color: var(--mona-text);
+    border-color: var(--mona-text);
+  }
+
   @media (max-width: 480px) {
     .address-form-block__actions {
       flex-direction: column-reverse;
     }
-    .address-form-block__actions > * {
+    .address-form-block__btn {
       width: 100%;
     }
   }

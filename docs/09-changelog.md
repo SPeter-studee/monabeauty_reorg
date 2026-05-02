@@ -18,7 +18,66 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.13] — 2026-04-27 — Sprint 4.5.x — Print stylesheet header/footer fix
+## [0.9.14] — 2026-04-27 — Sprint 4.5.x — Címkönyv form UX finomítások
+
+### 3 problémát javítva (vendég visszajelzés alapján)
+
+#### 1. Default checkbox-ok ne legyenek pre-checked
+
+**Most**: az "Új cím" form megnyitásakor mind a 4 checkbox **bepipálva** volt
+(Szállításra használható + Számlázásra használható + Alapértelmezett szállítási
++ Alapértelmezett számlázási). Ez agresszív vizuális default volt — különösen a
+két "Alapértelmezett" checkbox-on, amiket a vendég nem feltétlenül akart.
+
+**Javítás**:
+- Szállításra/Számlázásra használható: marad **alapból bekapcsolva** (jó default,
+  a vendég ritkán fogja kikapcsolni)
+- Alapértelmezett szállítási/számlázási: **alapból kikapcsolva**
+- A backend automatikusan default-tá teszi az **első** címet, ezért:
+- Új vizuális hint az első cím beírásakor: *"Mivel ez az első címed,
+  automatikusan alapértelmezett lesz mind szállításra, mind számlázásra. Később
+  a kártya alatt válthatsz másikra."* — patina arany akcentussal
+
+#### 2. Telefon mező ne kérje feleslegesen ha a profilban már van
+
+**Most**: a vendég megadja a profilban a telefonszámát, **majd** itt megint
+kéri "Címzett telefonja" — duplikáció.
+
+**Új viselkedés**:
+- A label átnevezve: "Címzett telefonja" (egyértelmű hogy specifikusan a címhez tartozik)
+- Placeholder: "Üresen hagyhatod"
+- Részletes hint: *"Csak ha másik telefonszámon hívja a futár (pl. ha nem a tied
+  a cím — anyu, munkahely). Üresen hagyva a profilodban megadott telefonszámot
+  használjuk."*
+- Backend: a NULL `phone` érték jelzi, hogy a Sprint 5+ rendelés-flow-ban a
+  profil telefonszámot kell használni
+
+**Valós forgatókönyvek**:
+- "Otthon" cím — telefon üres → profil telefon (a vendég sajátja)
+- "Anyu címe" — anyukád telefonszáma → futár anyukát hívja
+- "Munkahely" — recepciós telefon → futár recepcióhoz megy
+
+#### 3. Mégse + Cím mentése gombok egységes méret
+
+**Most**: a "Mégse" globális `.btn-secondary` osztályt használt, "Cím mentése"
+a `.btn .btn-primary` osztályokat. **A két gomb különböző méretű és font-súlyú**
+volt — vizuálisan inkonzisztens.
+
+**Javítás**: scope-os, egységes osztályok:
+- `.address-form-block__btn` — közös base (padding, font, height, transition)
+- `.address-form-block__btn--primary` — sötét háttér, fehér szöveg (mint az
+  "Új cím" gomb az empty state-ben)
+- `.address-form-block__btn--secondary` — transparent, border, semleges szín
+- Mobile-on column-reverse: Mentés felül, Mégse alul (full-width)
+
+### Fájlok (3)
+- `package.json` — `0.9.13` → `0.9.14`
+- `src/pages/profil/cimek.astro` — markup + JS + CSS
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 
