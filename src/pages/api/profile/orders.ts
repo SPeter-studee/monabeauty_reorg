@@ -59,15 +59,27 @@ async function handleListOrders(request: Request, locals: any): Promise<Response
   }
 
   const customerId = authResult.customer.id;
+  const customerEmail = authResult.customer.email;
 
   // 2. Lekérjük a vendég rendeléseit
+  //
+  // FALLBACK LOGIKA: a Sprint 4 ELŐTT létrejött rendeléseknek nincs customer_id-je
+  // (anonymous checkout volt). Ezeket az email egyezésen keresztül találjuk meg,
+  // hogy a vendég lássa a régi rendeléseit is.
+  //
+  // A 0006_backfill_orders_customer_id.sql migráció az adatbázist visszamenőleg
+  // tisztítja, de a fallback logika védő:
+  //   - ha valaki anonymous-ként rendel (kijelentkezve), majd belép később
+  //   - ha másik browser-ben rendelt
+  //   - ha admin-szerűen tisztogatva customer_id resetelődik
   const ordersResult = await db
     .prepare(`
       SELECT * FROM orders
       WHERE customer_id = ?
+         OR (customer_id IS NULL AND guest_email = ?)
       ORDER BY created_at DESC
     `)
-    .bind(customerId)
+    .bind(customerId, customerEmail)
     .all<OrderRow>();
 
   const orders = ordersResult.results || [];

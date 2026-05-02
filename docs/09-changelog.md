@@ -18,7 +18,90 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
-## [0.9.7] — 2026-04-27 — Sprint 4.5 hotfix — Banner pozíció + [hidden] fix
+## [0.9.8] — 2026-04-27 — Sprint 4.5.x — Anonymous rendelések összekapcsolása
+
+### Probléma
+
+A Sprint 4 ELŐTT a vendégek anonymous-ként checkout-oltak (csak `guest_email`,
+`guest_name`, `guest_phone`), és az `orders.customer_id` mező NULL maradt.
+A v0.9.2 (Sprint 4.5.2) `/profil/rendelesek` oldal **csak a customer_id egyezés
+alapján** kereste a rendeléseket, így a régi rendelések **nem voltak láthatók**
+a vendég profil területén — pedig az emailje egyezett.
+
+### Megoldás — két részre bontva
+
+#### 1. SQL backfill (egyszeri)
+
+`migrations/0006_backfill_orders_customer_id.sql`:
+```sql
+UPDATE orders
+SET customer_id = (
+  SELECT c.id FROM customers c WHERE c.email = orders.guest_email LIMIT 1
+)
+WHERE customer_id IS NULL
+  AND guest_email IN (SELECT email FROM customers);
+```
+
+A migráció:
+- BEFORE: kiírja hány orphan rendelés van (customer_id NULL + matching email)
+- UPDATE: összekapcsolás email egyezés alapján
+- AFTER: verifikáció, hogy 0 maradt
+
+A `customers.email UNIQUE` constraint biztosítja hogy csak pontosan egy customer
+egyezhet egy adott email-lel, így az UPDATE determinisztikus.
+
+#### 2. Backend fallback logika (jövőbiztos)
+
+A `/api/profile/orders` endpoint mostantól **kétféleképp** is felismeri a
+vendég rendeléseit:
+
+```typescript
+SELECT * FROM orders
+WHERE customer_id = ?
+   OR (customer_id IS NULL AND guest_email = ?)
+ORDER BY created_at DESC
+```
+
+Ez a **fallback** védő ha:
+- A vendég anonymous-ként rendel (kijelentkezve), majd belép később ugyanazzal
+  az email-lel
+- Másik browserben rendelt és nem volt logged-in
+- Admin-szerű tisztogatás miatt a customer_id reset-elődik
+
+### Tanulság
+
+**Backwards-compat fontos**: amikor egy új mezőt vezetünk be (mint a
+`orders.customer_id` Sprint 4-ben), gondoljunk át **3 dologra**:
+1. **Új rekordok**: a kód automatikusan kitölti
+2. **Backfill**: egy migráció a régi rekordokra
+3. **Fallback**: a kód a régi struktúrára is illik (ne csak az új mezőre építsen)
+
+Ezt **a Sprint 5+ admin felületen** is alkalmazzuk: amikor új mezőt vezetünk be,
+mind a 3 lépést tervezzük.
+
+### Migráció futtatás
+
+```powershell
+npx wrangler d1 execute monastudio-v2-db --remote --file migrations/0006_backfill_orders_customer_id.sql
+```
+
+A migráció kimenete (példa):
+```
+BEFORE: orders with NULL customer_id but matching guest_email: 3
+[7 lekérdezés sikeres]
+AFTER: orders with NULL customer_id but matching guest_email: 0
+```
+
+### Fájlok (3)
+
+- `migrations/0006_backfill_orders_customer_id.sql` (új)
+- `src/pages/api/profile/orders.ts` — fallback query
+- `package.json` — `0.9.7` → `0.9.8`
+- `docs/09-changelog.md`
+
+---
+
+
 
 ### Probléma
 
