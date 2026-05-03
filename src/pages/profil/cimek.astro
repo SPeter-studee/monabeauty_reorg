@@ -142,6 +142,22 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         <span data-add-btn-text>Új cím hozzáadása</span>
       </button>
     </div>
+
+    {/* v0.9.25 — Cím törlése confirm modal */}
+    <div class="address-delete-modal" data-delete-modal hidden role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      <div class="address-delete-modal__backdrop" data-delete-modal-backdrop></div>
+      <div class="address-delete-modal__dialog">
+        <h3 class="address-delete-modal__title" id="delete-modal-title">Cím törlése</h3>
+        <p class="address-delete-modal__body">
+          Biztosan törölni szeretnéd a(z) <strong data-delete-modal-label></strong> címet?
+        </p>
+        <p class="address-delete-modal__warning">A művelet nem visszavonható.</p>
+        <div class="address-delete-modal__actions">
+          <button type="button" class="btn btn-tertiary" data-delete-modal-cancel>Mégse</button>
+          <button type="button" class="btn btn-sale" data-delete-modal-confirm>Törlés</button>
+        </div>
+      </div>
+    </div>
   </div>
 </ProfileLayout>
 
@@ -273,11 +289,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
               ${badges.length > 0 ? `<div class="address-card__badges">${badges.join("")}</div>` : ""}
             </div>
             <div class="address-card__actions">
-              <button type="button" class="address-card__action-btn" data-edit-id="${addr.id}" title="Szerkesztés">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <button type="button" class="address-card__action-btn" data-edit-id="${addr.id}" title="Cím szerkesztése" aria-label="Cím szerkesztése">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span class="address-card__action-label">Szerkesztés</span>
               </button>
-              <button type="button" class="address-card__action-btn address-card__action-btn--danger" data-delete-id="${addr.id}" title="Törlés">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              <button type="button" class="address-card__action-btn address-card__action-btn--danger" data-delete-id="${addr.id}" title="Cím törlése" aria-label="Cím törlése">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                <span class="address-card__action-label">Törlés</span>
               </button>
             </div>
           </div>
@@ -420,7 +438,11 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     async function handleDelete(id: number) {
       const addr = addresses.find(a => a.id === id);
       if (!addr) return;
-      if (!confirm(`Biztosan törölni szeretnéd a(z) "${addr.label}" címet?`)) return;
+
+      // v0.9.25: confirm modal a natív confirm() helyett
+      const confirmed = await openDeleteModal(addr.label);
+      if (!confirmed) return;
+
       try {
         const res = await fetch(`/api/profile/addresses/${id}`, { method: "DELETE", credentials: "include" });
         const data = await res.json();
@@ -432,6 +454,52 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       } catch (err) {
         alert("Hálózati hiba a törléskor.");
       }
+    }
+
+    // v0.9.25 — confirm modal kezelő (Promise-based, mint a confirm())
+    const deleteModal = document.querySelector<HTMLElement>("[data-delete-modal]");
+    const deleteModalBackdrop = document.querySelector<HTMLElement>("[data-delete-modal-backdrop]");
+    const deleteModalLabel = document.querySelector<HTMLElement>("[data-delete-modal-label]");
+    const deleteModalCancel = document.querySelector<HTMLButtonElement>("[data-delete-modal-cancel]");
+    const deleteModalConfirm = document.querySelector<HTMLButtonElement>("[data-delete-modal-confirm]");
+
+    function openDeleteModal(addressLabel: string): Promise<boolean> {
+      return new Promise((resolve) => {
+        if (!deleteModal || !deleteModalLabel) {
+          // Fallback ha valamiért nincs DOM (sose kéne ide jutni)
+          resolve(window.confirm(`Biztosan törölni szeretnéd a(z) "${addressLabel}" címet?`));
+          return;
+        }
+
+        deleteModalLabel.textContent = addressLabel;
+        deleteModal.hidden = false;
+        // Body scroll lock
+        document.body.style.overflow = "hidden";
+
+        // Confirm gomb fókusz nem default — a "Mégse" gomb fókuszt kap (biztonság)
+        setTimeout(() => deleteModalCancel?.focus(), 50);
+
+        const cleanup = () => {
+          deleteModal.hidden = true;
+          document.body.style.overflow = "";
+          deleteModalCancel?.removeEventListener("click", onCancel);
+          deleteModalConfirm?.removeEventListener("click", onConfirm);
+          deleteModalBackdrop?.removeEventListener("click", onCancel);
+          document.removeEventListener("keydown", onKey);
+        };
+
+        const onCancel = () => { cleanup(); resolve(false); };
+        const onConfirm = () => { cleanup(); resolve(true); };
+        const onKey = (e: KeyboardEvent) => {
+          if (e.key === "Escape") onCancel();
+          if (e.key === "Enter" && document.activeElement === deleteModalConfirm) onConfirm();
+        };
+
+        deleteModalCancel?.addEventListener("click", onCancel);
+        deleteModalConfirm?.addEventListener("click", onConfirm);
+        deleteModalBackdrop?.addEventListener("click", onCancel);
+        document.addEventListener("keydown", onKey);
+      });
     }
 
     async function handleSetDefault(id: number, type: "shipping" | "billing") {
@@ -706,28 +774,63 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   }
 
   .address-card__action-btn {
-    width: 32px;
-    height: 32px;
-    min-height: 0;
+    /* v0.9.25: Apple HIG touch target ≥44px */
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     padding: 0;
-    border: none;
+    border: 0.5px solid transparent;
     background: transparent;
-    color: var(--mona-text-3);
+    /* v0.9.25: erősebb szín — text-3 (halvány) helyett text-2 */
+    color: var(--mona-text-2);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: color var(--motion-fast) var(--ease),
-                background var(--motion-fast) var(--ease);
+                background var(--motion-fast) var(--ease),
+                border-color var(--motion-fast) var(--ease);
   }
 
   .address-card__action-btn:hover {
     color: var(--mona-text);
     background: var(--mona-elevated);
+    border-color: var(--mona-border);
   }
 
   .address-card__action-btn--danger:hover {
     color: var(--mona-sale, #c84545);
+    border-color: var(--mona-sale, #c84545);
+  }
+
+  /* v0.9.25: focus visible accessibility */
+  .address-card__action-btn:focus-visible {
+    outline: 2px solid var(--mona-warm);
+    outline-offset: 2px;
+  }
+
+  /* v0.9.25: action button szöveges címke — desktop-on rejtett (csak ikon),
+     mobile-on (≤768px) látszik az ikon mellett. Ezzel a vendég biztosan tudja
+     mit csinál a gomb. */
+  .address-card__action-label {
+    display: none;
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+  }
+
+  @media (max-width: 768px) {
+    .address-card__action-btn {
+      width: auto;
+      padding: 0 var(--space-3);
+      gap: var(--space-1);
+      border-color: var(--mona-border);
+    }
+    .address-card__action-label {
+      display: inline;
+    }
   }
 
   .address-card__body {
@@ -1028,6 +1131,117 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     }
     .address-form-block__btn {
       width: 100%;
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* v0.9.25 — Cím törlés confirm modal                                       */
+  /* ──────────────────────────────────────────────────────────────────────── */
+  .address-delete-modal[hidden] {
+    display: none !important;
+  }
+
+  .address-delete-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+  }
+
+  .address-delete-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: address-modal-fadein var(--motion-fast) var(--ease);
+  }
+
+  .address-delete-modal__dialog {
+    position: relative;
+    z-index: 1;
+    background: var(--mona-bg);
+    border: 0.5px solid var(--mona-border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    padding: var(--space-6);
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+    animation: address-modal-popin var(--motion) var(--ease);
+  }
+
+  .address-delete-modal__title {
+    font-family: var(--mona-serif);
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--mona-text);
+    margin: 0 0 var(--space-3);
+  }
+
+  .address-delete-modal__body {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--mona-text-2);
+    margin: 0 0 var(--space-2);
+  }
+
+  .address-delete-modal__body strong {
+    color: var(--mona-text);
+    font-weight: 500;
+  }
+
+  .address-delete-modal__warning {
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-text-3);
+    margin: 0 0 var(--space-5);
+    font-style: italic;
+  }
+
+  .address-delete-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  .address-delete-modal__actions .btn {
+    min-width: 100px;
+  }
+
+  /* Mobile responsive — full-width gombok, kompakt padding */
+  @media (max-width: 480px) {
+    .address-delete-modal__dialog {
+      padding: var(--space-5) var(--space-4);
+    }
+    .address-delete-modal__title {
+      font-size: 19px;
+    }
+    .address-delete-modal__actions {
+      flex-direction: column-reverse;
+    }
+    .address-delete-modal__actions .btn {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  @keyframes address-modal-fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes address-modal-popin {
+    from { 
+      opacity: 0; 
+      transform: scale(0.95) translateY(-8px);
+    }
+    to { 
+      opacity: 1; 
+      transform: scale(1) translateY(0);
     }
   }
 </style>

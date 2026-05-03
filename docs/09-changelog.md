@@ -18,6 +18,119 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.25] — 2026-04-27 — Sprint 4.5.4 — Cím szerkeszt/töröl + Rendelés PDF UX ⭐
+
+### Vendég kérés
+
+> *"A lakcím szerkesztő és törli lehetősége. Ezek mellett illetve a rendelés 
+> letöltési lehetőség is. De ezeket mind egy verzióba kellene tenni."*
+
+### Háttér
+
+A funkciók **technikailag már implementálva voltak** a v0.9.16-ban (Sprint 4.5.3), 
+de **nem voltak vizuálisan láthatók** a vendég számára. Ez a verzió **megjeleníti**
+azokat amik már működtek, és **finomítja** a UX-et.
+
+### 1. Cím szerkesztése — láthatóbbá
+
+**Probléma**: a cím-kártyán **toll-ikon** és **szemetes-ikon** volt csak (32×32px,
+halvány szürke). Mobile-on a vendég **nem vette észre őket**.
+
+**Javítás**:
+- **Touch target ≥44×44px** (Apple HIG)
+- **Erősebb szín** (`text-3` → `text-2`)
+- **Mobile-on (≤768px) szöveges címke** is megjelenik az ikon mellett:
+  `[✏ SZERKESZTÉS]` és `[🗑 TÖRLÉS]`
+- Border + hover state — érintetten mintha "gomb" lenne, nem csak ikon
+- Focus-visible accessibility outline
+
+**Funkcionálisan**: az `openForm(addressId)` JS függvény **már kezelte** 
+a szerkesztést (form prefill + PUT API hívás). Csak a UI nem volt elég
+látható.
+
+### 2. Cím törlése — confirm modal a natív `confirm()` helyett
+
+**Probléma**: a törlés a böngésző natív `window.confirm()` dialógusát hívta,
+ami **csúnya, OS-szintű popup** (nem a Mona Studio brand-jéhez illik).
+
+**Javítás**: szép modal **Mona Studio dizájnnal**:
+- **Backdrop**: 50% fekete + blur(2px)
+- **Dialog**: fehér háttér, 0.5px border, drop shadow, kompakt 420px max-width
+- **Címsor**: "Cím törlése" (Cormorant Garamond serif, 22px)
+- **Body**: `Biztosan törölni szeretnéd a(z) **{label}** címet?`
+- **Warning**: "A művelet nem visszavonható." (italic, kis betű)
+- **Gombok**: "Mégse" (tertiary) + "Törlés" (sale piros)
+
+**Accessibility**:
+- `role="dialog"` + `aria-modal="true"` + `aria-labelledby`
+- Focus trap (initial focus a "Mégse" gombra — biztonsági default)
+- **Escape** bezár (cancel)
+- **Enter** a "Törlés" gombon megerősít
+- Backdrop klikk = cancel
+
+**Animation**: fadein backdrop + popin dialog (250ms ease).
+
+**Mobile responsive**: < 480px-on a gombok column-reverse layout-tal full-width.
+
+**Promise-based API**:
+```typescript
+async function handleDelete(id: number) {
+  const addr = addresses.find(a => a.id === id);
+  if (!addr) return;
+  const confirmed = await openDeleteModal(addr.label);
+  if (!confirmed) return;
+  // ... DELETE fetch
+}
+```
+
+### 3. Rendelés PDF letöltés — világosabb UX
+
+**Probléma**: a `/profil/rendelesek/MS-2026-0001` oldalon volt egy "Nyomtatás 
+/ PDF letöltés" gomb, **de** a vendég **nem tudta hogy ez PDF-et menteni is**
+tud. A `window.print()` natív print dialógusa megnyílik, de a **"Save as PDF"
+opció nem nyilvánvaló** mindenkinek.
+
+**Javítás**:
+- Gomb átnevezve: **"Nyomtatás / PDF letöltés"** → **"PDF letöltés"** (rövidebb,
+  konkrétabb)
+- **Új ikon**: nyomtató helyett **letöltés-nyíl** (`↓`) — vizuálisan
+  egyértelműbb hogy fájlt tölt le
+- **Hint a gomb alatt**: 
+  > *"A megnyíló nyomtatási ablakban válaszd a 'PDF mentése' / 
+  > 'Save as PDF' opciót."*
+- Header-actions **column layout**: gomb felül + hint alul (volt: csak gomb)
+- Mobile-on full-width gomb + hint center-aligned
+
+**Funkcionálisan változatlan** — a `window.print()` megy, és a vendég 
+megválasztja a "Save as PDF" opciót.
+
+### Előnyök
+
+- ✅ Browser-szintű `window.print()` használata = **sokkal kevesebb kód**
+  mint server-side PDF generálás
+- ✅ A meglévő `@media print` stylesheet **már produkál szép nyomtatott**
+  oldalt (Sprint 4.5.3-ban tervezve)
+- ✅ **Nincs új API endpoint** — az UX javítása egyetlen astro fájlban
+- ✅ A PDF tartalmaz **mindent ami a print-friendly nézeten** (logó, dátum,
+  termék-lista, totals, vásárló adatok, szállítási cím)
+
+### Fájlok (3)
+- `src/pages/profil/cimek.astro` — action button-ok láthatóbbá + delete modal
+- `src/pages/profil/rendelesek/[orderNumber].astro` — PDF gomb + hint
+- `package.json` — `0.9.24` → `0.9.25`
+- `docs/09-changelog.md`
+
+### Sprint 4.6 ZIP 4 — még pending
+
+A Sprint 4.6 mobile sweep maradék része (komponensek):
+- `auth/UserMenu.astro` (dropdown mobile-on)
+- `home/AboutMonikaTeaser.astro`, `home/TrustindexReviews.astro`
+- `shop/SaleCountdown.astro`, `services/ServiceCard.astro`
+
+---
+
+
+
 ## [0.9.24] — 2026-04-27 — Sprint 4.6 — HOTFIX: /profil overflow mobile-on (banner + input mezők) ⭐
 
 ### Probléma — vendég screenshot-ok

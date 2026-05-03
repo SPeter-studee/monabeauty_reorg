@@ -56,10 +56,14 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         <div class="order-detail__header-actions" data-no-print>
           <button type="button" class="btn btn-primary" data-print-btn>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Nyomtatás / PDF letöltés
+            PDF letöltés
           </button>
+          {/* v0.9.25: hint a vendégnek hogy hogyan menthet PDF-et */}
+          <p class="order-detail__pdf-hint">
+            A megnyíló nyomtatási ablakban válaszd a "PDF mentése" / "Save as PDF" opciót.
+          </p>
         </div>
       </header>
 
@@ -428,6 +432,8 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
   .order-detail__header-actions {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     gap: var(--space-2);
     flex-shrink: 0;
   }
@@ -436,6 +442,18 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  /* v0.9.25: PDF letöltés hint a gomb alatt */
+  .order-detail__pdf-hint {
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    color: var(--mona-text-3);
+    margin: 0;
+    text-align: right;
+    max-width: 280px;
+    line-height: 1.4;
+    font-style: italic;
   }
 
   /* ─── Status row ──────────────────────────────────────────────────────── */
@@ -604,9 +622,19 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     }
 
     /* Print gomb full-width mobile-on */
+    .order-detail__header-actions {
+      align-items: stretch;
+    }
+
     .order-detail__header-actions .btn {
       width: 100%;
       justify-content: center;
+    }
+
+    /* v0.9.25: hint balra rendezett mobile-on */
+    .order-detail__pdf-hint {
+      text-align: center;
+      max-width: 100%;
     }
 
     /* Status row */
