@@ -196,6 +196,11 @@ const navItems = [
       max-width: 1200px;
       margin: 0 auto;
       padding: var(--space-6) var(--space-4);
+      /* v0.9.24.1: overflow guards — a child elemek (nav, banner) nem 
+         lóghatnak ki a viewport-on. iOS Safari is rispektálja. */
+      box-sizing: border-box;
+      width: 100%;
+      overflow-x: hidden;
     }
 
     /* [hidden] override — a globális reset és a saját display szabályok
@@ -233,6 +238,9 @@ const navItems = [
       display: grid;
       grid-template-columns: 240px 1fr;
       gap: var(--space-8);
+      /* v0.9.24.1: overflow guard — a 1fr column nem lóghat ki */
+      max-width: 100%;
+      min-width: 0;
     }
 
     /* Sidebar ─────────────────────────────────────────────────────────────── */

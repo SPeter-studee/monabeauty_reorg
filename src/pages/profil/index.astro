@@ -335,6 +335,9 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     display: flex;
     flex-direction: column;
     gap: var(--space-7);
+    /* v0.9.24: overflow guard — semmi child elem nem lóghat ki vízszintesen */
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .profile-page__header {
@@ -389,6 +392,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     border-top: 0.5px solid rgb(192 154 80 / 0.3);
     border-right: 0.5px solid rgb(192 154 80 / 0.3);
     border-bottom: 0.5px solid rgb(192 154 80 / 0.3);
+    /* v0.9.24: overflow guards — explicit max-width + box-sizing
+       a screenshot-on látszott, hogy a banner kifutott a viewport-ból */
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .profile-page__verify-banner-icon {
@@ -406,6 +413,9 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   .profile-page__verify-banner-content {
     flex: 1;
     min-width: 0;
+    /* v0.9.24: a flex item zsugorodjon ne lógjon ki */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   .profile-page__verify-banner-title {
@@ -462,7 +472,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   /* Mobile responsive — banner */
   @media (max-width: 600px) {
     .profile-page__verify-banner {
-      flex-wrap: wrap;
+      /* v0.9.24: column layout 600px alatt — a 3 elem (icon + content + btn)
+         egymás alá kerül, nincs overflow */
+      flex-direction: column;
+      align-items: flex-start;
       padding: var(--space-3) var(--space-4);
       gap: var(--space-3);
     }
@@ -478,11 +491,13 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
     .profile-page__verify-banner-text strong {
       font-size: 15px;
+      /* v0.9.24: a -10% kedvezmény nem szakadhat más sorba mint a "kapsz" */
+      white-space: nowrap;
     }
 
     .profile-page__verify-banner-btn {
       width: 100%;
-      margin-top: var(--space-2);
+      margin-top: 0;
     }
   }
 
@@ -493,18 +508,25 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    /* v0.9.24.1: form-szülő nem lóghat ki */
+    max-width: 100%;
   }
 
   .profile-page__field {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    /* v0.9.24.1: minden field max-width 100% — flex children min-width: auto bug */
+    max-width: 100%;
+    min-width: 0;
   }
 
   .profile-page__field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-3);
+    /* v0.9.24.1: grid is overflow guard */
+    max-width: 100%;
   }
 
   @media (max-width: 600px) {
@@ -563,6 +585,10 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   }
 
   .profile-page__input {
+    /* v0.9.24.1: explicit 100% width + box-sizing, hogy a mező garantáltan
+       a parent szélességét vegye fel és ne lépje túl a viewport-ot */
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px var(--space-3);
     /* Szerkeszthető mező: kiemelt háttér, vizuálisan "interaktív" */
     background: var(--mona-elevated);

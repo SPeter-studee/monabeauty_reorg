@@ -18,6 +18,141 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.24] — 2026-04-27 — Sprint 4.6 — HOTFIX: /profil overflow mobile-on (banner + input mezők) ⭐
+
+### Probléma — vendég screenshot-ok
+
+A vendég 4 screenshot-ot küldött a v0.9.21-23 deploy után. A `/profil` oldalon
+kettős probléma volt mobile-on (iPhone Messenger in-app browser):
+
+1. **Email verifikáció banner** kifutott a viewport-ból
+2. **Beviteli mezők** (Keresztnév, Vezetéknév, Email) **háttér is** kilógott
+
+### Diagnózis
+
+#### Ok 1: Banner overflow
+- `.profile-page__verify-banner-content` `flex: 1` + `min-width: 0` van, de:
+  - **Hiányzott a `max-width: 100%` és `box-sizing: border-box`**
+  - **Hiányzott az `overflow-wrap: break-word`** a hosszú szavakra
+- A meglévő `flex-wrap: wrap` mobile @media nem volt **garantáltan** robosztus
+
+#### Ok 2: Input mezők overflow
+- `.profile-page__input` **nem volt explicit `width: 100%`** beállítva
+- Default browser width és/vagy a `box-sizing` hiánya miatt a flex-children 
+  nem zsugorodtak → kilógtak
+- A flex-children `min-width: auto` (default) bug — a hosszú email cím
+  meg-extending-elte a parent-et
+
+#### Ok 3: ProfileLayout container
+- `.profile-layout__container` grid `1fr` column `min-width: auto` (default) miatt
+- A child elemek (banner, mezők) bármilyen szélesre nőhettek
+
+### Javítások (kombinált védelem)
+
+#### `profil/index.astro`
+
+**1. Banner alap CSS bővítve**:
+```css
+.profile-page__verify-banner {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.profile-page__verify-banner-content {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+```
+
+**2. Mobile banner robosztusabb**:
+```css
+@media (max-width: 600px) {
+  .profile-page__verify-banner {
+    flex-direction: column;          /* volt: flex-wrap: wrap */
+    align-items: flex-start;
+  }
+  .profile-page__verify-banner-text strong {
+    white-space: nowrap;             /* "-10% kedvezmény" együtt marad */
+  }
+}
+```
+
+**3. Input mezők width: 100% + box-sizing**:
+```css
+.profile-page__input {
+  width: 100%;
+  box-sizing: border-box;
+  /* ... eddigi padding, font, stb. */
+}
+```
+
+**4. Form, field, field-row overflow guards**:
+```css
+.profile-page__form,
+.profile-page__field,
+.profile-page__field-row {
+  max-width: 100%;
+}
+.profile-page__field {
+  min-width: 0;  /* flex children min-width: auto bug */
+}
+```
+
+**5. Profile-page container**:
+```css
+.profile-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+```
+
+#### `ProfileLayout.astro`
+
+**Layout root + container guards**:
+```css
+.profile-layout {
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+}
+.profile-layout__container {
+  max-width: 100%;
+  min-width: 0;  /* grid 1fr column min-width: auto bug */
+}
+```
+
+#### `tokens.css`
+A `--space-7: 2.5rem` token (v0.9.21 backup, ZIP 1-ben már hozzáadtam).
+
+### Test plan a vendégnek
+
+Hard refresh után a `/profil`-on:
+- ✅ A "Email verifikáció" banner mobile-on **3 sorban**:
+  - Ikon felül (kompakt 36×36px)
+  - Szöveg középen (több sorra tört, "-10%" együtt marad)
+  - "Küldj linket" gomb full-width alul
+- ✅ **Beviteli mezők (Keresztnév, Vezetéknév, Email)** szépen a viewport
+  szélességén belül vannak, nem lógnak ki
+- ✅ Nincs vízszintes scrollbar (még a Messenger in-app browser-ben sem)
+- ✅ A "−10% kedvezmény" együtt marad egy sorban
+
+### Fájlok (4)
+- `src/pages/profil/index.astro` — banner + input + form overflow fix
+- `src/layouts/ProfileLayout.astro` — layout container overflow guard
+- `src/styles/tokens.css` — `--space-7` (biztonsági backup)
+- `package.json` — `0.9.23` → `0.9.24`
+- `docs/09-changelog.md`
+
+### Megjegyzés
+
+A **többi oldal** (`/profil/rendelesek`, `/profil/cimek`) screenshot-okon
+**rendben volt**. **De**: a `ProfileLayout.astro` overflow guard hatása **MIND a
+profil-oldalakra kiterjed**, így a `/profil/rendelesek` és `/profil/cimek` is
+**még biztonságosabb** lesz.
+
+---
+
+
+
 ## [0.9.23] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 3 (marketing oldalak) ⭐
 
 ### Folytatás a ZIP 2 után
