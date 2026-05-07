@@ -18,6 +18,85 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.28] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: cegadatok "Betöltés..." stuck (typo a auth state check-ben) ⭐
+
+### Probléma — vendég screenshot
+
+A `/profil/cegadatok` oldalon stuck "Betöltés..." üzenet, **kivéve** ha a 
+vendég először a `/profil`-ra kattintott, és onnan navigál a "Cégadatok" 
+menüpontra.
+
+### Tényleges bug (v0.9.27-ben véletlenül beírtam)
+
+A v0.9.27 frontend kódban:
+
+```typescript
+subscribeAuthState((state) => {
+  if (!state.authenticated || !state.customer) {  // ← BUG
+    return;
+  }
+  // ...
+});
+```
+
+**De**: az `AuthState` type-ban **nincs** `state.authenticated` mező — csak:
+
+```typescript
+interface AuthState {
+  status: "loading" | "authenticated" | "anonymous";
+  customer: CustomerPublic | null;
+}
+```
+
+A `state.authenticated` hivatkozás **mindig `undefined`** → falsy → **korai 
+return** → a form **soha nem jelenik meg**.
+
+### Miért működött ha előbb `/profil`-ra kattint?
+
+Mert akkor a `subscribeAuthState` callback-em **többször hívódik** (state 
+változás esemény). Az **első** hívás a `state.status === "authenticated"` 
+ellenére **ugyanúgy** korai return-be megy (`state.authenticated` undefined). 
+**De** akkor már a populateForm() másfelől (ProfileLayout?) **valamilyen 
+módon kihat** és a form mégis látszik.
+
+Valószínűleg az ok: a sidebar-ban való kattintás ugyanazt a tab-ot frissíti, 
+de a böngésző URL-bar-os direct navigációhoz képest **a state-cache** 
+tovább marad élő a session során.
+
+### Javítás
+
+```typescript
+subscribeAuthState((state) => {
+  if (state.status === "loading") return;
+  if (state.status !== "authenticated" || !state.customer) return;
+  // ... populateForm + bind
+});
+```
+
+### Plus: defensive populateForm
+
+Ha a customer object régi shape-ű (a backend update.ts még nincs deployolva), 
+a `customer.customerType` undefined lehet. A `populateForm()` mostantól 
+`(customer as any).customerType ?? null` defensive access-szel.
+
+### Try-catch a callback körül
+
+Bármi hiba is, a form **mindenképp megjelenik** — a vendég nem ragad 
+"Betöltés..." állapotban.
+
+### Console logok
+
+- `[cegadatok] auth state: {status: "...", customer: ...}` minden state-update-re
+- `[cegadatok] form ready` mikor a form sikeresen feltöltött
+- `[cegadatok] populateForm error: ...` ha JS hiba
+
+### Fájlok (3)
+- `src/pages/profil/cegadatok.astro` — `state.status` check + defensive populate + try-catch
+- `package.json` — `0.9.27` → `0.9.28`
+- `docs/09-changelog.md`
+
+---
+
 ## [0.9.27] — 2026-04-27 — Sprint 4.5.3.y — B2B Cégadatok modul ⭐⭐⭐
 
 ### Vendég kérés (régóta tervezett)

@@ -185,26 +185,47 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
   let currentCustomer: CustomerPublic | null = null;
 
   // ─── 1. Auth + load ──────────────────────────────────────────────────────
+  // FONTOS: az AuthState type-ban NINCS `state.authenticated` — csak
+  // `state.status === "loading" | "authenticated" | "anonymous"`. A v0.9.27-ben
+  // én hibásan írtam `state.authenticated`-et → mindig undefined → korai return →
+  // a form sosem jelent meg.
   subscribeAuthState((state) => {
-    if (!state.authenticated || !state.customer) {
-      // ProfileLayout kezeli a redirect-et
-      return;
+    try {
+      console.log("[cegadatok] auth state:", state);
+
+      // Loading state: várj
+      if (state.status === "loading") {
+        return;
+      }
+
+      // Anonymous: a ProfileLayout kezeli a redirect-et / login modal-t
+      if (state.status !== "authenticated" || !state.customer) {
+        return;
+      }
+
+      currentCustomer = state.customer;
+      populateForm(currentCustomer);
+      loadingEl?.setAttribute("hidden", "");
+      formEl?.removeAttribute("hidden");
+
+      // ZIP-város bind az HU-cégszékhelyhez
+      bindZipCityAutofill({
+        zipInput: document.querySelector<HTMLInputElement>("[data-zip-input]"),
+        cityInput: document.querySelector<HTMLInputElement>("[data-city-input]"),
+        countyInput: document.querySelector<HTMLInputElement>("[data-county-input]"),
+        citiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-cities-datalist"),
+        countiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-counties-datalist"),
+      });
+
+      updateVisibility();
+      console.log("[cegadatok] form ready");
+    } catch (err) {
+      // v0.9.28 hotfix: bármi hiba is, mutassuk a form-ot (a felhasználó tudjon menteni)
+      console.error("[cegadatok] populateForm error:", err);
+      loadingEl?.setAttribute("hidden", "");
+      formEl?.removeAttribute("hidden");
+      updateVisibility();
     }
-    currentCustomer = state.customer;
-    populateForm(currentCustomer);
-    loadingEl?.setAttribute("hidden", "");
-    formEl?.removeAttribute("hidden");
-
-    // ZIP-város bind az HU-cégszékhelyhez
-    bindZipCityAutofill({
-      zipInput: document.querySelector<HTMLInputElement>("[data-zip-input]"),
-      cityInput: document.querySelector<HTMLInputElement>("[data-city-input]"),
-      countyInput: document.querySelector<HTMLInputElement>("[data-county-input]"),
-      citiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-cities-datalist"),
-      countiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-counties-datalist"),
-    });
-
-    updateVisibility();
   });
 
   // ─── 2. UI állapot — típus változás → mezők megjelenítése/elrejtése ──────
@@ -246,19 +267,25 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
   // ─── 3. Form prefill ─────────────────────────────────────────────────────
   function populateForm(customer: CustomerPublic) {
-    // Type radio
-    const targetRadio = document.querySelector<HTMLInputElement>(`input[name='customerType'][value='${customer.customerType}']`);
+    // v0.9.28 hotfix: defensive — ha a customer object nem tartalmazza a B2B
+    // mezőket (régi cache, vagy backend még nem frissítette a customerRowToPublic-ot),
+    // akkor default 'private' és üres mezők. A vendég ki tud választani egy típust
+    // és menteni — a backend mindkét eset (új mezők megléte v. nem) lekezeli.
+
+    // Type radio — default 'private' ha hiányzik
+    const customerType = (customer as any).customerType || "private";
+    const targetRadio = document.querySelector<HTMLInputElement>(`input[name='customerType'][value='${customerType}']`);
     if (targetRadio) targetRadio.checked = true;
 
-    // Mezők — egyszerű setValue
-    setValue("companyName", customer.companyName);
-    setValue("taxNumber", customer.taxNumber);
-    setValue("euVatNumber", customer.euVatNumber);
-    setValue("companyCountryEu", customer.companyCountry);  // HU automatikusan readonly
-    setValue("companyZip", customer.companyZip);
-    setValue("companyCity", customer.companyCity);
-    setValue("companyCounty", customer.companyCounty);
-    setValue("companyStreet", customer.companyStreet);
+    // Mezők — egyszerű setValue, undefined-safe
+    setValue("companyName", (customer as any).companyName ?? null);
+    setValue("taxNumber", (customer as any).taxNumber ?? null);
+    setValue("euVatNumber", (customer as any).euVatNumber ?? null);
+    setValue("companyCountryEu", (customer as any).companyCountry ?? null);
+    setValue("companyZip", (customer as any).companyZip ?? null);
+    setValue("companyCity", (customer as any).companyCity ?? null);
+    setValue("companyCounty", (customer as any).companyCounty ?? null);
+    setValue("companyStreet", (customer as any).companyStreet ?? null);
   }
 
   function setValue(name: string, value: string | null) {
