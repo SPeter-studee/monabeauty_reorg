@@ -18,6 +18,58 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.29] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: Cégadatok menüpont a UserMenu dropdown-ban
+
+### Probléma — vendég screenshot
+
+A v0.9.27/0.9.28 deploy után a `/profil/cegadatok` oldal megjelent és működik
+(form, type választó, fieldsets), **de** a header jobb felső sarkában
+(👤 ikon) lévő **dropdown menüben** **a "Cégadatok" link nem látszik**:
+- ✅ Profilom
+- ✅ Rendelési előzmények
+- ✅ Címeim
+- ❌ **HIÁNYZIK: Cégadatok**
+- ✅ Kívánságlista
+- ✅ Kijelentkezés
+
+### Diagnózis
+
+A v0.9.27-ben **csak a `ProfileLayout.astro` sidebar nav-ját** módosítottam.
+**De** az `UserMenu.astro` (a header dropdown) **külön komponens, külön nav**!
+Elfelejtettem ott is hozzáadni a Cégadatok linket.
+
+### Javítás
+
+`UserMenu.astro` nav listájában új link a Címeim és Kívánságlista között:
+
+```html
+<a href="/profil/cegadatok" class="user-menu__link">
+  <svg ...><!-- épület-ikon, ugyanaz mint a sidebar-ban --></svg>
+  Cégadatok
+</a>
+```
+
+Az ikon azonos a `ProfileLayout.astro` sidebar "Cégadatok" menüpontjával
+(épület + ablakok SVG).
+
+### Konzisztencia ellenőrzés Sprint 5+ -ban
+
+A profil-szekciókat **két helyen** kell felsorolni:
+1. `ProfileLayout.astro` — sidebar nav (logged-in profil-oldalakon)
+2. `UserMenu.astro` — header dropdown (minden oldalon)
+
+Sprint 5+ -ban érdemes egy közös **`profileNavItems.ts` config**-ba kiszervezni,
+hogy ne lehessen elfelejteni egyiket sem.
+
+### Fájlok (3)
+- `src/components/auth/UserMenu.astro` — Cégadatok link hozzáadás
+- `package.json` — `0.9.28` → `0.9.29`
+- `docs/09-changelog.md`
+
+---
+
+
+
 ## [0.9.28] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: cegadatok "Betöltés..." stuck (typo a auth state check-ben) ⭐
 
 ### Probléma — vendég screenshot
