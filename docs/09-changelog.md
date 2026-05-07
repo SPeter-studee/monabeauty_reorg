@@ -18,6 +18,103 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.30] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: ZIP-város auto-fill /profil/cegadatok-on
+
+### Probléma — vendég visszajelzés
+
+> *"most olyan mintha az automatikus település kitöltés nem működne."*
+
+A `/profil/cegadatok` oldalon a Belföldi cég cégszékhelyén az irányítószám
+beírása után a város (és megye) mező **nem töltődik ki automatikusan**.
+
+### Diagnózis — három lehetséges ok
+
+#### 1. A bind hívás csak az auth state authenticated állapotban futott
+A v0.9.27-ben a `bindZipCityAutofill`-t a `subscribeAuthState` callback-be tettem,
+**a populateForm() után**. Ez azt jelentette: a bind csak akkor inicializálódott,
+ha a customer adatok megérkeztek. Ha valami baj volt a populateForm-ban
+(pl. a v0.9.28 előtti `state.authenticated` typo), a bind sem futott.
+
+A v0.9.28 hotfix után a populateForm már working, **de** a bind még mindig
+**a callback-en belül** van — felesleges függőség. A bind az event listener-eket
+a DOM elemekre teszi, **független** a customer adatától.
+
+#### 2. ZIP input pattern hiányzott
+A `bindZipCityAutofill` a `blur` event-en `if (!/^\d{4}$/.test(zip)) return;`
+ellenőriz. Ha a vendég nem **pontosan 4 számjegyet** ír, a callback return-el.
+
+A `companyZip` input-on **nem volt pattern** + `maxlength="10"` (lehet hogy
+nem 4 számjegyet írt be). A v0.9.20-as `shippingZip` checkout mezőn van
+`pattern="[0-9]{4}"` + `maxlength="4"` — kompenzálva az eltérést.
+
+#### 3. Numeric keyboard mobile-on
+Ha mobile-on tesztelt, a default keyboard betűs volt. `inputmode="numeric"`
+hozzáadása → numerikus billentyűzet azonnal előjön (jobb UX).
+
+### Javítás
+
+#### 1. Bind RÖGTÖN, az auth-state-től függetlenül
+
+```typescript
+// v0.9.30: a bind az auth-flow-tól függetlenül fut le
+try {
+  bindZipCityAutofill({
+    zipInput: document.querySelector("[data-zip-input]"),
+    cityInput: document.querySelector("[data-city-input]"),
+    countyInput: document.querySelector("[data-county-input]"),
+    citiesDatalist: document.querySelector("#cegadatok-cities-datalist"),
+    countiesDatalist: document.querySelector("#cegadatok-counties-datalist"),
+  });
+} catch (err) {
+  console.error("[cegadatok] ZIP-city bind failed:", err);
+}
+```
+
+A bind a script betöltés után **azonnal** lefut. A fieldset hidden még,
+de az event listener-ek a hidden inputokon is működnek — amikor a
+fieldset megjelenik (Belföldi cég kiválasztása után), a vendég bekattint
+a ZIP-be, kibillent → blur event → auto-fill.
+
+#### 2. ZIP input pattern + maxlength + inputmode
+
+```html
+<input id="companyZip" name="companyZip" type="text"
+       maxlength="4" pattern="[0-9]{4}"
+       inputmode="numeric" autocomplete="postal-code"
+       data-zip-input ... />
+```
+
+Csak 4 számjegy elfogadott, mobile-on numerikus keyboard.
+
+#### 3. Diagnosztikai logok
+
+```typescript
+console.log("[cegadatok] bind init — elements found:", {
+  zip: !!zipInputEl,
+  city: !!cityInputEl,
+  county: !!countyInputEl,
+  citiesDl: !!citiesDatalistEl,
+  countiesDl: !!countiesDatalistEl,
+});
+```
+
+Ha bármelyik elem **`false`** → DOM-bug, lokálisan reprodukálható.
+
+### Test plan
+
+Hard refresh után, **Belföldi cég**:
+1. Beírsz `2600` a Irányítószámba
+2. Tab vagy klikk máshol → **`Vác`** auto-fill a Város mezőben
+3. **`Pest`** auto-fill a Megye mezőben
+4. Console: `[zip-city] 2600 → Vác, Pest`
+
+### Fájlok (3)
+- `src/pages/profil/cegadatok.astro` — bind kivétel a callback-ből + pattern + diagnostic logs
+- `package.json` — `0.9.29` → `0.9.30`
+- `docs/09-changelog.md`
+
+---
+
 ## [0.9.29] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: Cégadatok menüpont a UserMenu dropdown-ban
 
 ### Probléma — vendég screenshot

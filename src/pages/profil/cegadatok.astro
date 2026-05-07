@@ -135,7 +135,9 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         <div class="profile-page__field-row">
           <div class="profile-page__field">
             <label class="profile-page__label" for="companyZip">Irányítószám <span class="required">*</span></label>
-            <input id="companyZip" name="companyZip" type="text" maxlength="10" class="profile-page__input" data-field="companyZip" data-zip-input />
+            <input id="companyZip" name="companyZip" type="text" maxlength="4" pattern="[0-9]{4}"
+                   inputmode="numeric" autocomplete="postal-code"
+                   class="profile-page__input" data-field="companyZip" data-zip-input />
             <p class="profile-page__field-error" data-error="company_zip_required" hidden>Az irányítószám megadása kötelező.</p>
           </div>
           <div class="profile-page__field">
@@ -184,6 +186,36 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
 
   let currentCustomer: CustomerPublic | null = null;
 
+  // ─── 0. ZIP-város bind RÖGTÖN — független az auth state-től ──────────────
+  // v0.9.30: a bind az auth-flow-tól függetlenül fut le. Az event listener-ek
+  // a DOM elemekre hivatkoznak, nem a customer-re. Ha a fieldset hidden, a
+  // listener akkor is működik amikor megjelenik — ez megfelel a böngészőben.
+  try {
+    const zipInputEl = document.querySelector<HTMLInputElement>("[data-zip-input]");
+    const cityInputEl = document.querySelector<HTMLInputElement>("[data-city-input]");
+    const countyInputEl = document.querySelector<HTMLInputElement>("[data-county-input]");
+    const citiesDatalistEl = document.querySelector<HTMLDataListElement>("#cegadatok-cities-datalist");
+    const countiesDatalistEl = document.querySelector<HTMLDataListElement>("#cegadatok-counties-datalist");
+
+    console.log("[cegadatok] bind init — elements found:", {
+      zip: !!zipInputEl,
+      city: !!cityInputEl,
+      county: !!countyInputEl,
+      citiesDl: !!citiesDatalistEl,
+      countiesDl: !!countiesDatalistEl,
+    });
+
+    bindZipCityAutofill({
+      zipInput: zipInputEl,
+      cityInput: cityInputEl,
+      countyInput: countyInputEl,
+      citiesDatalist: citiesDatalistEl,
+      countiesDatalist: countiesDatalistEl,
+    });
+  } catch (err) {
+    console.error("[cegadatok] ZIP-city bind failed:", err);
+  }
+
   // ─── 1. Auth + load ──────────────────────────────────────────────────────
   // FONTOS: az AuthState type-ban NINCS `state.authenticated` — csak
   // `state.status === "loading" | "authenticated" | "anonymous"`. A v0.9.27-ben
@@ -207,15 +239,6 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       populateForm(currentCustomer);
       loadingEl?.setAttribute("hidden", "");
       formEl?.removeAttribute("hidden");
-
-      // ZIP-város bind az HU-cégszékhelyhez
-      bindZipCityAutofill({
-        zipInput: document.querySelector<HTMLInputElement>("[data-zip-input]"),
-        cityInput: document.querySelector<HTMLInputElement>("[data-city-input]"),
-        countyInput: document.querySelector<HTMLInputElement>("[data-county-input]"),
-        citiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-cities-datalist"),
-        countiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-counties-datalist"),
-      });
 
       updateVisibility();
       console.log("[cegadatok] form ready");
