@@ -155,4 +155,31 @@
     border-top: 0.5px solid var(--mona-border);
     margin: var(--space-2) 0;
   }
+
+  /* ─── v0.9.26 — Mobile responsive (Sprint 4.6 ZIP 4) ──────── */
+  @media (max-width: 480px) {
+    .user-menu {
+      /* Mobile-on a dropdown **valamivel szélesebb** legyen, hogy a hosszú
+         email és menü elemek olvashatók legyenek. Még mindig dropdown, nem
+         full-width modal — UX szempontból elég. */
+      min-width: 260px;
+      max-width: calc(100vw - var(--space-4) * 2);
+      right: calc(-1 * var(--space-4));
+    }
+
+    .user-menu__header {
+      padding: var(--space-3);
+    }
+
+    .user-menu__greeting {
+      font-size: 15px;
+    }
+
+    .user-menu__link {
+      /* Touch target ≥44px */
+      padding: var(--space-3) var(--space-4);
+      min-height: var(--touch-target);
+      font-size: 14px;
+    }
+  }
 </style>

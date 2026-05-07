@@ -65,6 +65,18 @@ const { endsAt, variant = "compact" } = Astro.props;
   0%, 100% { background: rgba(184, 90, 60, 0.08); }
   50%      { background: rgba(184, 90, 60, 0.16); }
 }
+
+/* ─── v0.9.26 — Mobile responsive (Sprint 4.6 ZIP 4) ──────── */
+@media (max-width: 480px) {
+  .sale-countdown--full {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .sale-countdown--compact {
+    font-size: 10px;
+  }
+}
 </style>
 
 <script>

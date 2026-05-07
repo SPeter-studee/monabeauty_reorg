@@ -18,6 +18,96 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.26] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 4 (komponensek) ⭐
+
+### Sprint 4.6 lezárása
+
+A Sprint 4.6 mobile audit **utolsó fázisa**. ZIP 1-3 az oldalakat fedte le,
+ZIP 4 a **komponenseket** (kártyák, dropdown-ok, widgetek).
+
+### 5 komponens javítva
+
+#### `auth/UserMenu.astro` — 0 → 1 @media
+A header-ben lévő **dropdown menu** (Profilom, Rendelések, Címeim, Kijelentkezés).
+
+**Mobile (< 480px) javítás**:
+- `min-width: 240px → 260px` (hosszú email olvasható)
+- `max-width: calc(100vw - var(--space-4) * 2)` (nem fut túl)
+- `right: calc(-1 * var(--space-4))` (jobbra eltolva, hogy nem érje a viewport szélét)
+- **Touch target ≥44px** menü elemekre (Apple HIG)
+- Header padding kompaktabb
+- Greeting + link font-méret finomítás
+
+#### `home/AboutMonikaTeaser.astro` — 0 → 1 @media
+A főoldal "Mona Studio" idézet block-ja.
+
+**Mobile (< 600px) javítás**:
+- Quote padding kompaktabb (`var(--space-4) → var(--space-3)`)
+- Signature 13px → 12px
+- Body text 16px → 14px (line-height 1.7)
+- Margin-bottom kompaktabb
+
+#### `home/TrustindexReviews.astro` — 0 → 1 @media
+Külső Trustindex widget wrapper.
+
+**Mobile (< 600px) javítás**:
+- Intro margin kompaktabb
+- Title margin kisebb
+- Lead font 16px → 14px
+- Placeholder padding + font kompaktabb (csak akkor látszik, ha nincs script betöltve)
+
+A widget belseje **a Trustindex** scriptje rendereli — ott nem tudunk
+beavatkozni. A wrapper viszont mobile-on már kompakt.
+
+#### `shop/SaleCountdown.astro` — 0 → 1 @media
+A "Akciós ár — még 3 nap, 14 óra" countdown.
+
+**Mobile (< 480px) javítás**:
+- `--full` változat: `font-size: 13px → 12px`, padding kompaktabb
+- `--compact` változat (kártyán): `font-size: 11px → 10px`
+
+#### `services/ServiceCard.astro` — 1 → 2 @media
+A meglévő `@media (hover: hover)` (touch device-on no hover) mellé **valódi
+mobile szabály**.
+
+**Mobile (< 480px) javítás**:
+- Body padding `var(--space-5) → var(--space-4)` (több hely a szövegnek)
+- Description 15px → 14px (line-height 1.55)
+- Price value 18px → 16px
+- CTA "Részletek →" 13px → 12px
+
+### Sprint 4.6 lezárás — összefoglaló
+
+A teljes Sprint 4.6 mobile audit végeredménye:
+
+| Fázis | Verzió | Tartalom | Status |
+|---|---|---|---|
+| ZIP 1 | v0.9.21 | Vendég-flow (kosár, köszönjük, login, regisztr.) | ✅ |
+| ZIP 2 | v0.9.22 | Profil + kapcsolat | ✅ |
+| ZIP 3 | v0.9.23 | Marketing oldalak (10 oldal) | ✅ |
+| Hotfix | v0.9.24 | /profil banner + input overflow | ✅ |
+| ZIP 4 | v0.9.26 | Komponensek (5 db) | ✅ |
+
+**Eredmény**: a teljes vendég-felé eső felület **most már reszponzív**.
+Sephora/Notino-szintű mobile UX. A Cloudflare Analytics szerint a forgalom
+~70%+ mobile, így ez **közvetlen üzleti hatású**.
+
+### Még pending: Sprint 4.5.3.y B2B Cégadatok
+
+A vendég korábban "most azonnal kell"-ként jelölte. Sprint 5+ -ban a wishlist,
+email verifikáció, password reset is jön.
+
+### Fájlok (7)
+- `src/components/auth/UserMenu.astro` — 0 → 1 @media
+- `src/components/home/AboutMonikaTeaser.astro` — 0 → 1 @media
+- `src/components/home/TrustindexReviews.astro` — 0 → 1 @media
+- `src/components/shop/SaleCountdown.astro` — 0 → 1 @media
+- `src/components/services/ServiceCard.astro` — 1 → 2 @media
+- `package.json` — `0.9.25` → `0.9.26`
+- `docs/09-changelog.md`
+
+---
+
 ## [0.9.25] — 2026-04-27 — Sprint 4.5.4 — Cím szerkeszt/töröl + Rendelés PDF UX ⭐
 
 ### Vendég kérés
