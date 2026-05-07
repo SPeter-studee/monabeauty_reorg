@@ -1,0 +1,557 @@
+---
+// src/pages/profil/cegadatok.astro
+// Sprint 4.5.3.y v0.9.27 — B2B Cégadatok kezelő oldal
+//
+// Mit jelenít meg:
+//   - Vásárló-típus választó: Magán / Belföldi cég / EU cég
+//   - A típus alapján dinamikusan megjelenő mezők:
+//     - Magán: csak alap (nincs cégadat)
+//     - Belföldi cég: Cégnév, magyar adószám (12345678-1-12), cégszékhely (HU)
+//     - EU cég: Cégnév, EU VATIN (DE123456789), cégszékhely (ország + címe)
+//   - ZIP-város auto-fill (Sprint 4.5.3.x bindZipCityAutofill)
+//   - Validáció kliensoldalon + szerveren (regex + visszajelzés)
+//   - "Mentés" → POST /api/profile/update
+//
+// Hozzáférés: /profil/cegadatok (logged-in vendég)
+
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+---
+
+<ProfileLayout currentSection="business" title="Cégadatok">
+  <div class="profile-page">
+    <header class="profile-page__header">
+      <h1 class="profile-page__title">Cégadatok</h1>
+      <p class="profile-page__subtitle">
+        Ha a vásárlásokról cégnévre kérsz számlát, itt add meg a cégadatokat.
+      </p>
+    </header>
+
+    {/* Loading state — a JS betölti a customert és felépíti a UI-t */}
+    <div class="cegadatok-page__loading" data-loading>
+      <p>Betöltés…</p>
+    </div>
+
+    {/* A teljes form — kezdetben hidden, JS aktiválja */}
+    <form class="profile-page__form cegadatok-form" data-cegadatok-form hidden>
+
+      {/* ─── 1. Vásárló-típus választó ───────────────────────────────────── */}
+      <fieldset class="cegadatok-types">
+        <legend class="cegadatok-types__legend">Vásárló típusa</legend>
+
+        <label class="cegadatok-type">
+          <input type="radio" name="customerType" value="private" checked />
+          <span class="cegadatok-type__card">
+            <span class="cegadatok-type__name">Magán</span>
+            <span class="cegadatok-type__hint">A számlán a saját nevedre.</span>
+          </span>
+        </label>
+
+        <label class="cegadatok-type">
+          <input type="radio" name="customerType" value="company_hu" />
+          <span class="cegadatok-type__card">
+            <span class="cegadatok-type__name">Belföldi cég</span>
+            <span class="cegadatok-type__hint">Magyar adószámmal.</span>
+          </span>
+        </label>
+
+        <label class="cegadatok-type">
+          <input type="radio" name="customerType" value="company_eu" />
+          <span class="cegadatok-type__card">
+            <span class="cegadatok-type__name">EU-s cég</span>
+            <span class="cegadatok-type__hint">EU VATIN közösségi adószámmal.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      {/* ─── 2. Cégadatok blokk (csak ha NEM magán) ──────────────────────── */}
+      <fieldset class="cegadatok-fields" data-cegadatok-fields hidden>
+        <legend class="cegadatok-fields__legend">Cégadatok</legend>
+
+        <div class="profile-page__field">
+          <label class="profile-page__label" for="companyName">Cégnév <span class="required">*</span></label>
+          <input id="companyName" name="companyName" type="text" maxlength="200" class="profile-page__input" data-field="companyName" />
+          <p class="profile-page__field-error" data-error="company_name_required" hidden>A cégnév megadása kötelező.</p>
+        </div>
+
+        {/* Magyar adószám — csak company_hu */}
+        <div class="profile-page__field" data-only-for="company_hu" hidden>
+          <label class="profile-page__label" for="taxNumber">
+            Adószám <span class="required">*</span>
+            <span class="form-field__label-hint">(formátum: 12345678-1-12)</span>
+          </label>
+          <input id="taxNumber" name="taxNumber" type="text" maxlength="20" placeholder="12345678-1-12"
+                 pattern="\d{8}-\d-\d{2}" class="profile-page__input" data-field="taxNumber" />
+          <p class="profile-page__field-error" data-error="tax_number_required" hidden>Az adószám megadása kötelező.</p>
+          <p class="profile-page__field-error" data-error="tax_number_format_invalid" hidden>Érvénytelen formátum. Helyes: 12345678-1-12</p>
+        </div>
+
+        {/* EU VATIN — csak company_eu */}
+        <div class="profile-page__field" data-only-for="company_eu" hidden>
+          <label class="profile-page__label" for="euVatNumber">
+            EU VATIN közösségi adószám <span class="required">*</span>
+            <span class="form-field__label-hint">(formátum: DE123456789)</span>
+          </label>
+          <input id="euVatNumber" name="euVatNumber" type="text" maxlength="20" placeholder="DE123456789"
+                 class="profile-page__input" data-field="euVatNumber" style="text-transform: uppercase;" />
+          <p class="profile-page__field-error" data-error="eu_vat_number_required" hidden>A VATIN megadása kötelező.</p>
+          <p class="profile-page__field-error" data-error="eu_vat_number_format_invalid" hidden>Érvénytelen formátum. Helyes: 2 betű ország + 8-12 szám.</p>
+        </div>
+      </fieldset>
+
+      {/* ─── 3. Cégszékhely ──────────────────────────────────────────────── */}
+      <fieldset class="cegadatok-address" data-cegadatok-address hidden>
+        <legend class="cegadatok-address__legend">Cégszékhely</legend>
+        <p class="cegadatok-address__note">
+          A számlán szereplő cégszékhely címe. Eltérhet a szállítási és lakcímtől.
+        </p>
+
+        {/* Ország — magyarok HU rögzítve, EU-knál választható */}
+        <div class="profile-page__field" data-only-for="company_hu" hidden>
+          <label class="profile-page__label">Ország</label>
+          <input type="text" value="Magyarország" readonly class="profile-page__input" />
+          <input type="hidden" name="companyCountryHu" value="HU" />
+        </div>
+
+        <div class="profile-page__field" data-only-for="company_eu" hidden>
+          <label class="profile-page__label" for="companyCountryEu">
+            Ország <span class="required">*</span>
+            <span class="form-field__label-hint">(2-betűs ISO kód, pl. DE, AT, IT)</span>
+          </label>
+          <input id="companyCountryEu" name="companyCountryEu" type="text" maxlength="2"
+                 placeholder="DE" class="profile-page__input" data-field="companyCountryEu"
+                 style="text-transform: uppercase;" />
+          <p class="profile-page__field-error" data-error="company_country_required" hidden>Az országkód megadása kötelező.</p>
+          <p class="profile-page__field-error" data-error="company_country_invalid" hidden>Érvénytelen országkód.</p>
+        </div>
+
+        {/* Utca, házszám */}
+        <div class="profile-page__field">
+          <label class="profile-page__label" for="companyStreet">Utca, házszám <span class="required">*</span></label>
+          <input id="companyStreet" name="companyStreet" type="text" maxlength="200" class="profile-page__input" data-field="companyStreet" />
+          <p class="profile-page__field-error" data-error="company_street_required" hidden>Az utca, házszám megadása kötelező.</p>
+        </div>
+
+        {/* ZIP + Város (egy sor desktop) */}
+        <div class="profile-page__field-row">
+          <div class="profile-page__field">
+            <label class="profile-page__label" for="companyZip">Irányítószám <span class="required">*</span></label>
+            <input id="companyZip" name="companyZip" type="text" maxlength="10" class="profile-page__input" data-field="companyZip" data-zip-input />
+            <p class="profile-page__field-error" data-error="company_zip_required" hidden>Az irányítószám megadása kötelező.</p>
+          </div>
+          <div class="profile-page__field">
+            <label class="profile-page__label" for="companyCity">Város <span class="required">*</span></label>
+            <input id="companyCity" name="companyCity" type="text" maxlength="100" class="profile-page__input" data-field="companyCity" data-city-input list="cegadatok-cities-datalist" />
+            <datalist id="cegadatok-cities-datalist"></datalist>
+            <p class="profile-page__field-error" data-error="company_city_required" hidden>A város megadása kötelező.</p>
+          </div>
+        </div>
+
+        {/* Megye — csak HU */}
+        <div class="profile-page__field" data-only-for="company_hu" hidden>
+          <label class="profile-page__label" for="companyCounty">
+            Megye <span class="required">*</span>
+            <span class="form-field__label-hint">(automatikusan kitöltjük)</span>
+          </label>
+          <input id="companyCounty" name="companyCounty" type="text" maxlength="100" class="profile-page__input" data-field="companyCounty" data-county-input list="cegadatok-counties-datalist" />
+          <datalist id="cegadatok-counties-datalist"></datalist>
+          <p class="profile-page__field-error" data-error="company_county_required" hidden>A megye megadása kötelező.</p>
+        </div>
+      </fieldset>
+
+      {/* ─── 4. Mentés gomb + visszajelzés ───────────────────────────────── */}
+      <div class="profile-page__form-actions">
+        <p class="profile-page__form-message" data-form-message hidden></p>
+        <button type="submit" class="btn btn-primary" data-save-btn>Cégadatok mentése</button>
+      </div>
+    </form>
+  </div>
+</ProfileLayout>
+
+<script>
+  import { subscribeAuthState } from "@/lib/auth-state";
+  import { bindZipCityAutofill } from "@/lib/utils/zip-city-lookup";
+  import type { CustomerPublic } from "@/lib/types/auth";
+
+  const loadingEl = document.querySelector<HTMLElement>("[data-loading]");
+  const formEl = document.querySelector<HTMLFormElement>("[data-cegadatok-form]");
+  const fieldsBlock = document.querySelector<HTMLElement>("[data-cegadatok-fields]");
+  const addressBlock = document.querySelector<HTMLElement>("[data-cegadatok-address]");
+  const messageEl = document.querySelector<HTMLElement>("[data-form-message]");
+  const saveBtn = document.querySelector<HTMLButtonElement>("[data-save-btn]");
+
+  const typeRadios = document.querySelectorAll<HTMLInputElement>("input[name='customerType']");
+  const typeBlocks = document.querySelectorAll<HTMLElement>("[data-only-for]");
+
+  let currentCustomer: CustomerPublic | null = null;
+
+  // ─── 1. Auth + load ──────────────────────────────────────────────────────
+  subscribeAuthState((state) => {
+    if (!state.authenticated || !state.customer) {
+      // ProfileLayout kezeli a redirect-et
+      return;
+    }
+    currentCustomer = state.customer;
+    populateForm(currentCustomer);
+    loadingEl?.setAttribute("hidden", "");
+    formEl?.removeAttribute("hidden");
+
+    // ZIP-város bind az HU-cégszékhelyhez
+    bindZipCityAutofill({
+      zipInput: document.querySelector<HTMLInputElement>("[data-zip-input]"),
+      cityInput: document.querySelector<HTMLInputElement>("[data-city-input]"),
+      countyInput: document.querySelector<HTMLInputElement>("[data-county-input]"),
+      citiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-cities-datalist"),
+      countiesDatalist: document.querySelector<HTMLDataListElement>("#cegadatok-counties-datalist"),
+    });
+
+    updateVisibility();
+  });
+
+  // ─── 2. UI állapot — típus változás → mezők megjelenítése/elrejtése ──────
+  function getCurrentType(): "private" | "company_hu" | "company_eu" {
+    const checked = document.querySelector<HTMLInputElement>("input[name='customerType']:checked");
+    return (checked?.value as any) || "private";
+  }
+
+  function updateVisibility() {
+    const type = getCurrentType();
+    const isCompany = type !== "private";
+
+    // Cégadatok blokk + cégszékhely blokk
+    if (isCompany) {
+      fieldsBlock?.removeAttribute("hidden");
+      addressBlock?.removeAttribute("hidden");
+    } else {
+      fieldsBlock?.setAttribute("hidden", "");
+      addressBlock?.setAttribute("hidden", "");
+    }
+
+    // data-only-for blokkok
+    typeBlocks.forEach(block => {
+      const onlyFor = block.dataset.onlyFor;
+      if (onlyFor === type) {
+        block.removeAttribute("hidden");
+      } else {
+        block.setAttribute("hidden", "");
+      }
+    });
+  }
+
+  typeRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      updateVisibility();
+      clearAllErrors();
+    });
+  });
+
+  // ─── 3. Form prefill ─────────────────────────────────────────────────────
+  function populateForm(customer: CustomerPublic) {
+    // Type radio
+    const targetRadio = document.querySelector<HTMLInputElement>(`input[name='customerType'][value='${customer.customerType}']`);
+    if (targetRadio) targetRadio.checked = true;
+
+    // Mezők — egyszerű setValue
+    setValue("companyName", customer.companyName);
+    setValue("taxNumber", customer.taxNumber);
+    setValue("euVatNumber", customer.euVatNumber);
+    setValue("companyCountryEu", customer.companyCountry);  // HU automatikusan readonly
+    setValue("companyZip", customer.companyZip);
+    setValue("companyCity", customer.companyCity);
+    setValue("companyCounty", customer.companyCounty);
+    setValue("companyStreet", customer.companyStreet);
+  }
+
+  function setValue(name: string, value: string | null) {
+    const el = document.querySelector<HTMLInputElement>(`[data-field='${name}']`);
+    if (el && value !== null) el.value = value;
+  }
+
+  // ─── 4. Submit ───────────────────────────────────────────────────────────
+  formEl?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!saveBtn) return;
+
+    clearAllErrors();
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Mentés…";
+
+    const type = getCurrentType();
+    const payload: any = {
+      // Alapadatok megőrzése (a customerből)
+      firstName: currentCustomer?.firstName || null,
+      lastName: currentCustomer?.lastName || null,
+      phone: currentCustomer?.phone || null,
+      // B2B mezők
+      customerType: type,
+    };
+
+    if (type !== "private") {
+      payload.companyName = (document.querySelector<HTMLInputElement>("[data-field='companyName']")?.value || "").trim() || null;
+      payload.companyZip = (document.querySelector<HTMLInputElement>("[data-field='companyZip']")?.value || "").trim() || null;
+      payload.companyCity = (document.querySelector<HTMLInputElement>("[data-field='companyCity']")?.value || "").trim() || null;
+      payload.companyStreet = (document.querySelector<HTMLInputElement>("[data-field='companyStreet']")?.value || "").trim() || null;
+
+      if (type === "company_hu") {
+        payload.taxNumber = (document.querySelector<HTMLInputElement>("[data-field='taxNumber']")?.value || "").trim() || null;
+        payload.companyCountry = "HU";
+        payload.companyCounty = (document.querySelector<HTMLInputElement>("[data-field='companyCounty']")?.value || "").trim() || null;
+      } else {
+        // company_eu
+        payload.euVatNumber = (document.querySelector<HTMLInputElement>("[data-field='euVatNumber']")?.value || "").trim().toUpperCase() || null;
+        payload.companyCountry = (document.querySelector<HTMLInputElement>("[data-field='companyCountryEu']")?.value || "").trim().toUpperCase() || null;
+      }
+    }
+
+    try {
+      const res = await fetch("/api/profile/update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (data.validationErrors && Array.isArray(data.validationErrors)) {
+          data.validationErrors.forEach((errKey: string) => showError(errKey));
+        }
+        showMessage(data.message || "Sikertelen mentés.", "error");
+        return;
+      }
+
+      showMessage("Cégadatok sikeresen mentve.", "success");
+      // Optionally: refresh customer data
+      if (data.customer) {
+        currentCustomer = data.customer;
+      }
+    } catch (err) {
+      showMessage("Hálózati hiba a mentéskor.", "error");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Cégadatok mentése";
+    }
+  });
+
+  // ─── 5. Error display ────────────────────────────────────────────────────
+  function clearAllErrors() {
+    document.querySelectorAll<HTMLElement>("[data-error]").forEach(el => el.setAttribute("hidden", ""));
+    if (messageEl) {
+      messageEl.setAttribute("hidden", "");
+      messageEl.classList.remove("profile-page__form-message--error", "profile-page__form-message--success");
+    }
+  }
+
+  function showError(errorKey: string) {
+    const el = document.querySelector<HTMLElement>(`[data-error='${errorKey}']`);
+    if (el) el.removeAttribute("hidden");
+  }
+
+  function showMessage(text: string, kind: "error" | "success") {
+    if (!messageEl) return;
+    messageEl.textContent = text;
+    messageEl.removeAttribute("hidden");
+    messageEl.classList.remove("profile-page__form-message--error", "profile-page__form-message--success");
+    messageEl.classList.add(`profile-page__form-message--${kind}`);
+  }
+</script>
+
+<style is:global>
+  .cegadatok-page__loading {
+    text-align: center;
+    padding: var(--space-8) 0;
+    color: var(--mona-text-3);
+  }
+
+  .cegadatok-form[hidden] {
+    display: none;
+  }
+
+  /* ─── 1. Type választó (3 radio kártya) ─────────────────────────────── */
+  .cegadatok-types {
+    border: none;
+    padding: 0;
+    margin: 0 0 var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+
+  .cegadatok-types__legend {
+    grid-column: 1 / -1;
+    font-family: var(--mona-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mona-text-3);
+    margin: 0 0 var(--space-3);
+    padding: 0;
+  }
+
+  .cegadatok-type {
+    cursor: pointer;
+  }
+
+  .cegadatok-type input {
+    /* Sr-only — a kártya maga a választó (ahogy a Sprint 4.5.3.x mintára) */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .cegadatok-type__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 0.5px solid var(--mona-border);
+    background: var(--mona-bg);
+    transition: border-color var(--motion-fast) var(--ease),
+                background var(--motion-fast) var(--ease),
+                box-shadow var(--motion-fast) var(--ease);
+    height: 100%;
+  }
+
+  .cegadatok-type:hover .cegadatok-type__card {
+    border-color: var(--mona-warm);
+  }
+
+  .cegadatok-type input:checked + .cegadatok-type__card {
+    border: 1.5px solid var(--mona-warm);
+    background: rgb(192 154 80 / 0.08);
+    box-shadow: 0 0 0 0.5px var(--mona-warm);
+  }
+
+  .cegadatok-type input:focus-visible + .cegadatok-type__card {
+    outline: 2px solid var(--mona-warm);
+    outline-offset: 2px;
+  }
+
+  .cegadatok-type__name {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mona-text);
+  }
+
+  .cegadatok-type__hint {
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-text-3);
+  }
+
+  /* ─── 2. Cégadatok + cégszékhely fieldset ─────────────────────────────── */
+  .cegadatok-fields,
+  .cegadatok-address {
+    border: 0.5px solid var(--mona-border);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    background: var(--mona-bg);
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .cegadatok-fields__legend,
+  .cegadatok-address__legend {
+    font-family: var(--mona-serif);
+    font-size: 18px;
+    color: var(--mona-text);
+    padding: 0 var(--space-2);
+  }
+
+  .cegadatok-address__note {
+    font-family: var(--mona-sans);
+    font-size: 13px;
+    color: var(--mona-text-3);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ─── 3. Field error pirosban ────────────────────────────────────────── */
+  .profile-page__field-error {
+    font-family: var(--mona-sans);
+    font-size: 12px;
+    color: var(--mona-sale, #c84545);
+    margin: var(--space-1) 0 0;
+  }
+
+  .profile-page__field-error[hidden] {
+    display: none !important;
+  }
+
+  /* ─── 4. Form message (success / error) ──────────────────────────────── */
+  .profile-page__form-message {
+    font-family: var(--mona-sans);
+    font-size: 14px;
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px solid;
+  }
+
+  .profile-page__form-message[hidden] {
+    display: none !important;
+  }
+
+  .profile-page__form-message--success {
+    background: rgb(0 128 0 / 0.06);
+    color: var(--mona-success, #2d6a2d);
+    border-color: var(--mona-success, #2d6a2d);
+  }
+
+  .profile-page__form-message--error {
+    background: rgb(192 60 60 / 0.06);
+    color: var(--mona-sale, #c84545);
+    border-color: var(--mona-sale, #c84545);
+  }
+
+  /* ─── 5. Mobile responsive ───────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    /* Type kártyák egymás alatt */
+    .cegadatok-types {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .cegadatok-type__card {
+      padding: var(--space-3);
+    }
+
+    /* Fieldsets kompaktabb */
+    .cegadatok-fields,
+    .cegadatok-address {
+      padding: var(--space-4);
+    }
+
+    .cegadatok-fields__legend,
+    .cegadatok-address__legend {
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .cegadatok-fields,
+    .cegadatok-address {
+      padding: var(--space-3);
+    }
+  }
+
+  /* form-field__label-hint — ha még nincs */
+  .form-field__label-hint {
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--mona-text-3);
+    text-transform: none;
+    letter-spacing: normal;
+    font-style: italic;
+    margin-left: 6px;
+  }
+</style>

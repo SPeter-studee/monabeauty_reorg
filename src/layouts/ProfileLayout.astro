@@ -30,7 +30,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
 interface Props {
   /** A jelenlegi szekció kulcsa — vezérli a sidebar aktív tab-ját */
-  currentSection: "profile" | "orders" | "addresses" | "wishlist";
+  currentSection: "profile" | "orders" | "addresses" | "business" | "wishlist";
   /** A page title a <head>-be */
   title: string;
   /** Opcionális SEO description (a Sprint 5+ admin-os oldalakra) */
@@ -44,6 +44,8 @@ const navItems = [
   { key: "profile", label: "Profilom", href: "/profil", icon: "user" },
   { key: "orders", label: "Rendelések", href: "/profil/rendelesek", icon: "orders" },
   { key: "addresses", label: "Címeim", href: "/profil/cimek", icon: "address" },
+  // Sprint 4.5.3.y v0.9.27 — B2B Cégadatok
+  { key: "business", label: "Cégadatok", href: "/profil/cegadatok", icon: "business" },
   { key: "wishlist", label: "Kívánságlista", href: "/profil/kivansaglista", icon: "heart" },
 ];
 ---
@@ -94,6 +96,11 @@ const navItems = [
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/>
                   <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+              )}
+              {item.icon === "business" && (
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/>
                 </svg>
               )}
               {item.icon === "heart" && (
@@ -196,11 +203,6 @@ const navItems = [
       max-width: 1200px;
       margin: 0 auto;
       padding: var(--space-6) var(--space-4);
-      /* v0.9.24.1: overflow guards — a child elemek (nav, banner) nem 
-         lóghatnak ki a viewport-on. iOS Safari is rispektálja. */
-      box-sizing: border-box;
-      width: 100%;
-      overflow-x: hidden;
     }
 
     /* [hidden] override — a globális reset és a saját display szabályok
@@ -238,9 +240,6 @@ const navItems = [
       display: grid;
       grid-template-columns: 240px 1fr;
       gap: var(--space-8);
-      /* v0.9.24.1: overflow guard — a 1fr column nem lóghat ki */
-      max-width: 100%;
-      min-width: 0;
     }
 
     /* Sidebar ─────────────────────────────────────────────────────────────── */

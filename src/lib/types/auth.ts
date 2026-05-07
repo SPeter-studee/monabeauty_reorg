@@ -40,6 +40,17 @@ export interface CustomerRow {
   accepts_marketing: 0 | 1;
   loyalty_points: number;
 
+  // Sprint 4.5.3.y v0.9.27 — B2B Cégadatok
+  customer_type: "private" | "company_hu" | "company_eu";
+  company_name: string | null;
+  tax_number: string | null;        // HU adószám: 12345678-1-12
+  eu_vat_number: string | null;      // EU VATIN: DE123456789
+  company_country: string | null;    // ISO 2-betű: HU/DE/AT...
+  company_zip: string | null;
+  company_city: string | null;
+  company_county: string | null;     // csak HU esetén
+  company_street: string | null;
+
   status: CustomerStatus;
   last_login_at: string | null;
   created_at: string;
@@ -65,6 +76,17 @@ export interface CustomerPublic {
   oauthProviders: AuthProvider[];  // mely OAuth providerekkel van összekapcsolva
   status: CustomerStatus;
   createdAt: string;
+
+  // Sprint 4.5.3.y v0.9.27 — B2B Cégadatok
+  customerType: "private" | "company_hu" | "company_eu";
+  companyName: string | null;
+  taxNumber: string | null;
+  euVatNumber: string | null;
+  companyCountry: string | null;
+  companyZip: string | null;
+  companyCity: string | null;
+  companyCounty: string | null;
+  companyStreet: string | null;
 }
 
 export type AuthProvider = "google" | "facebook" | "apple";
@@ -93,6 +115,17 @@ export function customerRowToPublic(row: CustomerRow): CustomerPublic {
     oauthProviders,
     status: row.status,
     createdAt: row.created_at,
+
+    // Sprint 4.5.3.y v0.9.27 — B2B Cégadatok
+    customerType: row.customer_type,
+    companyName: row.company_name,
+    taxNumber: row.tax_number,
+    euVatNumber: row.eu_vat_number,
+    companyCountry: row.company_country,
+    companyZip: row.company_zip,
+    companyCity: row.company_city,
+    companyCounty: row.company_county,
+    companyStreet: row.company_street,
   };
 }
 

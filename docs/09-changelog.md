@@ -18,6 +18,178 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.27] — 2026-04-27 — Sprint 4.5.3.y — B2B Cégadatok modul ⭐⭐⭐
+
+### Vendég kérés (régóta tervezett)
+
+A B2B vásárlások (cég-számlára vásárlás) a magyar webshopok alapfunkciója.
+Mónika korábban "most azonnal kell" kategóriába tette.
+
+### Funkcionalitás
+
+3 vásárló-típus a profilban:
+
+#### 1. Magán
+- Csak az alap (Keresztnév, Vezetéknév, Telefon) érvényes
+- A számla a vendég nevére kiállítva
+
+#### 2. Belföldi cég (`company_hu`)
+- **Cégnév** kötelező
+- **Magyar adószám** formátumban: `12345678-1-12` (regex: `^\d{8}-\d-\d{2}$`)
+- **Cégszékhely**: ország kötelezően Magyarország (HU), megye kötelező,
+  ZIP, város, utca-házszám
+- ZIP-város auto-fill (Sprint 4.5.3.x `bindZipCityAutofill`)
+
+#### 3. EU-s cég (`company_eu`)
+- **Cégnév** kötelező
+- **EU VATIN** közösségi adószám: ország 2-betűs ISO + 8-12 szám 
+  (regex: `^[A-Z]{2}\d{8,12}$`, pl. `DE123456789`, `AT U12345678`)
+- **Cégszékhely**: 2-betűs országkód + ZIP + város + utca-házszám
+- Megye nincs (EU kontextusban irreleváns)
+
+### D1 migráció (`0007_sprint4_5_3_y_business_customers.sql`)
+
+A `customers` tábla bővítése:
+```sql
+ALTER TABLE customers ADD COLUMN customer_type TEXT NOT NULL DEFAULT 'private';
+ALTER TABLE customers ADD COLUMN company_name TEXT;
+ALTER TABLE customers ADD COLUMN tax_number TEXT;       -- HU
+ALTER TABLE customers ADD COLUMN eu_vat_number TEXT;    -- EU
+ALTER TABLE customers ADD COLUMN company_country TEXT;  -- ISO 2-betű
+ALTER TABLE customers ADD COLUMN company_zip TEXT;
+ALTER TABLE customers ADD COLUMN company_city TEXT;
+ALTER TABLE customers ADD COLUMN company_county TEXT;   -- HU only
+ALTER TABLE customers ADD COLUMN company_street TEXT;
+```
+
+3 új index a `customer_type`, `tax_number` (partial), `eu_vat_number` (partial) 
+mezőkre — jövőbeli admin riportokhoz, B2B export-hoz.
+
+### Backend változások
+
+#### `update.ts` — POST `/api/profile/update`
+A meglévő endpoint **bővítve**:
+- 9 új mező parszolása (sanitize, max-length)
+- B2B-specifikus validáció:
+  - `company_name_required`, `company_country_required`, `company_zip_required`,
+    `company_city_required`, `company_street_required`
+  - HU-cég: `tax_number_required` + `tax_number_format_invalid` (regex)
+    + `company_county_required`
+  - EU-cég: `eu_vat_number_required` + `eu_vat_number_format_invalid`,
+    `company_country_invalid` (HU-t nem engedélyez ide)
+- 400 response a `validationErrors` tömbbel ha hiba
+- Magán-vásárlónál a cégadatokat NULL-ra állítja (cleanup)
+- ENUM check: csak `private` / `company_hu` / `company_eu`
+
+#### `lib/types/auth.ts` és `lib/types/profile.ts`
+- `CustomerRow` és `CustomerPublic` 9 új field
+- `customerRowToPublic()` mapping bővítve
+- `ProfileUpdateRequest` 9 új optional field
+- Új `B2BValidationError` union type
+
+### Frontend — `/profil/cegadatok.astro`
+
+Új profil oldal (~430 LOC). Komponensek:
+
+1. **Type választó** (3 radio kártya — Magán / HU cég / EU cég)
+   - Sr-only radio + kártya-pattern (Sprint 4.5.3.x mintára)
+   - Selected state: 1.5px arany border + halvány arany bg + box-shadow
+2. **Cégadatok fieldset** (csak ha NEM magán)
+   - Cégnév (mindkét típus)
+   - Adószám HU-cégnél (placeholder + pattern)
+   - VATIN EU-cégnél (uppercase, placeholder)
+3. **Cégszékhely fieldset** (csak ha NEM magán)
+   - Ország: HU readonly vagy EU 2-betűs input
+   - Utca, házszám
+   - ZIP + város (egy sor desktop)
+   - Megye HU-cégnél (datalist auto-fill ZIP-ből)
+4. **Mentés** + form-message (success/error)
+
+### Validáció (kliens + szerver)
+
+**Kliens**:
+- HTML5 `pattern` attribútum az adószám mezőn (`\d{8}-\d-\d{2}`)
+- HTML5 `maxlength` minden szöveges mezőn
+- Submit előtt: type alapján csak a releváns mezőket küldi
+
+**Szerver**:
+- Regex check (HU adószám: `^\d{8}-\d-\d{2}$`, EU VATIN: `^[A-Z]{2}\d{8,12}$`)
+- Required check minden szükséges mezőre
+- 400 response a `validationErrors` tömbbel
+- Frontend `data-error="..."` mezőket render-eli
+
+### UI/UX patterns
+
+- **Inline error messages** a mezők alatt (piros, 12px italic)
+- **Sticky form message** a "Mentés" gomb mellett (success zöld / error piros)
+- **Disabled gomb** mentés alatt + "Mentés…" text
+- **A cégadatok blokk progresszíven jelenik meg** — magán-vásárlónál
+  még csak a 3 radio kártya látszik, nincs zsúfolt mezősereg
+
+### Mobile responsive
+
+- Type kártyák **egymás alatt** mobile-on (volt: 3-oszlopos grid)
+- Fieldsets padding kompaktabb (24px → 16px → 12px)
+- Legend font-size 18px → 16px mobile-on
+
+### ProfileLayout sidebar
+
+Új "Cégadatok" menüpont a "Címeim" és "Kívánságlista" között:
+- Új `business` ikon (épület + ablakok SVG)
+- `currentSection: "business"` típus
+
+### Hatás — Mónika perspektíva
+
+- ✅ **B2B vásárlók** mostantól regisztrálhatnak cégnévre
+- ✅ **Számlázás** előkészítve: a számla generálásakor a `customer_type` 
+  alapján tud különbözőképpen megjelölni
+- ✅ **Adószám validáció** garantálja hogy csak érvényes magyar adószámok 
+  kerülnek a DB-be (NAV számla-szabvánnyal kompatibilis)
+- ✅ **EU VATIN** támogatás: német, osztrák, olasz cégek is vásárolhatnak
+  (a 0% áfa-mentes B2B lehetőség Sprint 5+ -ban implementálható)
+
+### Sprint 4.5.5+ tervezett bővítés (NEM most)
+
+- Checkout oldalon: vásárló-típus radio választó
+  - Default a profil `customerType`-ja
+  - Override-olható ha pl. magán-fiók ideiglenesen cégnévre vásárol
+- Számla generálás (`/api/checkout`): `customer_type`-ot átveszi
+- Hivatalos NAV számla (Számlázz.hu / Billingo) integráció
+
+### Fájlok (8)
+
+**Új**:
+- `migrations/0007_sprint4_5_3_y_business_customers.sql`
+- `src/pages/profil/cegadatok.astro` (~430 LOC)
+
+**Módosított**:
+- `src/lib/types/auth.ts` — `CustomerRow` + `CustomerPublic` + mapper
+- `src/lib/types/profile.ts` — `ProfileUpdateRequest` + `B2BValidationError`
+- `src/pages/api/profile/update.ts` — B2B validáció + UPDATE bővítés
+- `src/layouts/ProfileLayout.astro` — új sidebar menüpont + business ikon
+- `package.json` — `0.9.26` → `0.9.27`
+- `docs/09-changelog.md`
+
+### Deploy
+
+```powershell
+# 1. D1 migráció FUTTATÁSA ELŐSZÖR (production!)
+npx wrangler d1 execute monastudio-v2-db --remote `
+  --file=migrations/0007_sprint4_5_3_y_business_customers.sql
+
+# 2. Húzd be a fájlokat
+# 3. Build + commit + push (lásd commit-msg-v0927.txt)
+npm run build
+git add -A
+git commit -F commit-msg-v0927.txt
+Remove-Item commit-msg-v0927.txt
+git push origin main
+```
+
+**FONTOS**: a migrációt **a deploy ELŐTT** futtasd, különben az új mezők hivatkozása `D1_ERROR: no such column` hibát ad.
+
+---
+
 ## [0.9.26] — 2026-04-27 — Sprint 4.6 — Mobile responsive ZIP 4 (komponensek) ⭐
 
 ### Sprint 4.6 lezárása

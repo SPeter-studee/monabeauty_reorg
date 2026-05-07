@@ -10,6 +10,35 @@ export interface ProfileUpdateRequest {
   lastName?: string | null;
   phone?: string | null;
   // Email és jelszó NEM itt — külön endpointokon (Sprint 4.5.5/4.5.6)
+
+  // Sprint 4.5.3.y v0.9.27 — B2B Cégadatok (opcionális, csak ha customerType !== "private")
+  customerType?: "private" | "company_hu" | "company_eu";
+  companyName?: string | null;
+  taxNumber?: string | null;
+  euVatNumber?: string | null;
+  companyCountry?: string | null;
+  companyZip?: string | null;
+  companyCity?: string | null;
+  companyCounty?: string | null;
+  companyStreet?: string | null;
+}
+
+// Sprint 4.5.3.y — B2B validációs hibák
+export type B2BValidationError =
+  | "company_name_required"
+  | "tax_number_required"
+  | "tax_number_format_invalid"
+  | "eu_vat_number_required"
+  | "eu_vat_number_format_invalid"
+  | "company_country_required"
+  | "company_country_invalid"
+  | "company_zip_required"
+  | "company_city_required"
+  | "company_street_required"
+  | "company_county_required";  // HU only
+
+export interface ProfileUpdateResponseError extends ProfileUpdateResponse {
+  validationErrors?: B2BValidationError[];
 }
 
 export interface ProfileUpdateResponse {

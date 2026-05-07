@@ -62,21 +62,115 @@ async function handleUpdate(request: Request, locals: any): Promise<Response> {
     });
   }
 
-  // 3. Validáció
+  // 3. Validáció — alapadatok
   const firstName = sanitize(body.firstName, 50);
   const lastName = sanitize(body.lastName, 50);
   const phone = sanitize(body.phone, 20);
 
-  // 4. UPDATE
+  // ── Sprint 4.5.3.y v0.9.27 — B2B Cégadatok validáció ─────────────────────
+  const customerType = body.customerType || "private";
+  if (!["private", "company_hu", "company_eu"].includes(customerType)) {
+    return jsonResponse(400, {
+      success: false,
+      error: "invalid_request",
+      message: "Érvénytelen vásárló-típus.",
+    });
+  }
+
+  const companyName = sanitize(body.companyName, 200);
+  const taxNumber = sanitize(body.taxNumber, 20);
+  const euVatNumber = sanitize(body.euVatNumber, 20);
+  const companyCountry = sanitize(body.companyCountry, 2);  // ISO 2-betű
+  const companyZip = sanitize(body.companyZip, 10);
+  const companyCity = sanitize(body.companyCity, 100);
+  const companyCounty = sanitize(body.companyCounty, 100);
+  const companyStreet = sanitize(body.companyStreet, 200);
+
+  // B2B-specifikus validáció ha cég
+  const validationErrors: string[] = [];
+
+  if (customerType === "company_hu" || customerType === "company_eu") {
+    if (!companyName) validationErrors.push("company_name_required");
+    if (!companyCountry) validationErrors.push("company_country_required");
+    if (!companyZip) validationErrors.push("company_zip_required");
+    if (!companyCity) validationErrors.push("company_city_required");
+    if (!companyStreet) validationErrors.push("company_street_required");
+  }
+
+  if (customerType === "company_hu") {
+    if (!taxNumber) {
+      validationErrors.push("tax_number_required");
+    } else if (!/^\d{8}-\d-\d{2}$/.test(taxNumber)) {
+      validationErrors.push("tax_number_format_invalid");
+    }
+    // HU-cég kötelező megye
+    if (!companyCounty) validationErrors.push("company_county_required");
+    // Ország kötelezően HU
+    if (companyCountry && companyCountry.toUpperCase() !== "HU") {
+      validationErrors.push("company_country_invalid");
+    }
+  }
+
+  if (customerType === "company_eu") {
+    if (!euVatNumber) {
+      validationErrors.push("eu_vat_number_required");
+    } else if (!/^[A-Z]{2}\d{8,12}$/.test(euVatNumber)) {
+      validationErrors.push("eu_vat_number_format_invalid");
+    }
+    // EU országkód: ISO 2-betűs, nem lehet HU (akkor company_hu lenne)
+    if (companyCountry) {
+      const cc = companyCountry.toUpperCase();
+      if (!/^[A-Z]{2}$/.test(cc) || cc === "HU") {
+        validationErrors.push("company_country_invalid");
+      }
+    }
+  }
+
+  if (validationErrors.length > 0) {
+    return jsonResponse(400, {
+      success: false,
+      error: "validation_failed",
+      message: "Hiányzó vagy érvénytelen cégadatok.",
+      validationErrors,
+    } as any);
+  }
+
+  // Magán-vásárlónál a cégadatokat NULL-ra állítjuk (cleanup)
+  const isPrivate = customerType === "private";
+
+  // 4. UPDATE — minden mező egyben
   const updateResult = await db
     .prepare(`
       UPDATE customers
       SET first_name = ?,
           last_name = ?,
-          phone = ?
+          phone = ?,
+          customer_type = ?,
+          company_name = ?,
+          tax_number = ?,
+          eu_vat_number = ?,
+          company_country = ?,
+          company_zip = ?,
+          company_city = ?,
+          company_county = ?,
+          company_street = ?
       WHERE id = ?
     `)
-    .bind(firstName, lastName, phone, customerId)
+    .bind(
+      firstName,
+      lastName,
+      phone,
+      customerType,
+      isPrivate ? null : companyName,
+      isPrivate || customerType === "company_eu" ? null : taxNumber,
+      isPrivate || customerType === "company_hu" ? null : (euVatNumber ? euVatNumber.toUpperCase() : null),
+      isPrivate ? null : (companyCountry ? companyCountry.toUpperCase() : null),
+      isPrivate ? null : companyZip,
+      isPrivate ? null : companyCity,
+      isPrivate || customerType === "company_eu" ? null : companyCounty,
+      isPrivate ? null : companyStreet,
+      customerId,
+    )
     .run();
 
   if (!updateResult.success) {
