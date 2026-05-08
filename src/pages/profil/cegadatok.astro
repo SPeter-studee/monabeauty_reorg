@@ -8,13 +8,21 @@
 //     - Magán: csak alap (nincs cégadat)
 //     - Belföldi cég: Cégnév, magyar adószám (12345678-1-12), cégszékhely (HU)
 //     - EU cég: Cégnév, EU VATIN (DE123456789), cégszékhely (ország + címe)
-//   - ZIP-város auto-fill (Sprint 4.5.3.x bindZipCityAutofill)
+//   - ZIP-város auto-fill (v0.9.31: BULLETPROOF inline JSON, nem külső modul)
 //   - Validáció kliensoldalon + szerveren (regex + visszajelzés)
 //   - "Mentés" → POST /api/profile/update
 //
 // Hozzáférés: /profil/cegadatok (logged-in vendég)
+//
+// v0.9.31: A ZIP-város auto-fill nem importálja a /lib/utils/zip-city-lookup.ts
+// modult, hanem build-time beágyazott JSON-t használ egy <script type="application/json">
+// tag-ben. Bulletproof: nincs külső függőség, nincs build-pipeline kockázat.
 
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import zipDataJson from "@/lib/utils/hu-zip-cities.json";
+
+// JSON inline (HTML-be kerül a <script type="application/json">-be)
+const zipDataString = JSON.stringify(zipDataJson);
 ---
 
 <ProfileLayout currentSection="business" title="Cégadatok">
@@ -166,13 +174,138 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
         <button type="submit" class="btn btn-primary" data-save-btn>Cégadatok mentése</button>
       </div>
     </form>
+
+    {/* v0.9.31 — Inline ZIP-város adat (build-time embedded). NINCS import. */}
+    <script type="application/json" id="hu-zip-data" set:html={zipDataString}></script>
   </div>
 </ProfileLayout>
 
 <script>
   import { subscribeAuthState } from "@/lib/auth-state";
-  import { bindZipCityAutofill } from "@/lib/utils/zip-city-lookup";
   import type { CustomerPublic } from "@/lib/types/auth";
+
+  // ─── Inline ZIP-város lookup (v0.9.31: NINCS külső modul import) ────────
+  type ZipDataShape = {
+    counties: string[];
+    zips: Record<string, [string, number]>;
+  };
+
+  let zipData: ZipDataShape | null = null;
+
+  function loadZipData(): ZipDataShape | null {
+    if (zipData) return zipData;
+    try {
+      const el = document.getElementById("hu-zip-data");
+      if (!el) {
+        console.warn("[zip-city-inline] #hu-zip-data element not found");
+        return null;
+      }
+      zipData = JSON.parse(el.textContent || "{}") as ZipDataShape;
+      console.log(`[zip-city-inline] loaded ${Object.keys(zipData.zips).length} ZIPs, ${zipData.counties.length} counties`);
+      return zipData;
+    } catch (err) {
+      console.error("[zip-city-inline] JSON parse failed:", err);
+      return null;
+    }
+  }
+
+  function lookupZip(zip: string): { city: string; county: string } | null {
+    const data = loadZipData();
+    if (!data) return null;
+
+    const trimmed = zip.trim();
+    if (!/^\d{4}$/.test(trimmed)) return null;
+
+    const entry = data.zips[trimmed];
+    if (!entry) return null;
+
+    const city = entry[0];
+    const countyId = entry.length > 1 ? entry[1] : -1;
+    const county = countyId >= 0 ? (data.counties[countyId] || "") : "";
+
+    return { city, county };
+  }
+
+  function getAllCities(): string[] {
+    const data = loadZipData();
+    if (!data) return [];
+    const set = new Set<string>();
+    for (const entry of Object.values(data.zips)) {
+      set.add(entry[0]);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "hu"));
+  }
+
+  function getAllCounties(): string[] {
+    const data = loadZipData();
+    if (!data) return [];
+    return [...data.counties].sort((a, b) => a.localeCompare(b, "hu"));
+  }
+
+  function escapeAttr(s: string): string {
+    return s.replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function bindZipCityAutofillInline(opts: {
+    zipInput: HTMLInputElement | null;
+    cityInput: HTMLInputElement | null;
+    countyInput: HTMLInputElement | null;
+    citiesDatalist: HTMLDataListElement | null;
+    countiesDatalist: HTMLDataListElement | null;
+  }): void {
+    const { zipInput, cityInput, countyInput, citiesDatalist, countiesDatalist } = opts;
+
+    if (!zipInput || !cityInput) {
+      console.warn("[zip-city-inline] bind failed: missing zipInput or cityInput");
+      return;
+    }
+
+    if (citiesDatalist) {
+      const cities = getAllCities();
+      citiesDatalist.innerHTML = cities.map(c => `<option value="${escapeAttr(c)}"></option>`).join("");
+      console.log(`[zip-city-inline] cities datalist filled: ${cities.length}`);
+    }
+
+    if (countiesDatalist) {
+      const counties = getAllCounties();
+      countiesDatalist.innerHTML = counties.map(c => `<option value="${escapeAttr(c)}"></option>`).join("");
+      console.log(`[zip-city-inline] counties datalist filled: ${counties.length}`);
+    }
+
+    let cityManuallyEdited = false;
+    let countyManuallyEdited = false;
+    cityInput.addEventListener("input", () => { cityManuallyEdited = true; });
+    countyInput?.addEventListener("input", () => { countyManuallyEdited = true; });
+
+    zipInput.addEventListener("blur", () => {
+      const zip = zipInput.value.trim();
+      if (!/^\d{4}$/.test(zip)) return;
+
+      const info = lookupZip(zip);
+      if (!info) {
+        console.log(`[zip-city-inline] ${zip} not found`);
+        return;
+      }
+
+      if (!cityManuallyEdited || !cityInput.value.trim()) {
+        cityInput.value = info.city;
+        cityInput.dispatchEvent(new Event("input", { bubbles: true }));
+        cityManuallyEdited = false;
+      }
+
+      if (countyInput && info.county && (!countyManuallyEdited || !countyInput.value.trim())) {
+        countyInput.value = info.county;
+        countyInput.dispatchEvent(new Event("input", { bubbles: true }));
+        countyManuallyEdited = false;
+      }
+
+      console.log(`[zip-city-inline] ${zip} → ${info.city}, ${info.county || "(no county)"}`);
+    });
+
+    console.log("[zip-city-inline] bind successful");
+  }
+
+  // ─── DOM init ───────────────────────────────────────────────────────────
 
   const loadingEl = document.querySelector<HTMLElement>("[data-loading]");
   const formEl = document.querySelector<HTMLFormElement>("[data-cegadatok-form]");
@@ -205,7 +338,7 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
       countiesDl: !!countiesDatalistEl,
     });
 
-    bindZipCityAutofill({
+    bindZipCityAutofillInline({
       zipInput: zipInputEl,
       cityInput: cityInputEl,
       countyInput: countyInputEl,
@@ -563,7 +696,14 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     border-color: var(--mona-sale, #c84545);
   }
 
-  /* ─── 5. Mobile responsive ───────────────────────────────────────────── */
+  /* ─── 5. Mobile responsive (v0.9.31: bővítve) ──────────────────────────── */
+  @media (max-width: 768px) {
+    /* Field row 2-oszlopos → 1-oszlopos mobile-on */
+    .profile-page__field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 600px) {
     /* Type kártyák egymás alatt */
     .cegadatok-types {
@@ -585,12 +725,29 @@ import ProfileLayout from "@/layouts/ProfileLayout.astro";
     .cegadatok-address__legend {
       font-size: 16px;
     }
+
+    /* v0.9.31: input-mezők kisebb font + responsive */
+    .cegadatok-form input[type="text"],
+    .cegadatok-form input[type="tel"] {
+      font-size: 16px;  /* iOS zoom prevent: ne legyen kisebb mint 16px */
+    }
   }
 
   @media (max-width: 480px) {
     .cegadatok-fields,
     .cegadatok-address {
       padding: var(--space-3);
+    }
+
+    /* Form-actions kompaktabb */
+    .profile-page__form-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-3);
+    }
+
+    .profile-page__form-actions .btn {
+      width: 100%;
     }
   }
 

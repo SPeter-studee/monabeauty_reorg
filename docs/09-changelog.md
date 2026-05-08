@@ -18,6 +18,151 @@ A Mona Studio V2 projekt változásnaplója. [Keep a Changelog](https://keepacha
 
 ---
 
+## [0.9.31] — 2026-04-27 — Sprint 4.5.3.y — Bulletproof ZIP-város (inline JSON) + mobile profil-nav ⭐
+
+### Probléma 1 — ZIP-város továbbra sem működik /profil/cegadatok-on
+
+A v0.9.30 hotfix után is **csak a `[cegadatok]` log látszott**, **nem volt
+`[zip-city]` log + piros JS error**. A vendég `/penztar`-on **sem** működik.
+
+A `bindZipCityAutofill` modul a `/profil/cimek` Új cím formjában **bizonyítottan
+működik** (screenshot: 1214 → Budapest auto-fill arany hátérrel). Tehát a
+modul OK, de **valami környezeti gond** van a `cegadatok.astro` és
+`penztar/index.astro`-on.
+
+### Megoldás — inline JSON, nincs külső modul import
+
+A `cegadatok.astro` mostantól:
+1. **Build-time beágyazza a `hu-zip-cities.json`-t** Astro front-matter-ből:
+   ```astro
+   import zipDataJson from "@/lib/utils/hu-zip-cities.json";
+   const zipDataString = JSON.stringify(zipDataJson);
+   ```
+
+2. **Beilleszti a HTML-be** egy `<script type="application/json" id="hu-zip-data">`
+   tag-be (`set:html={zipDataString}`)
+
+3. **Runtime-ban**:
+   ```typescript
+   const data = JSON.parse(document.getElementById("hu-zip-data").textContent);
+   ```
+
+4. **A teljes `bindZipCityAutofillInline` függvény** a script-ben definiálva
+   (~120 LOC, az eredetit lemásolva). Nincs külső modul import.
+
+### Előnyei
+
+- ✅ **Nincs build-pipeline kockázat** (Astro/Vite JSON import alkalmanként
+  meghibásodik)
+- ✅ **Nincs runtime fetch** (a JSON már a HTML-ben van)
+- ✅ **Nincs dynamic import** (az ESM resolution-on nem múlik)
+- ✅ **Logok minden lépésnél**: `[zip-city-inline] loaded 3074 ZIPs, 20 counties`,
+  `[zip-city-inline] cities datalist filled: 3074`, `[zip-city-inline] 1214 → Budapest, Budapest`
+
+### Hátrány
+
+- ~74KB extra HTML payload a `/profil/cegadatok` oldalon. Egyszer letöltődik,
+  utána a böngésző cache-eli (a HTML és benne a JSON együtt).
+- A `/penztar` és más ZIP-város használatú oldalak **továbbra is** a külső 
+  `bindZipCityAutofill` modult használják. Ha **ezek is meghibásodnak**, akkor
+  egy következő verzióban (v0.9.32+) a `penztar`-ra is inline-oljuk.
+
+### Probléma 2 — Mobil nézet rossz az egész profil-szekción
+
+A vendég jelezte hogy "a mobil nézet még mindig nem jó felhasználóként" —
+"Mind" a /profil/* oldalakon.
+
+#### Diagnózis
+
+A v0.9.21-26 mobile audit fő vonalban **lefedte** a profil oldalakat. **De**
+a v0.9.27-ben hozzáadtam egy **6. menüpontot** (Cégadatok) a sidebar-hoz,
+és mobile-on a horizontális scroll nav-ban a `padding: var(--space-3) var(--space-4)`
++ a tipikus link-szöveg miatt **6 elem nem fér el** könnyen, és a vendég
+nem látja a Cégadatok-at vagy a Kijelentkezést.
+
+#### Javítás — `ProfileLayout.astro`
+
+```css
+@media (max-width: 768px) {
+  .profile-layout__nav {
+    /* ... + scroll snap + position: relative jelzéshez */
+    scroll-snap-type: x proximity;
+  }
+  .profile-layout__nav-link {
+    padding: var(--space-3);  /* var(--space-3) var(--space-4) volt */
+    font-size: 13px;
+    scroll-snap-align: start;
+  }
+  .profile-layout__nav-link svg {
+    width: 14px;       /* 16px volt */
+    height: 14px;
+  }
+}
+```
+
+#### Javítás — `cegadatok.astro` mobile
+
+```css
+@media (max-width: 768px) {
+  /* Field row 2-oszlopos → 1-oszlopos */
+  .profile-page__field-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  /* Input mezők font-size 16px (iOS zoom prevent) */
+  .cegadatok-form input { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  /* Form-actions column-layout, full-width gomb */
+  .profile-page__form-actions { flex-direction: column; }
+  .profile-page__form-actions .btn { width: 100%; }
+}
+```
+
+### Test plan
+
+#### ZIP-város teszt (`/profil/cegadatok` Belföldi cég)
+
+1. Hard refresh
+2. F12 Console → látsz: `[zip-city-inline] loaded 3074 ZIPs, 20 counties`
+3. Belföldi cég kiválasztás
+4. Klikk az "Irányítószám" mezőre
+5. Beír: `2600`
+6. Tab vagy klikk a "Város" mezőre
+7. Console: `[zip-city-inline] 2600 → Vác, Pest`
+8. **Város**: "Vác" auto-fill
+9. **Megye**: "Pest" auto-fill
+
+További tesztek: `1214` → Budapest, `6720` → Szeged/Csongrád-Csanád, `9970` → Szentgotthárd/Vas
+
+#### Mobile teszt
+
+iPhone SE (375x667) Chrome DevTools:
+- ✅ Sidebar nav vízszintesen scroll-ozható, 6 elem
+- ✅ Cégadatok menüpontot el tudod scroll-olni
+- ✅ Form mezők beleférnek a viewport-ba
+- ✅ "Cégadatok mentése" gomb full-width
+- ✅ Type kártyák egymás alatt
+
+### Fájlok (4)
+- `src/pages/profil/cegadatok.astro` — bulletproof inline ZIP-város + mobile bővítés
+- `src/layouts/ProfileLayout.astro` — mobile nav padding+ikon kompaktabb
+- `package.json` — `0.9.30` → `0.9.31`
+- `docs/09-changelog.md`
+
+### Ha még mindig nem megy
+
+A `[zip-city-inline]` logok pontosan megmondják:
+- Ha **`loaded 0 ZIPs, 0 counties`** → A JSON parse failed → más a JSON shape
+- Ha **`#hu-zip-data element not found`** → A `set:html` direktíva nem ment át
+- Ha **`bind failed: missing zipInput or cityInput`** → A querySelector null-t ad
+- Ha **logok normálok, de mégsem fill-el** → A `blur` event nem trigger-elődik
+
+---
+
+
+
 ## [0.9.30] — 2026-04-27 — Sprint 4.5.3.y — HOTFIX: ZIP-város auto-fill /profil/cegadatok-on
 
 ### Probléma — vendég visszajelzés

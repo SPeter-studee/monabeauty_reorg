@@ -379,6 +379,10 @@ const navItems = [
         gap: 0;
         padding-bottom: var(--space-2);
         border-bottom: 0.5px solid var(--mona-border);
+        /* v0.9.31: scroll snap a jobb UX-hez */
+        scroll-snap-type: x proximity;
+        /* v0.9.31: jelzés hogy van még content jobbra */
+        position: relative;
       }
 
       .profile-layout__nav::-webkit-scrollbar {
@@ -388,7 +392,16 @@ const navItems = [
       .profile-layout__nav-link {
         flex-shrink: 0;
         white-space: nowrap;
-        padding: var(--space-3) var(--space-4);
+        /* v0.9.31: kompaktabb padding hogy 6 elem férjen el */
+        padding: var(--space-3);
+        font-size: 13px;
+        scroll-snap-align: start;
+      }
+
+      .profile-layout__nav-link svg {
+        /* v0.9.31: kisebb ikon mobile-on */
+        width: 14px;
+        height: 14px;
       }
 
       .profile-layout__nav-link--active {
